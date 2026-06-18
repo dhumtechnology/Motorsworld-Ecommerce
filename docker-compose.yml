@@ -1,0 +1,66 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: motosworld_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    networks:
+      - motosworld
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-motosworld}
+      - DB_USERNAME=${DB_USERNAME:-motosworld}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - TMPDIR=/var/www/html/storage/framework/cache
+
+  nginx:
+    image: nginx:alpine
+    container_name: motosworld_nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - motosworld
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: motosworld_mysql
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT_EXTERNAL:-3307}:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-motosworld}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_USER: ${DB_USERNAME:-motosworld}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - motosworld
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-psecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  motosworld:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
