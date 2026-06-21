@@ -16,4 +16,20 @@ if [ ! -f ".env" ]; then
     php artisan key:generate --ansi
 fi
 
+echo "Esperando conexión a la base de datos..."
+max_retries=30
+retry=0
+until php artisan db:show >/dev/null 2>&1; do
+    retry=$((retry + 1))
+    if [ "$retry" -ge "$max_retries" ]; then
+        echo "Error: no se pudo conectar a la base de datos tras $max_retries intentos."
+        exit 1
+    fi
+    echo "Base de datos no disponible, reintentando ($retry/$max_retries)..."
+    sleep 2
+done
+
+echo "Aplicando migraciones pendientes..."
+php artisan migrate --force --no-interaction
+
 exec docker-php-entrypoint "$@"
