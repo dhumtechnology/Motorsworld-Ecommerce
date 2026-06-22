@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\Auth\UserStatus;
+use App\Models\Auth\CustomerProfile;
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -51,5 +52,25 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'status' => UserStatus::Locked,
         ]);
+    }
+
+    public function administrador(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->syncRoles(['Administrador']);
+        });
+    }
+
+    public function usuario(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->syncRoles(['Usuario']);
+
+            if ($user->customerProfile()->exists()) {
+                return;
+            }
+
+            CustomerProfile::factory()->forUser($user)->create();
+        });
     }
 }

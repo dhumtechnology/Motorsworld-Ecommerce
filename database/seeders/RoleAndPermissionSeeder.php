@@ -14,50 +14,73 @@ class RoleAndPermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = collect([
-            ['name' => 'View Admin Panel', 'slug' => 'admin.view', 'description' => 'Access the admin dashboard'],
-            ['name' => 'Manage Users', 'slug' => 'users.manage', 'description' => 'Create, update and delete users'],
-            ['name' => 'Manage Roles', 'slug' => 'roles.manage', 'description' => 'Assign roles and permissions'],
-            ['name' => 'Manage Products', 'slug' => 'products.manage', 'description' => 'Manage catalog products'],
-            ['name' => 'Manage Orders', 'slug' => 'orders.manage', 'description' => 'Manage customer orders'],
-            ['name' => 'Place Orders', 'slug' => 'orders.place', 'description' => 'Place orders in the shop'],
+            [
+                'name' => 'Acceder al panel admin',
+                'slug' => 'admin.view',
+                'description' => 'Permite iniciar sesión y acceder al panel administrativo',
+            ],
+            [
+                'name' => 'Gestionar usuarios',
+                'slug' => 'users.manage',
+                'description' => 'Crear, editar y eliminar usuarios del sistema',
+            ],
+            [
+                'name' => 'Gestionar roles',
+                'slug' => 'roles.manage',
+                'description' => 'Asignar roles y permisos',
+            ],
+            [
+                'name' => 'Gestionar productos',
+                'slug' => 'products.manage',
+                'description' => 'Administrar el catálogo de productos',
+            ],
+            [
+                'name' => 'Gestionar pedidos',
+                'slug' => 'orders.manage',
+                'description' => 'Administrar pedidos de clientes',
+            ],
+            [
+                'name' => 'Acceder a la tienda',
+                'slug' => 'shop.access',
+                'description' => 'Permite iniciar sesión en el ecommerce',
+            ],
+            [
+                'name' => 'Realizar pedidos',
+                'slug' => 'orders.place',
+                'description' => 'Comprar productos en la tienda online',
+            ],
         ])->map(fn (array $data) => Permission::query()->updateOrCreate(
             ['slug' => $data['slug']],
             $data,
         ));
 
-        $admin = Role::query()->updateOrCreate(
-            ['slug' => 'administrator'],
+        $administrador = Role::query()->updateOrCreate(
+            ['slug' => 'administrador'],
             [
-                'name' => 'Administrator',
-                'description' => 'Full access to the admin panel and system management',
+                'name' => 'Administrador',
+                'description' => 'Acceso completo al panel administrativo',
             ],
         );
 
-        $staff = Role::query()->updateOrCreate(
-            ['slug' => 'staff'],
+        $usuario = Role::query()->updateOrCreate(
+            ['slug' => 'usuario'],
             [
-                'name' => 'Staff',
-                'description' => 'Manages products and orders',
+                'name' => 'Usuario',
+                'description' => 'Cliente del ecommerce; no puede acceder al panel admin',
             ],
         );
 
-        $customer = Role::query()->updateOrCreate(
-            ['slug' => 'customer'],
-            [
-                'name' => 'Customer',
-                'description' => 'Shop customer with access to the storefront',
-            ],
-        );
-
-        $admin->syncPermissions($permissions->pluck('name')->all());
-
-        $staff->syncPermissions([
-            'Manage Products',
-            'Manage Orders',
+        $administrador->syncPermissions([
+            'Acceder al panel admin',
+            'Gestionar usuarios',
+            'Gestionar roles',
+            'Gestionar productos',
+            'Gestionar pedidos',
         ]);
 
-        $customer->syncPermissions([
-            'Place Orders',
+        $usuario->syncPermissions([
+            'Acceder a la tienda',
+            'Realizar pedidos',
         ]);
     }
 }
