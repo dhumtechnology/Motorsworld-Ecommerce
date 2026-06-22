@@ -11,8 +11,8 @@
     - $product->inventory      : Inventory|null (total_stock, available_stock, reserved_stock)
 
     Atributos directos del producto:
-    - $product->id
     - $product->sku
+    - $product->description
     - $product->price_amount
     - $product->currency
     - $product->status          : ProductStatus enum
@@ -45,6 +45,10 @@
         @endif
 
         <h1>{{ $product->sku }}</h1>
+
+        @if ($product->description)
+            <p>{{ $product->description }}</p>
+        @endif
 
         <p>{{ number_format($product->price_amount, 2) }} {{ $product->currency }}</p>
 

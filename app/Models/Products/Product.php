@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'sku',
+    'description',
     'price_amount',
     'currency',
     'status',

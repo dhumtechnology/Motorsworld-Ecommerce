@@ -112,6 +112,7 @@ class CatalogController extends Controller
             $query->where(function (Builder $searchQuery) use ($like) {
                 $searchQuery
                     ->where('sku', 'like', $like)
+                    ->orWhere('description', 'like', $like)
                     ->orWhereHas('category', fn (Builder $q) => $q->where('name', 'like', $like))
                     ->orWhereHas('vehicleModel', function (Builder $q) use ($like) {
                         $q->where('name', 'like', $like)

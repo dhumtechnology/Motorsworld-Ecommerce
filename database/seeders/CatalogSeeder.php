@@ -124,39 +124,39 @@ class CatalogSeeder extends Seeder
     ): void {
         $products = [
             // Motos
-            ['sku' => 'MW-MOTO-001', 'category' => 'MOTOS', 'brand' => 'Yamaha', 'model' => 'YZF-R3', 'price' => 18999.00, 'stock' => 3, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-MOTO-002', 'category' => 'MOTOS', 'brand' => 'Honda', 'model' => 'CB650R', 'price' => 24999.00, 'stock' => 2, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-MOTO-003', 'category' => 'MOTOS', 'brand' => 'Kawasaki', 'model' => 'Ninja 400', 'price' => 21999.00, 'stock' => 0, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-MOTO-004', 'category' => 'MOTOS', 'brand' => 'Bajaj', 'model' => 'Pulsar NS200', 'price' => 12999.00, 'stock' => 5, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-MOTO-005', 'category' => 'MOTOS', 'brand' => 'KTM', 'model' => '390 Duke', 'price' => 19999.00, 'stock' => 1, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-MOTO-001', 'description' => 'Yamaha YZF-R3 2024. Deportiva ligera ideal para ciudad y pista, motor bicilíndrico 321 cc.', 'category' => 'MOTOS', 'brand' => 'Yamaha', 'model' => 'YZF-R3', 'price' => 18999.00, 'stock' => 3, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-MOTO-002', 'description' => 'Honda CB650R naked streetfighter. Cuatro cilindros, 649 cc, acabado premium y manejo ágil.', 'category' => 'MOTOS', 'brand' => 'Honda', 'model' => 'CB650R', 'price' => 24999.00, 'stock' => 2, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-MOTO-003', 'description' => 'Kawasaki Ninja 400. Carenado deportivo, ideal para iniciarse en motos de alta cilindrada.', 'category' => 'MOTOS', 'brand' => 'Kawasaki', 'model' => 'Ninja 400', 'price' => 21999.00, 'stock' => 0, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-MOTO-004', 'description' => 'Bajaj Pulsar NS200. Urbana versátil con excelente relación potencia-consumo.', 'category' => 'MOTOS', 'brand' => 'Bajaj', 'model' => 'Pulsar NS200', 'price' => 12999.00, 'stock' => 5, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-MOTO-005', 'description' => 'KTM 390 Duke. Naked ágil con tecnología ABS y pantalla TFT a color.', 'category' => 'MOTOS', 'brand' => 'KTM', 'model' => '390 Duke', 'price' => 19999.00, 'stock' => 1, 'status' => ProductStatus::Active],
 
             // Accesorios
-            ['sku' => 'MW-ACC-001', 'category' => 'Accesorios', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 459.90, 'stock' => 25, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-ACC-002', 'category' => 'Accesorios', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 89.90, 'stock' => 40, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-ACC-003', 'category' => 'Accesorios', 'brand' => 'Yamaha', 'model' => 'YZF-R3', 'price' => 320.00, 'stock' => 12, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-ACC-004', 'category' => 'Accesorios', 'brand' => 'Honda', 'model' => 'PCX 160', 'price' => 275.50, 'stock' => 0, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-ACC-001', 'description' => 'Casco integral certificado DOT/ECE. Visera anti-rayas y ventilación superior.', 'category' => 'Accesorios', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 459.90, 'stock' => 25, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-ACC-002', 'description' => 'Guantes de verano con protección en nudillos y palma reforzada.', 'category' => 'Accesorios', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 89.90, 'stock' => 40, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-ACC-003', 'description' => 'Chaquetas textil compatible con Yamaha YZF-R3. Incluye protecciones CE en hombros y codos.', 'category' => 'Accesorios', 'brand' => 'Yamaha', 'model' => 'YZF-R3', 'price' => 320.00, 'stock'  => 12, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-ACC-004', 'description' => 'Baúl trasero 35 L para Honda PCX 160. Incluye soporte y kit de montaje.', 'category' => 'Accesorios', 'brand' => 'Honda', 'model' => 'PCX 160', 'price' => 275.50, 'stock' => 0, 'status' => ProductStatus::Active],
 
             // Repuestos
-            ['sku' => 'MW-REP-001', 'category' => 'Repuestos', 'brand' => 'Yamaha', 'model' => 'MT-07', 'price' => 45.00, 'stock' => 30, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-REP-002', 'category' => 'Repuestos', 'brand' => 'Honda', 'model' => 'XR190L', 'price' => 38.50, 'stock' => 18, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-REP-003', 'category' => 'Repuestos', 'brand' => 'Suzuki', 'model' => 'GN125', 'price' => 22.00, 'stock' => 50, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-REP-004', 'category' => 'Repuestos', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 15.00, 'stock' => 0, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-REP-001', 'description' => 'Filtro de aceite original compatible con Yamaha MT-07.', 'category' => 'Repuestos', 'brand' => 'Yamaha', 'model' => 'MT-07', 'price' => 45.00, 'stock' => 30, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-REP-002', 'description' => 'Kit de pastillas de freno delanteras para Honda XR190L.', 'category' => 'Repuestos', 'brand' => 'Honda', 'model' => 'XR190L', 'price' => 38.50, 'stock' => 18, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-REP-003', 'description' => 'Kit de cadena y piñones 428 para Suzuki GN125.', 'category' => 'Repuestos', 'brand' => 'Suzuki', 'model' => 'GN125', 'price' => 22.00, 'stock' => 50, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-REP-004', 'description' => 'Bujía NGK estándar compatible con motos de baja cilindrada.', 'category' => 'Repuestos', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 15.00, 'stock' => 0, 'status' => ProductStatus::Active],
 
             // Baterías
-            ['sku' => 'MW-BAT-001', 'category' => 'Baterías', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 120.00, 'stock' => 15, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-BAT-002', 'category' => 'Baterías', 'brand' => 'Yamaha', 'model' => 'NMAX 155', 'price' => 145.00, 'stock' => 8, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-BAT-003', 'category' => 'Baterías', 'brand' => 'Honda', 'model' => 'CBR500R', 'price' => 155.00, 'stock' => 6, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-BAT-001', 'description' => 'Batería sellada 12 V 5 Ah. Uso universal para scooters y motos ligeras.', 'category' => 'Baterías', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 120.00, 'stock' => 15, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-BAT-002', 'description' => 'Batería de gel compatible con Yamaha NMAX 155.', 'category' => 'Baterías', 'brand' => 'Yamaha', 'model' => 'NMAX 155', 'price' => 145.00, 'stock' => 8, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-BAT-003', 'description' => 'Batería de alto rendimiento para Honda CBR500R.', 'category' => 'Baterías', 'brand' => 'Honda', 'model' => 'CBR500R', 'price' => 155.00, 'stock' => 6, 'status' => ProductStatus::Active],
 
             // Lubricantes
-            ['sku' => 'MW-LUB-001', 'category' => 'Lubricantes', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 55.00, 'stock' => 60, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-LUB-002', 'category' => 'Lubricantes', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 32.00, 'stock' => 45, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-LUB-001', 'description' => 'Aceite sintético 10W-40 1 L. Formulación para motores 4T de alto rendimiento.', 'category' => 'Lubricantes', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 55.00, 'stock' => 60, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-LUB-002', 'description' => 'Lubricante de cadena en aerosol 400 ml. Resistente al agua y polvo.', 'category' => 'Lubricantes', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 32.00, 'stock' => 45, 'status' => ProductStatus::Active],
 
             // Neumáticos
-            ['sku' => 'MW-NEU-001', 'category' => 'Neumáticos', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 280.00, 'stock' => 10, 'status' => ProductStatus::Active],
-            ['sku' => 'MW-NEU-002', 'category' => 'Neumáticos', 'brand' => 'BMW Motorrad', 'model' => 'F 850 GS', 'price' => 410.00, 'stock' => 4, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-NEU-001', 'description' => 'Neumático trasero 120/70-17. Compuesto mixto para uso urbano y carretera.', 'category' => 'Neumáticos', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 280.00, 'stock' => 10, 'status' => ProductStatus::Active],
+            ['sku' => 'MW-NEU-002', 'description' => 'Neumático trail 110/80-19 compatible con BMW F 850 GS.', 'category' => 'Neumáticos', 'brand' => 'BMW Motorrad', 'model' => 'F 850 GS', 'price' => 410.00, 'stock' => 4, 'status' => ProductStatus::Active],
 
             // Producto pendiente (no aparece en catálogo público)
-            ['sku' => 'MW-ACC-999', 'category' => 'Accesorios', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 99.00, 'stock' => 5, 'status' => ProductStatus::Pending],
+            ['sku' => 'MW-ACC-999', 'description' => 'Porta celular magnético para manillar. Próximamente disponible.', 'category' => 'Accesorios', 'brand' => 'Universal', 'model' => 'Genérico', 'price' => 99.00, 'stock' => 5, 'status' => ProductStatus::Pending],
         ];
 
         foreach ($products as $data) {
@@ -167,6 +167,7 @@ class CatalogSeeder extends Seeder
             $product = Product::query()->updateOrCreate(
                 ['sku' => $data['sku']],
                 [
+                    'description' => $data['description'],
                     'price_amount' => $data['price'],
                     'currency' => 'PEN',
                     'status' => $data['status'],

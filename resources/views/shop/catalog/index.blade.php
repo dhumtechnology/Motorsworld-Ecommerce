@@ -22,6 +22,9 @@
     Relaciones cargadas en cada producto:
     - category, vehicleModel.brand, inventory
 
+    Atributos directos en cada producto:
+    - sku, description, price_amount, currency, image
+
     Helpers útiles en Product:
     - $product->hasAvailableStock() : bool
 --}}
@@ -41,8 +44,16 @@
     {{-- Valores activos: $filters --}}
 
     @forelse ($products as $product)
-        {{-- $product->sku, price_amount, currency, image, category, vehicleModel, inventory --}}
-        {{-- $product->hasAvailableStock() --}}
+        <article>
+            <h2>
+                <a href="{{ route('shop.product.show', $product) }}">{{ $product->sku }}</a>
+            </h2>
+            @if ($product->description)
+                <p>{{ $product->description }}</p>
+            @endif
+            {{-- price_amount, currency, image, category, vehicleModel, inventory --}}
+            {{-- $product->hasAvailableStock() --}}
+        </article>
     @empty
         {{-- Sin productos --}}
     @endforelse
