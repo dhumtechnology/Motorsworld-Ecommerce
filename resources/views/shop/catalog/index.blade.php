@@ -59,6 +59,5 @@
     @endforelse
 
     {{-- Paginación: $products->links() --}}
-    <h1>Catalogo de productos</h1>
 </body>
 </html>
