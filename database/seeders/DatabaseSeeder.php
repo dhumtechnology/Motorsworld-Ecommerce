@@ -6,6 +6,7 @@ use App\Enums\Auth\UserStatus;
 use App\Models\Auth\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,18 +17,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleAndPermissionSeeder::class);
-
-        $admin = User::factory()->create([
-            'email' => 'admin@motosworld.test',
-            'status' => UserStatus::Active,
+        $this->call([
+            RoleAndPermissionSeeder::class,
+            CatalogSeeder::class,
         ]);
 
+        $admin = User::query()->updateOrCreate(
+            ['email' => 'admin@motosworld.test'],
+            [
+                'password_hash' => Hash::make('password'),
+                'status' => UserStatus::Active,
+                'email_verified_at' => now(),
+            ],
+        );
         $admin->assignRole('Administrator');
 
-        User::factory()->create([
-            'email' => 'test@example.com',
-            'status' => UserStatus::Active,
-        ])->assignRole('Customer');
+        $customer = User::query()->updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'password_hash' => Hash::make('password'),
+                'status' => UserStatus::Active,
+                'email_verified_at' => now(),
+            ],
+        );
+        $customer->assignRole('Customer');
     }
 }

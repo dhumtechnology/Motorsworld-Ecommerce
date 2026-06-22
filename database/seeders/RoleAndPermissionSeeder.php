@@ -14,30 +14,39 @@ class RoleAndPermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = collect([
-            ['name' => 'View Admin Panel', 'description' => 'Access the admin dashboard'],
-            ['name' => 'Manage Users', 'description' => 'Create, update and delete users'],
-            ['name' => 'Manage Roles', 'description' => 'Assign roles and permissions'],
-            ['name' => 'Manage Products', 'description' => 'Manage catalog products'],
-            ['name' => 'Manage Orders', 'description' => 'Manage customer orders'],
-            ['name' => 'Place Orders', 'description' => 'Place orders in the shop'],
+            ['name' => 'View Admin Panel', 'slug' => 'admin.view', 'description' => 'Access the admin dashboard'],
+            ['name' => 'Manage Users', 'slug' => 'users.manage', 'description' => 'Create, update and delete users'],
+            ['name' => 'Manage Roles', 'slug' => 'roles.manage', 'description' => 'Assign roles and permissions'],
+            ['name' => 'Manage Products', 'slug' => 'products.manage', 'description' => 'Manage catalog products'],
+            ['name' => 'Manage Orders', 'slug' => 'orders.manage', 'description' => 'Manage customer orders'],
+            ['name' => 'Place Orders', 'slug' => 'orders.place', 'description' => 'Place orders in the shop'],
         ])->map(fn (array $data) => Permission::query()->updateOrCreate(
-            ['name' => $data['name']],
+            ['slug' => $data['slug']],
             $data,
         ));
 
         $admin = Role::query()->updateOrCreate(
-            ['name' => 'Administrator'],
-            ['description' => 'Full access to the admin panel and system management'],
+            ['slug' => 'administrator'],
+            [
+                'name' => 'Administrator',
+                'description' => 'Full access to the admin panel and system management',
+            ],
         );
 
         $staff = Role::query()->updateOrCreate(
-            ['name' => 'Staff'],
-            ['description' => 'Manages products and orders'],
+            ['slug' => 'staff'],
+            [
+                'name' => 'Staff',
+                'description' => 'Manages products and orders',
+            ],
         );
 
         $customer = Role::query()->updateOrCreate(
-            ['name' => 'Customer'],
-            ['description' => 'Shop customer with access to the storefront'],
+            ['slug' => 'customer'],
+            [
+                'name' => 'Customer',
+                'description' => 'Shop customer with access to the storefront',
+            ],
         );
 
         $admin->syncPermissions($permissions->pluck('name')->all());

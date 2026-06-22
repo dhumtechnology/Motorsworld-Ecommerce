@@ -35,4 +35,9 @@ if ! php artisan migrate --force --no-interaction; then
     echo "Advertencia: no se pudieron aplicar todas las migraciones. Revise con: php artisan migrate:status"
 fi
 
+echo "Ejecutando seeders (upsert)..."
+if ! php artisan db:seed --force --no-interaction; then
+    echo "Advertencia: no se pudieron ejecutar los seeders. Revise los logs de la aplicación."
+fi
+
 exec docker-php-entrypoint "$@"
