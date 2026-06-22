@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Shop\CatalogController;
+use App\Http\Controllers\Shop\ProductController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,3 +18,5 @@ Route::get('/tienda', function () {
 })->name('home');
 
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
+
+Route::get('/producto/{product}', [ProductController::class, 'show'])->name('product.show');
