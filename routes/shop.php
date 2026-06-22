@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Shop\CatalogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,3 +15,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/tienda', function () {
     return response('Tienda E-Commerce — pendiente de implementación', 200);
 })->name('home');
+
+Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');

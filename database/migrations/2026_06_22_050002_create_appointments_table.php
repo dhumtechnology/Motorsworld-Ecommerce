@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->timestamp('appointment_at');
-            $table->foreignId('vehicle_model_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('vehicle_model_id')->nullable()->constrained('models')->nullOnDelete();
             $table->decimal('km', 10, 2)->nullable();
             $table->string('plate')->nullable();
             $table->foreignId('service_type_id')->constrained()->restrictOnDelete();

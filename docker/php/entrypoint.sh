@@ -2,6 +2,7 @@
 set -e
 
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 export TMPDIR=/var/www/html/storage/framework/cache
@@ -30,6 +31,8 @@ until php artisan db:show >/dev/null 2>&1; do
 done
 
 echo "Aplicando migraciones pendientes..."
-php artisan migrate --force --no-interaction
+if ! php artisan migrate --force --no-interaction; then
+    echo "Advertencia: no se pudieron aplicar todas las migraciones. Revise con: php artisan migrate:status"
+fi
 
 exec docker-php-entrypoint "$@"
