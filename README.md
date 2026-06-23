@@ -125,6 +125,37 @@ docker compose down
 docker compose down -v
 ```
 
+### Problemas frecuentes (`/catalogo` lento, 500 o 504)
+
+**500 — error de vista o rutas en Blade**
+
+Revisa que exista `resources/views/layouts/shop.blade.php` y que use `route('shop.catalog')`, no `shop.catalog.index`.
+
+```bash
+docker compose exec app php artisan view:clear
+docker compose exec app php artisan config:clear
+docker compose exec app tail -20 storage/logs/laravel.log
+```
+
+**504 — Gateway Time-out**
+
+Suele ocurrir en Windows cuando PHP tarda más de lo que Nginx espera (BD mal configurada, contenedor lento o primera compilación de vistas). Verifica `.env`:
+
+```env
+DB_HOST=mysql
+DB_PORT=3306
+DB_PORT_EXTERNAL=3307   # solo puerto en tu PC
+```
+
+**Lentitud general en Docker Desktop (Windows/Mac)**
+
+- Usa `SESSION_DRIVER=file` y `CACHE_STORE=file` en `.env` (ver `.env.example`).
+- Reconstruye contenedores tras cambios en `docker/php/php.ini` (OPcache):
+
+```bash
+docker compose up -d --build
+```
+
 ## Levantar el proyecto localmente (sin Docker)
 
 ### 1. Clonar e instalar dependencias

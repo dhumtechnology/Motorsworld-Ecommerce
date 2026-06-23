@@ -22,6 +22,7 @@ export DB_HOST=mysql
 export DB_PORT=3306
 
 php artisan config:clear >/dev/null 2>&1 || true
+php artisan view:clear >/dev/null 2>&1 || true
 
 echo "Esperando conexión a la base de datos (mysql:3306)..."
 max_retries=30

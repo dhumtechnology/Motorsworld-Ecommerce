@@ -18,6 +18,10 @@ class CatalogController extends Controller
 
     private const PER_PAGE = 12;
 
+    private ?int $motosCategoryId = null;
+
+    private bool $motosCategoryIdResolved = false;
+
     public function index(CatalogIndexRequest $request): View
     {
         $section = $request->section();
@@ -124,9 +128,16 @@ class CatalogController extends Controller
 
     private function motosCategoryId(): ?int
     {
-        return Category::query()
+        if ($this->motosCategoryIdResolved) {
+            return $this->motosCategoryId;
+        }
+
+        $this->motosCategoryIdResolved = true;
+        $this->motosCategoryId = Category::query()
             ->whereRaw('UPPER(name) = ?', [self::MOTOS_CATEGORY])
             ->value('id');
+
+        return $this->motosCategoryId;
     }
 
     /**
