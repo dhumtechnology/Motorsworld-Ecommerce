@@ -1,4 +1,16 @@
 services:
+  node:
+    image: node:22-alpine
+    container_name: motosworld_node
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - node_modules:/var/www/html/node_modules
+    networks:
+      - motosworld
+    command: sh docker/node/build-assets.sh
+    restart: "no"
+
   app:
     build:
       context: .
@@ -13,6 +25,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      node:
+        condition: service_completed_successfully
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -63,4 +77,6 @@ networks:
 
 volumes:
   mysql_data:
+    driver: local
+  node_modules:
     driver: local

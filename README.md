@@ -11,6 +11,8 @@ Incluye arquitectura Docker lista para desarrollo y despliegue local.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) 4.x o superior
 - Docker Compose v2
 
+No necesitas Node.js instalado en tu PC: los assets (Vite + Tailwind) se compilan automáticamente en el contenedor `node`.
+
 ### Sin Docker (desarrollo local)
 
 - PHP 8.4 o superior
@@ -73,11 +75,20 @@ Las variables por defecto ya están configuradas para Docker:
 docker compose up -d --build
 ```
 
-Esto levanta tres servicios:
+Esto levanta cuatro servicios (en orden):
 
-- **app** — PHP 8.4-FPM con Composer
-- **nginx** — Servidor web (puerto 8080)
-- **mysql** — MySQL 8.0 (puerto externo 3307 por defecto, evita conflicto con MySQL local)
+1. **node** — compila assets con Vite/Tailwind (`npm ci` + `npm run build`) y termina
+2. **mysql** — MySQL 8.0 (puerto externo configurable con `DB_PORT_EXTERNAL`)
+3. **app** — PHP 8.4-FPM (migrate + seed en el entrypoint)
+4. **nginx** — servidor web (puerto `APP_PORT`, default 8080)
+
+La primera vez puede tardar varios minutos mientras `node` instala dependencias npm.
+
+**Recompilar assets** tras cambiar CSS/JS:
+
+```bash
+docker compose run --rm -e FORCE_ASSET_BUILD=true node
+```
 
 ### 4. Generar clave de aplicación
 
