@@ -11,6 +11,8 @@ use App\Models\Products\Product;
 use App\Models\Products\VehicleModel;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CatalogController extends Controller
 {
@@ -18,33 +20,120 @@ class CatalogController extends Controller
 
     private const PER_PAGE = 12;
 
+    private const LOG_CHANNEL = 'catalog';
+
     private ?int $motosCategoryId = null;
 
     private bool $motosCategoryIdResolved = false;
 
     public function index(CatalogIndexRequest $request): View
     {
-        $section = $request->section();
+        $startedAt = microtime(true);
+        $context = $this->requestContext($request);
 
-        $products = $this->buildCatalogQuery($request, $section)
-            ->paginate(self::PER_PAGE)
-            ->withQueryString();
+        Log::channel(self::LOG_CHANNEL)->info('Catalog request received', $context);
 
-        return view('shop.catalog.index', [
-            'products' => $products,
-            'section' => $section,
-            'filters' => [
-                'category' => $request->categoryId(),
-                'brand' => $request->brandId(),
-                'model' => $request->modelId(),
-                'search' => $request->searchTerm(),
-            ],
-            'filterOptions' => [
+        try {
+            $section = $request->section();
+            $motosCategoryId = $this->motosCategoryId();
+
+            if ($motosCategoryId === null) {
+                Log::channel(self::LOG_CHANNEL)->warning('MOTOS category missing in database', [
+                    'expected_name' => self::MOTOS_CATEGORY,
+                    'section' => $section,
+                ]);
+            }
+
+            if ($this->hasIncompatibleCategoryFilter($request, $section, $motosCategoryId)) {
+                Log::channel(self::LOG_CHANNEL)->notice('Category filter incompatible with section', [
+                    'section' => $section,
+                    'category_id' => $request->categoryId(),
+                    'motos_category_id' => $motosCategoryId,
+                ]);
+            }
+
+            $products = $this->buildCatalogQuery($request, $section)
+                ->paginate(self::PER_PAGE)
+                ->withQueryString();
+
+            $filterOptions = [
                 'categories' => $this->categoryOptions($section),
                 'brands' => $this->brandOptions($section),
                 'models' => $this->modelOptions($section, $request->brandId()),
-            ],
-        ]);
+            ];
+
+            Log::channel(self::LOG_CHANNEL)->info('Catalog request completed', [
+                ...$context,
+                'total_products' => $products->total(),
+                'current_page' => $products->currentPage(),
+                'filter_options_count' => [
+                    'categories' => $filterOptions['categories']->count(),
+                    'brands' => $filterOptions['brands']->count(),
+                    'models' => $filterOptions['models']->count(),
+                ],
+                'duration_ms' => $this->elapsedMs($startedAt),
+            ]);
+
+            return view('shop.catalog.index', [
+                'products' => $products,
+                'section' => $section,
+                'filters' => [
+                    'category' => $request->categoryId(),
+                    'brand' => $request->brandId(),
+                    'model' => $request->modelId(),
+                    'search' => $request->searchTerm(),
+                ],
+                'filterOptions' => $filterOptions,
+            ]);
+        } catch (Throwable $exception) {
+            Log::channel(self::LOG_CHANNEL)->error('Catalog request failed', [
+                ...$context,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'duration_ms' => $this->elapsedMs($startedAt),
+            ]);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function requestContext(CatalogIndexRequest $request): array
+    {
+        return [
+            'section' => $request->section(),
+            'category_id' => $request->categoryId(),
+            'brand_id' => $request->brandId(),
+            'model_id' => $request->modelId(),
+            'search' => $request->searchTerm(),
+            'page' => (int) $request->input('page', 1),
+            'ip' => $request->ip(),
+            'user_id' => $request->user()?->id,
+        ];
+    }
+
+    private function hasIncompatibleCategoryFilter(
+        CatalogIndexRequest $request,
+        string $section,
+        ?int $motosCategoryId,
+    ): bool {
+        $categoryId = $request->categoryId();
+
+        if ($categoryId === null || $motosCategoryId === null) {
+            return false;
+        }
+
+        return ($section === 'motos' && $categoryId !== $motosCategoryId)
+            || ($section === 'accesorios' && $categoryId === $motosCategoryId);
+    }
+
+    private function elapsedMs(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 
     /**
