@@ -5,24 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
-<body>
-    <header>
-        <nav style="display: flex; justify-content: space-between; align-items: center; background-color: #f0f0f0; padding: 10px;">
-            <a href="{{ route('home') }}">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" style="width: 100px; height: 100px;">
-            </a>
-            <ul style="display: flex; gap: 10px;">
-                <li>
-                    <a href="{{ route('shop.home') }}">Tienda</a>
-                </li>
-                <li>
-                    <a href="{{ route('shop.catalog') }}">Catálogo</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        @yield('content')
-    </main>
-</body>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="{{ route('shop.catalog') }}">
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <x-dropdown title="HOME">
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            Desarrollo Web
+                        </a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            Aplicaciones Móviles
+                        </a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            Consultoría
+                        </a>
+                    </x-dropdown>
+                    
+                    <li><a href="{{ route('shop.catalog', ['section' => 'motos']) }}">SERVICIOS</a></li>
+                    <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}">TIENDA</a></li>
+                    <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}">NOSOTROS</a></li>
+                    <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}">CONTÁCTANOS</a></li>
+                </ul>
+            </nav>
+
+        </header>
+        
+        <main>
+            @yield('content')
+        </main>
+
+        <footer>
+            @yield('footer')
+        </footer>
+    </body>
 </html>

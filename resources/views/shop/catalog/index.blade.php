@@ -65,5 +65,5 @@
 @extends('layouts.shop')
 
 @section('content')
-    <h1>Catalogo de productos</h1>
+    <h1>Catálogo de productos</h1>
 @endsection
