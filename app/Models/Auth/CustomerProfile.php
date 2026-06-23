@@ -3,7 +3,9 @@
 namespace App\Models\Auth;
 
 use App\Models\Orders\Address;
+use Database\Factories\CustomerProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,11 +22,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class CustomerProfile extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<CustomerProfileFactory> */
+    use HasFactory, SoftDeletes;
+
+    public $timestamps = false;
 
     public $incrementing = false;
 
     protected $primaryKey = 'user_id';
+
+    protected static function newFactory(): CustomerProfileFactory
+    {
+        return CustomerProfileFactory::new();
+    }
 
     /**
      * @return BelongsTo<User, $this>

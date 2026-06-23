@@ -29,6 +29,11 @@ class User extends Authenticatable
 
     public ?Token $accessToken = null;
 
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
+    }
+
     public function getAuthPasswordName(): string
     {
         return 'password_hash';
