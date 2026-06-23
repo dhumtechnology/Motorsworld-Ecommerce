@@ -1,4 +1,4 @@
-{{--
+<!-- {{--
     Catálogo de productos — plantilla base para el equipo frontend.
 
     Variables disponibles:
@@ -60,4 +60,10 @@
 
     {{-- Paginación: $products->links() --}}
 </body>
-</html>
+</html> -->
+
+@extends('layouts.shop')
+
+@section('content')
+    <h1>Catálogo de productos</h1>
+@endsection
