@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/up', function () {
@@ -9,3 +10,5 @@ Route::get('/up', function () {
 Route::get('/', function () {
     return response('Motosworld E-Commerce — en construcción', 200);
 })->name('home');
+
+Route::post('/login', [LoginController::class, 'store'])->name('login');

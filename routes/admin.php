@@ -15,5 +15,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return response('Panel administrativo — pendiente de implementación', 200);
+    return view('admin.dashboard.index');
 })->name('dashboard');
