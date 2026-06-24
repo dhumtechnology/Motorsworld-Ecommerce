@@ -90,19 +90,9 @@ La primera vez puede tardar varios minutos mientras `node` instala dependencias 
 docker compose run --rm -e FORCE_ASSET_BUILD=true node
 ```
 
-### 4. Generar clave de aplicación
+> **Nota:** El entrypoint genera `APP_KEY` automáticamente si falta en `.env`. Solo ejecuta `cp .env.example .env` antes del primer `docker compose up`.
 
-```bash
-docker compose exec app php artisan key:generate
-```
-
-### 5. Ejecutar migraciones
-
-```bash
-docker compose exec app php artisan migrate
-```
-
-### 6. Verificar la aplicación
+### 4. Verificar la aplicación
 
 Abre en el navegador:
 

@@ -70,15 +70,30 @@ class CatalogIndexRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'section' => $this->filled('section') ? strtolower(trim((string) $this->input('section'))) : null,
-            'search' => $this->filled('search') ? trim((string) $this->input('search')) : null,
-        ]);
+        $normalized = [];
+
+        if ($this->has('section')) {
+            $section = strtolower(trim((string) $this->input('section')));
+
+            $normalized['section'] = $section !== '' ? $section : null;
+        }
+
+        if ($this->has('search')) {
+            $search = trim((string) $this->input('search'));
+
+            $normalized['search'] = $search !== '' ? $search : null;
+        }
+
+        if ($normalized !== []) {
+            $this->merge($normalized);
+        }
     }
 
     public function section(): string
     {
-        return $this->input('section', 'accesorios');
+        $section = $this->input('section');
+
+        return in_array($section, ['motos', 'accesorios'], true) ? $section : 'accesorios';
     }
 
     public function categoryId(): ?int

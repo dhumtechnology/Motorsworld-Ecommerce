@@ -14,7 +14,11 @@ fi
 
 if [ ! -f ".env" ]; then
     cp .env.example .env
-    php artisan key:generate --ansi
+fi
+
+if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
+    echo "Generando APP_KEY..."
+    php artisan key:generate --force --ansi
 fi
 
 # Conexión interna Docker: siempre mysql:3306 (DB_PORT_EXTERNAL solo mapea el host).
