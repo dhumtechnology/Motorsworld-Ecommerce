@@ -5,7 +5,7 @@
     <button
         @click="open = !open"
         @click.away="open = false"
-        class="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 transition"
+        class="flex items-center gap-2 px-3 py-2 text-white hover:text-blue-600 transition"
     >
         <span>{{ $title }}</span>
 
