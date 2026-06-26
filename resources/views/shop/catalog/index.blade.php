@@ -125,16 +125,23 @@
 
                 <x-filters
                     title="CATEGORÍAS"
-                    name="category"
+                    name="categories"
                     :options="$filterOptions['categories']"
-                    :selected="$filters['category']" {{-- Tu controlador ya maneja arrays o strings aquí --}}
+                    :selected="$filters['categories'] ?? []"
                 />
 
                 <x-filters
                     title="MARCAS"
-                    name="brand"
+                    name="brands"
                     :options="$filterOptions['brands']"
-                    :selected="$filters['brand']"
+                    :selected="$filters['brands'] ?? []"
+                />
+
+                <x-filters
+                    title="MODELOS"
+                    name="models"
+                    :options="$filterOptions['models']"
+                    :selected="$filters['models'] ?? []"
                 />
 
                 <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white">
@@ -143,7 +150,12 @@
                     </h3>
                     
                     {{-- Botón inteligente de Limpieza Total --}}
-                    @if(request('category') || request('brand') || request('search') || request('model'))
+                    @if(
+                        ($filters['categories'] ?? []) !== []
+                        || ($filters['brands'] ?? []) !== []
+                        || ($filters['models'] ?? []) !== []
+                        || filled($filters['search'] ?? null)
+                    )
                         <a href="{{ url()->current() }}{{ request('section') ? '?section='.request('section') : '' }}" 
                         class="inline-block mt-2 text-xs font-bold text-orange-500 hover:text-orange-600 uppercase tracking-widest transition-colors">
                             ✕ Limpiar Filtros
