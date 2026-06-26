@@ -89,7 +89,7 @@
         </div>
     </header>
 
-    <main class="mx-auto max-w-7xl px-4 py-8">
+    <main class="bg-[#252525]">
         @yield('content')
     </main>
 

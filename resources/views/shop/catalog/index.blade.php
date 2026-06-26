@@ -52,9 +52,9 @@
 
 @section('content')
     <h1>Catálogo de productos</h1>
-    <div class="bg-[#151515] min-h-screen py-12 px-4 md:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse ($products as $product)
+    <div class="bg-[#151515] min-h-screen py-12 px-4 md:px-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
+           @forelse ($products as $product)
                 <!-- <article>
                     <h2>
                         <a href="{{ route('shop.product.show', $product) }}">{{ $product->sku }}</a>
@@ -78,15 +78,43 @@
                 {{-- Sin productos --}}
             @endforelse
         </div>
-        <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white sticky top-4">
+
+        <div class="lg:col-span-3 flex flex-col gap-6 sticky top-4 h-fit">
+            
+            <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white">
+                <h3 class="font-sans font-black tracking-wider uppercase text-xl mb-4 antialiased">
+                    BÚSQUEDA
+                </h3>
+                <input type="text" placeholder="Buscar..." 
+                    class="w-full px-4 py-2.5 bg-[#151515] text-gray-300 rounded border border-neutral-700 placeholder-neutral-500 focus:outline-none focus:border-orange-600 transition-colors text-sm">
+            </div>
+
             <x-filters
                 title="CATEGORÍAS"
                 :options="[
-                    1 => 'Categoría 1',
-                    2 => 'Categoría 2',
-                    3 => 'Categoría 3',
+                    1 => 'Tires & Wheels',
+                    2 => 'Tires & Wheels',
+                    3 => 'Tires & Wheels',
+                    4 => 'Tires & Wheels',
+                    5 => 'Tires & Wheels',
+                    6 => 'Tires & Wheels',
                 ]"
             />
+
+            <x-filters
+                title="MARCAS"
+                :options="[
+                    1 => 'Tires & Wheels',
+                    2 => 'Tires & Wheels',
+                    3 => 'Tires & Wheels',
+                ]"
+            />
+
+            <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white">
+                <h3 class="font-sans font-black tracking-wider uppercase text-xl antialiased">
+                    FILTRAR POR PRECIO
+                </h3>
+            </div>
         </div>
     </div>
 @endsection
