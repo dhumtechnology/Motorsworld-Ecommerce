@@ -43,21 +43,7 @@
     {{-- Filtros: $filterOptions['categories'], $filterOptions['brands'], $filterOptions['models'] --}}
     {{-- Valores activos: $filters --}}
 
-    @forelse ($products as $product)
-        <article>
-            <h2>
-                <a href="{{ route('shop.product.show', $product) }}">{{ $product->sku }}</a>
-            </h2>
-            @if ($product->description)
-                <p>{{ $product->description }}</p>
-            @endif
-            {{-- price_amount, currency, image, category, vehicleModel, inventory --}}
-            {{-- $product->hasAvailableStock() --}}
-        </article>
-    @empty
-        {{-- Sin productos --}}
-    @endforelse
-
+    
     {{-- Paginación: $products->links() --}}
 </body>
 </html> -->
@@ -66,4 +52,41 @@
 
 @section('content')
     <h1>Catálogo de productos</h1>
+    <div class="bg-[#151515] min-h-screen py-12 px-4 md:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @forelse ($products as $product)
+                <!-- <article>
+                    <h2>
+                        <a href="{{ route('shop.product.show', $product) }}">{{ $product->sku }}</a>
+                    </h2>
+                    @if ($product->description)
+                        <p>{{ $product->description }}</p>
+                    @endif
+                    {{-- price_amount, currency, image, category, vehicleModel, inventory --}}
+                    {{-- $product->hasAvailableStock() --}}
+                </article> -->
+                <x-card
+                    title="Producto de ejemplo"
+                    category="Categoría de ejemplo"
+                    price="100"
+                    oldPrice="150"
+                    image="https://images.ctfassets.net/8zlbnewncp6f/2fH3mKeHaSrfHQlEsm2xxt/c9c0202dc9333bd05422552a3a14e34b/Galeria2_Galgo_Chile.jpg?w=600&fm=webp&q=90"
+                    isSale="true"
+                    href="#"
+                /> 
+            @empty
+                {{-- Sin productos --}}
+            @endforelse
+        </div>
+        <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white sticky top-4">
+            <x-filters
+                title="CATEGORÍAS"
+                :options="[
+                    1 => 'Categoría 1',
+                    2 => 'Categoría 2',
+                    3 => 'Categoría 3',
+                ]"
+            />
+        </div>
+    </div>
 @endsection

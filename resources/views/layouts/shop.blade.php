@@ -93,14 +93,15 @@
         @yield('content')
     </main>
 
-    <footer class="text-white py-12 px-4 md:px-12 bg-[#252525]">
-        <div mx-auto grid grid-cols-1 md:grid-cols-5 gap-8 max-w-[95%]>
-            <div class="flex flex-col gap-4 ">
-                <x-logo href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" />
-                <p class="text-gray-300 text-sm">
+    <footer class="text-white py-14 bg-[#1e1e1e]">
+        <div class="mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 max-w-[95%] px-4 md:px-8">
+            
+            <div class="flex flex-col gap-3 md:col-span-3">
+                <x-logo href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" size="lg" />
+                <p class="text-gray-400 text-xs leading-relaxed max-w-xs font-medium">
                     Motos, repuestos, accesorios, servicio de mantenimiento y reparación para tu moto, todo en un solo lugar.  
                 </p>    
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 text-white font-bold mt-1 text-xs">
                     <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g clip-path="url(#clip0_76_362)">
                         <path d="M24.2866 17.6656L18.8179 15.3218C18.5843 15.2223 18.3246 15.2013 18.078 15.262C17.8315 15.3228 17.6113 15.462 17.4507 15.6587L15.0288 18.6177C11.2279 16.8256 8.16904 13.7668 6.37695 9.96587L9.33594 7.54399C9.53305 7.38368 9.67256 7.16351 9.73335 6.91682C9.79414 6.67013 9.7729 6.41035 9.67285 6.1768L7.3291 0.708053C7.21929 0.4563 7.02508 0.250751 6.77996 0.126852C6.53483 0.00295173 6.25416 -0.0315334 5.98633 0.0293424L0.908203 1.20122C0.649985 1.26085 0.419602 1.40624 0.254656 1.61366C0.0897096 1.82109 -5.94829e-05 2.07829 2.95713e-08 2.34331C2.95713e-08 14.8677 10.1514 24.9996 22.6562 24.9996C22.9213 24.9997 23.1787 24.91 23.3862 24.7451C23.5937 24.5801 23.7392 24.3497 23.7988 24.0914L24.9707 19.0132C25.0312 18.7441 24.996 18.4623 24.8711 18.2163C24.7463 17.9704 24.5396 17.7756 24.2866 17.6656Z" fill="#EDEDED"/>
@@ -111,19 +112,23 @@
                         </clipPath>
                         </defs>
                     </svg>
-                    <p>+51920883723</p>
+                    <span class="tracking-wider">+51 920-883-723</span>
                 </div>
             </div>    
-            <div class="flex gap-4 ">   
+
+            <div class="md:col-span-2">
                 <x-footer-column 
-                        title="CONÓCENOS" 
-                        :links="[
-                            'NOSOTROS' => '#',
-                            'NUESTRO TRABAJO' => '#',
-                            'POLÍTICAS DE CALIDAD' => '#',
-                            'CONTÁCTANOS' => '#'
-                        ]" 
+                    title="CONÓCENOS" 
+                    :links="[
+                        'NOSOTROS' => '#',
+                        'NUESTRO TRABAJO' => '#',
+                        'POLÍTICAS DE CALIDAD' => '#',
+                        'CONTÁCTANOS' => '#'
+                    ]" 
                 />
+            </div>
+
+            <div class="md:col-span-2">
                 <x-footer-column 
                     title="NUESTROS SERVICIOS" 
                     :links="[
@@ -133,6 +138,9 @@
                         'ASESORÍAS' => '#'
                     ]" 
                 />
+            </div>
+
+            <div class="md:col-span-2">
                 <x-footer-column 
                     title="NUESTROS PRODUCTOS" 
                     :links="[
@@ -142,25 +150,27 @@
                         'NEUMÁTICOS' => '#'
                     ]" 
                 />
-                <div class="flex flex-col gap-4">
-                    <h3 class="text-white font-bold tracking-wider uppercase text-lg font-sans">
-                        SUSCRÍBETE
-                    </h3>
-                    
-                    <form action="#" method="POST" class="flex flex-col gap-4">
-                        <div class="flex flex-col gap-2">
-                            <label class="text-gray-300 text-xs font-semibold tracking-wider">TU E-MAIL</label>
-                            <input type="email" name="email" placeholder="Ingresa tu E-mail" 
-                                class="w-full px-4 py-3 bg-black text-gray-300 rounded-lg border border-neutral-700 placeholder-neutral-500 focus:outline-none focus:border-blue-600 transition-colors">
-                        </div>
-                        
-                        <button type="submit" 
-                            class="w-full py-3 bg-orange-600 text-white font-bold text-sm tracking-wider rounded-lg hover:bg-blue-700 transition-colors uppercase">
-                            SUSCRÍBETE
-                        </button>
-                    </form>
-                </div>
             </div>
+
+            <div class="flex flex-col gap-3 md:col-span-3">
+                <h3 class="text-white font-extrabold tracking-wider uppercase text-sm font-sans">
+                    SUBSCÍBETE
+                </h3>
+                
+                <form action="#" method="POST" class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-gray-400 text-[10px] font-bold tracking-widest">TU E-MAIL</label>
+                        <input type="email" name="email" placeholder="Ingresa tu E-mail" 
+                            class="w-full px-3 py-2 bg-[#2a2a2a] text-gray-300 rounded border border-neutral-700 placeholder-neutral-500 focus:outline-none focus:border-orange-600 transition-colors text-xs">
+                    </div>
+                    
+                    <button type="submit" 
+                        class="w-full py-2.5 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase">
+                        SUBSCÍBETE
+                    </button>
+                </form>
+            </div>
+
         </div>
     </footer>
 </body>
