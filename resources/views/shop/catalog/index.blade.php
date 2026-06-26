@@ -20,41 +20,84 @@
     - Motos: {{ route('shop.catalog', ['section' => 'motos']) }}
 
     Relaciones cargadas en cada producto:
-    - category, vehicleModel.brand, inventory
+    - category, vehicleModel.brand, inventory, activeOffer
 
     Atributos directos en cada producto:
-    - sku, description, price_amount, currency, image
+    - name, sku, description, price_amount, currency, image
+
+    Precios calculados por el controlador (en cada $product del paginador):
+    - effective_price : precio a mostrar/cobrar (oferta activa o precio de lista)
+    - list_price      : precio de catálogo (price_amount)
+    - sale_price      : precio en oferta; null si no hay oferta activa
+    - is_on_sale      : bool — true si tiene oferta vigente
+    - offer_ends_at   : Carbon|null — fin de la oferta activa
+
+    Relación activeOffer (ProductOffer|null):
+    - $product->activeOffer->offer_price_amount
+    - $product->activeOffer->starts_at / ends_at
+    - $product->activeOffer->currency
 
     Helpers útiles en Product:
     - $product->hasAvailableStock() : bool
---}}
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Catálogo — {{ config('app.name') }}</title>
-</head>
-<body>
-    {{-- Navegación de sección: implementar UI --}}
-    {{-- Accesorios: route('shop.catalog', array_merge(request()->query(), ['section' => 'accesorios', 'page' => null])) --}}
-    {{-- Motos: route('shop.catalog', array_merge(request()->query(), ['section' => 'motos', 'page' => null])) --}}
+    - $product->hasActiveOffer()    : bool
+    - $product->currentPricing()    : ProductPricing (unitPrice, listUnitPrice, hasOffer())
 
-    {{-- Filtros: $filterOptions['categories'], $filterOptions['brands'], $filterOptions['models'] --}}
-    {{-- Valores activos: $filters --}}
+    Ejemplo x-card con datos reales:
+    - title     => $product->name
+    - category  => $product->category->name
+    - price     => $product->effective_price
+    - oldPrice  => $product->is_on_sale ? $product->list_price : null
+    - isSale    => $product->is_on_sale
+    - href      => route('shop.product.show', $product)
+    - image     => $product->image ?? 'url-placeholder'
 
-    
-    {{-- Paginación: $products->links() --}}
-</body>
-</html> -->
+    Ejemplo precio manual en Blade:
+    @if ($product->is_on_sale)
+        Oferta: {{ number_format($product->sale_price, 2) }} {{ $product->currency }}
+        Antes: {{ number_format($product->list_price, 2) }}
+        Hasta: {{ $product->offer_ends_at?->format('d/m/Y') }}
+    @else
+        {{ number_format($product->effective_price, 2) }} {{ $product->currency }}
+    @endif
+--}} -->
 
 @extends('layouts.shop')
 
 @section('content')
+    {{--
+        Ofertas / precios por producto (CatalogController):
+        - $product->effective_price  → precio a mostrar
+        - $product->list_price       → precio de catálogo
+        - $product->sale_price       → precio en oferta (null si no aplica)
+        - $product->is_on_sale       → bool
+        - $product->offer_ends_at    → fin de oferta activa
+        - $product->activeOffer      → relación ProductOffer|null
+
+        x-card sugerido:
+        :title="$product->name"
+        :category="$product->category->name"
+        :price="$product->effective_price"
+        :oldPrice="$product->is_on_sale ? $product->list_price : null"
+        :isSale="$product->is_on_sale"
+        :href="route('shop.product.show', $product)"
+        :image="$product->image"
+    --}}
     <h1>Catálogo de productos</h1>
     <div class="bg-[#151515] min-h-screen py-12 px-4 md:px-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
            @forelse ($products as $product)
+                {{--
+                    Datos del producto para esta iteración:
+                    - $product->name, $product->sku, $product->description
+                    - $product->price_amount, $product->currency, $product->image
+                    - $product->category, $product->vehicleModel, $product->inventory
+                    - $product->hasAvailableStock()
+
+                    Ofertas (si is_on_sale es true):
+                    - $product->sale_price vs $product->list_price
+                    - $product->activeOffer->offer_price_amount
+                    - $product->offer_ends_at
+                --}}
                 <!-- <article>
                     <h2>
                         <a href="{{ route('shop.product.show', $product) }}">{{ $product->sku }}</a>

@@ -5,15 +5,19 @@ namespace App\Models\Products;
 use App\Enums\Products\ProductStatus;
 use App\Models\Cart\CartItem;
 use App\Models\Orders\OrderItem;
+use App\Services\Orders\ProductPricing;
+use App\Services\Orders\ProductPricingService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 #[Fillable([
     'sku',
+    'name',
     'description',
     'price_amount',
     'currency',
@@ -49,6 +53,25 @@ class Product extends Model
     }
 
     /**
+     * @return HasOne<ProductOffer, $this>
+     */
+    public function activeOffer(): HasOne
+    {
+        return $this->hasOne(ProductOffer::class)->ofMany(
+            ['offer_price_amount' => 'min'],
+            fn (Builder $query) => $query->activeAt(),
+        );
+    }
+
+    /**
+     * @return HasMany<ProductOffer, $this>
+     */
+    public function offers(): HasMany
+    {
+        return $this->hasMany(ProductOffer::class);
+    }
+
+    /**
      * @return HasMany<CartItem, $this>
      */
     public function cartItems(): HasMany
@@ -62,6 +85,39 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function activeOfferAt(?Carbon $at = null): ?ProductOffer
+    {
+        if ($this->relationLoaded('activeOffer')) {
+            $offer = $this->getRelation('activeOffer');
+
+            return $offer !== null && $offer->isActiveAt($at) ? $offer : null;
+        }
+
+        $at ??= now();
+
+        if ($this->relationLoaded('offers')) {
+            return $this->offers
+                ->filter(fn (ProductOffer $offer) => $offer->isActiveAt($at))
+                ->sortBy('offer_price_amount')
+                ->first();
+        }
+
+        return $this->offers()
+            ->activeAt($at)
+            ->orderBy('offer_price_amount')
+            ->first();
+    }
+
+    public function currentPricing(?Carbon $at = null): ProductPricing
+    {
+        return app(ProductPricingService::class)->resolve($this, $at);
+    }
+
+    public function hasActiveOffer(?Carbon $at = null): bool
+    {
+        return $this->activeOfferAt($at) !== null;
     }
 
     /**

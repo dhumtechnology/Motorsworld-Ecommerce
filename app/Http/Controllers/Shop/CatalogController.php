@@ -56,6 +56,8 @@ class CatalogController extends Controller
                 ->paginate(self::PER_PAGE)
                 ->withQueryString();
 
+            $products->through(fn (Product $product) => $this->withActiveOfferPricing($product));
+
             $filterOptions = [
                 'categories' => $this->categoryOptions($section),
                 'brands' => $this->brandOptions($section),
@@ -66,6 +68,7 @@ class CatalogController extends Controller
                 ...$context,
                 'total_products' => $products->total(),
                 'current_page' => $products->currentPage(),
+                'products_on_sale' => $products->getCollection()->where('is_on_sale', true)->count(),
                 'filter_options_count' => [
                     'categories' => $filterOptions['categories']->count(),
                     'brands' => $filterOptions['brands']->count(),
@@ -136,6 +139,22 @@ class CatalogController extends Controller
         return (int) round((microtime(true) - $startedAt) * 1000);
     }
 
+    private function withActiveOfferPricing(Product $product): Product
+    {
+        $pricing = $product->currentPricing();
+
+        $product->setAttribute('is_on_sale', $pricing->hasOffer());
+        $product->setAttribute('sale_price', $pricing->hasOffer() ? $pricing->unitPrice : null);
+        $product->setAttribute('list_price', $pricing->listUnitPrice);
+        $product->setAttribute('effective_price', $pricing->unitPrice);
+
+        if ($offer = $product->activeOfferAt()) {
+            $product->setAttribute('offer_ends_at', $offer->ends_at);
+        }
+
+        return $product;
+    }
+
     /**
      * @return Builder<Product>
      */
@@ -146,7 +165,7 @@ class CatalogController extends Controller
         $query = Product::query()
             ->active()
             ->catalogOrder()
-            ->with(['category', 'vehicleModel.brand', 'inventory']);
+            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer']);
 
         $this->applySectionFilter($query, $section, $motosCategoryId);
         $this->applyCatalogFilters($request, $query, $section, $motosCategoryId);
@@ -205,6 +224,7 @@ class CatalogController extends Controller
             $query->where(function (Builder $searchQuery) use ($like) {
                 $searchQuery
                     ->where('sku', 'like', $like)
+                    ->orWhere('name', 'like', $like)
                     ->orWhere('description', 'like', $like)
                     ->orWhereHas('category', fn (Builder $q) => $q->where('name', 'like', $like))
                     ->orWhereHas('vehicleModel', function (Builder $q) use ($like) {
