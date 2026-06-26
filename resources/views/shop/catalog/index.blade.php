@@ -4,14 +4,14 @@
     Variables disponibles:
     - $products       : LengthAwarePaginator de Product (paginado)
     - $section        : 'accesorios' (default) | 'motos'
-    - $filters        : ['category' => ?int, 'brand' => ?int, 'model' => ?int, 'search' => ?string]
+    - $filters        : ['categories' => list<int>, 'brands' => list<int>, 'models' => list<int>, 'search' => ?string]
     - $filterOptions  : ['categories' => Collection, 'brands' => Collection, 'models' => Collection]
 
-    Query string soportado:
+    Query string soportado (filtros múltiples):
     - section=motos|accesorios
-    - category={id}
-    - brand={id}
-    - model={id}
+    - categories[]=1&categories[]=2   (también acepta category=1 legacy)
+    - brands[]=3&brands[]=5           (también acepta brand=3 legacy)
+    - models[]=10&models[]=12         (también acepta model=10 legacy)
     - search={texto}
     - page={n}
 
