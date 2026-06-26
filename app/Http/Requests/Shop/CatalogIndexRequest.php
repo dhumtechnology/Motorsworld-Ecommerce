@@ -21,9 +21,12 @@ class CatalogIndexRequest extends FormRequest
     {
         return [
             'section' => ['nullable', 'string', Rule::in(['motos', 'accesorios'])],
-            'category' => ['nullable', 'integer', 'min:1', 'exists:categories,id'],
-            'brand' => ['nullable', 'integer', 'min:1', 'exists:brands,id'],
-            'model' => ['nullable', 'integer', 'min:1', 'exists:models,id'],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['integer', 'min:1', 'exists:categories,id'],
+            'brands' => ['nullable', 'array'],
+            'brands.*' => ['integer', 'min:1', 'exists:brands,id'],
+            'models' => ['nullable', 'array'],
+            'models.*' => ['integer', 'min:1', 'exists:models,id'],
             'search' => ['nullable', 'string', 'max:255'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
@@ -36,9 +39,12 @@ class CatalogIndexRequest extends FormRequest
     {
         return [
             'section' => 'sección',
-            'category' => 'categoría',
-            'brand' => 'marca',
-            'model' => 'modelo',
+            'categories' => 'categorías',
+            'categories.*' => 'categoría',
+            'brands' => 'marcas',
+            'brands.*' => 'marca',
+            'models' => 'modelos',
+            'models.*' => 'modelo',
             'search' => 'búsqueda',
             'page' => 'página',
         ];
@@ -47,22 +53,22 @@ class CatalogIndexRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            $brandId = $this->brandId();
-            $modelId = $this->modelId();
+            $brandIds = $this->brandIds();
+            $modelIds = $this->modelIds();
 
-            if ($brandId === null || $modelId === null) {
+            if ($brandIds === [] || $modelIds === []) {
                 return;
             }
 
-            $modelBelongsToBrand = VehicleModel::query()
-                ->whereKey($modelId)
-                ->where('brand_id', $brandId)
-                ->exists();
+            $invalidCount = VehicleModel::query()
+                ->whereIn('id', $modelIds)
+                ->whereNotIn('brand_id', $brandIds)
+                ->count();
 
-            if (! $modelBelongsToBrand) {
+            if ($invalidCount > 0) {
                 $validator->errors()->add(
-                    'model',
-                    'El modelo seleccionado no pertenece a la marca indicada.',
+                    'models',
+                    'Uno o más modelos seleccionados no pertenecen a las marcas indicadas.',
                 );
             }
         });
@@ -70,7 +76,17 @@ class CatalogIndexRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $normalized = [];
+        $normalized = [
+            'categories' => $this->normalizeIdList(
+                $this->input('categories', $this->input('category')),
+            ),
+            'brands' => $this->normalizeIdList(
+                $this->input('brands', $this->input('brand')),
+            ),
+            'models' => $this->normalizeIdList(
+                $this->input('models', $this->input('model')),
+            ),
+        ];
 
         if ($this->has('section')) {
             $section = strtolower(trim((string) $this->input('section')));
@@ -84,9 +100,7 @@ class CatalogIndexRequest extends FormRequest
             $normalized['search'] = $search !== '' ? $search : null;
         }
 
-        if ($normalized !== []) {
-            $this->merge($normalized);
-        }
+        $this->merge($normalized);
     }
 
     public function section(): string
@@ -96,25 +110,28 @@ class CatalogIndexRequest extends FormRequest
         return in_array($section, ['motos', 'accesorios'], true) ? $section : 'accesorios';
     }
 
-    public function categoryId(): ?int
+    /**
+     * @return list<int>
+     */
+    public function categoryIds(): array
     {
-        $value = $this->input('category');
-
-        return $value !== null ? (int) $value : null;
+        return $this->normalizeIdList($this->input('categories'));
     }
 
-    public function brandId(): ?int
+    /**
+     * @return list<int>
+     */
+    public function brandIds(): array
     {
-        $value = $this->input('brand');
-
-        return $value !== null ? (int) $value : null;
+        return $this->normalizeIdList($this->input('brands'));
     }
 
-    public function modelId(): ?int
+    /**
+     * @return list<int>
+     */
+    public function modelIds(): array
     {
-        $value = $this->input('model');
-
-        return $value !== null ? (int) $value : null;
+        return $this->normalizeIdList($this->input('models'));
     }
 
     public function searchTerm(): ?string
@@ -122,5 +139,30 @@ class CatalogIndexRequest extends FormRequest
         $search = trim((string) $this->input('search', ''));
 
         return $search !== '' ? $search : null;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function normalizeIdList(mixed $value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        if (! is_array($value)) {
+            $value = [$value];
+        }
+
+        $ids = array_map(
+            static fn (mixed $id): int => (int) $id,
+            $value,
+        );
+
+        $ids = array_values(array_unique(array_filter($ids, static fn (int $id): bool => $id > 0)));
+
+        sort($ids);
+
+        return $ids;
     }
 }

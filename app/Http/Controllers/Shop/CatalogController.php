@@ -47,7 +47,7 @@ class CatalogController extends Controller
             if ($this->hasIncompatibleCategoryFilter($request, $section, $motosCategoryId)) {
                 Log::channel(self::LOG_CHANNEL)->notice('Category filter incompatible with section', [
                     'section' => $section,
-                    'category_id' => $request->categoryId(),
+                    'category_ids' => $request->categoryIds(),
                     'motos_category_id' => $motosCategoryId,
                 ]);
             }
@@ -61,7 +61,7 @@ class CatalogController extends Controller
             $filterOptions = [
                 'categories' => $this->categoryOptions($section),
                 'brands' => $this->brandOptions($section),
-                'models' => $this->modelOptions($section, $request->brandId()),
+                'models' => $this->modelOptions($section, $request->brandIds()),
             ];
 
             Log::channel(self::LOG_CHANNEL)->info('Catalog request completed', [
@@ -81,9 +81,9 @@ class CatalogController extends Controller
                 'products' => $products,
                 'section' => $section,
                 'filters' => [
-                    'category' => $request->categoryId(),
-                    'brand' => $request->brandId(),
-                    'model' => $request->modelId(),
+                    'categories' => $request->categoryIds(),
+                    'brands' => $request->brandIds(),
+                    'models' => $request->modelIds(),
                     'search' => $request->searchTerm(),
                 ],
                 'filterOptions' => $filterOptions,
@@ -109,9 +109,9 @@ class CatalogController extends Controller
     {
         return [
             'section' => $request->section(),
-            'category_id' => $request->categoryId(),
-            'brand_id' => $request->brandId(),
-            'model_id' => $request->modelId(),
+            'category_ids' => $request->categoryIds(),
+            'brand_ids' => $request->brandIds(),
+            'model_ids' => $request->modelIds(),
             'search' => $request->searchTerm(),
             'page' => (int) $request->input('page', 1),
             'ip' => $request->ip(),
@@ -124,14 +124,18 @@ class CatalogController extends Controller
         string $section,
         ?int $motosCategoryId,
     ): bool {
-        $categoryId = $request->categoryId();
+        $categoryIds = $request->categoryIds();
 
-        if ($categoryId === null || $motosCategoryId === null) {
+        if ($categoryIds === [] || $motosCategoryId === null) {
             return false;
         }
 
-        return ($section === 'motos' && $categoryId !== $motosCategoryId)
-            || ($section === 'accesorios' && $categoryId === $motosCategoryId);
+        if ($section === 'motos') {
+            return count($categoryIds) > 1
+                || ! in_array($motosCategoryId, $categoryIds, true);
+        }
+
+        return in_array($motosCategoryId, $categoryIds, true);
     }
 
     private function elapsedMs(float $startedAt): int
@@ -202,20 +206,38 @@ class CatalogController extends Controller
         string $section,
         ?int $motosCategoryId,
     ): void {
-        if ($categoryId = $request->categoryId()) {
-            if ($section === 'accesorios' && $categoryId === $motosCategoryId) {
-                $query->whereRaw('0 = 1');
-            } else {
-                $query->where('category_id', $categoryId);
+        $categoryIds = $request->categoryIds();
+
+        if ($categoryIds !== []) {
+            if ($section === 'accesorios' && $motosCategoryId !== null) {
+                $categoryIds = array_values(array_filter(
+                    $categoryIds,
+                    static fn (int $id): bool => $id !== $motosCategoryId,
+                ));
+
+                if ($categoryIds === []) {
+                    $query->whereRaw('0 = 1');
+
+                    return;
+                }
             }
+
+            if ($section === 'motos' && $motosCategoryId !== null) {
+                $categoryIds = [$motosCategoryId];
+            }
+
+            $query->whereIn('category_id', $categoryIds);
         }
 
-        if ($brandId = $request->brandId()) {
-            $query->whereHas('vehicleModel', fn (Builder $modelQuery) => $modelQuery->where('brand_id', $brandId));
+        if ($brandIds = $request->brandIds()) {
+            $query->whereHas(
+                'vehicleModel',
+                fn (Builder $modelQuery) => $modelQuery->whereIn('brand_id', $brandIds),
+            );
         }
 
-        if ($modelId = $request->modelId()) {
-            $query->where('model_id', $modelId);
+        if ($modelIds = $request->modelIds()) {
+            $query->whereIn('model_id', $modelIds);
         }
 
         if ($search = $request->searchTerm()) {
@@ -286,12 +308,16 @@ class CatalogController extends Controller
     }
 
     /**
+     * @param  list<int>  $brandIds
      * @return \Illuminate\Database\Eloquent\Collection<int, VehicleModel>
      */
-    private function modelOptions(string $section, ?int $brandId)
+    private function modelOptions(string $section, array $brandIds)
     {
         return VehicleModel::query()
-            ->when($brandId, fn (Builder $q) => $q->where('brand_id', $brandId))
+            ->when(
+                $brandIds !== [],
+                fn (Builder $q) => $q->whereIn('brand_id', $brandIds),
+            )
             ->whereHas('products', function (Builder $q) use ($section) {
                 $q->where('status', ProductStatus::Active);
                 $this->applySectionFilterOnProductQuery($q, $section);
