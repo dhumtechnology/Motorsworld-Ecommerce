@@ -174,7 +174,7 @@ class CatalogSeeder extends Seeder
                     'price_amount' => $data['price'],
                     'currency' => 'PEN',
                     'status' => $data['status'],
-                    'image' => null,
+                    'image' => $data['image'] ?? null,
                     'category_id' => $category->id,
                     'model_id' => $vehicleModel?->id,
                 ],
