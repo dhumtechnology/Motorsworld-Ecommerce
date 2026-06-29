@@ -9,6 +9,33 @@
     - $product         : Product (solo status active; 404 en otros casos)
     - $reviews         : Collection<int, Comment> — reseñas del producto, más recientes primero
     - $reviewSummary   : ['count' => int, 'average_stars' => float|null]
+    - $relatedProducts : Collection<int, Product> — hasta 8 productos relacionados (ver algoritmo abajo)
+
+    =============================================================================
+    PRODUCTOS RELACIONADOS ($relatedProducts)
+    =============================================================================
+
+    Misma forma que el catálogo: effective_price, list_price, is_on_sale, image, category, etc.
+    Cada item admite x-card igual que en shop/catalog/index.blade.php.
+
+    Algoritmo (RelatedProductsResolver):
+    1. Co-compra — productos que aparecen en los mismos pedidos (no cancelados/reembolsados),
+       ordenados por frecuencia de pedidos compartidos y unidades vendidas juntas.
+    2. Si faltan hasta 8 — misma categoría + misma marca (vehicleModel.brand).
+    3. Si aún faltan — misma categoría, priorizando más vendidos y con stock.
+
+    Ejemplo:
+    @foreach ($relatedProducts as $related)
+        <x-card
+            :title="$related->name"
+            :category="$related->category?->name"
+            :price="$related->effective_price"
+            :oldPrice="$related->is_on_sale ? $related->list_price : null"
+            :image="$related->image ?? 'url-placeholder'"
+            :isSale="$related->is_on_sale"
+            :href="route('shop.product.show', $related)"
+        />
+    @endforeach
 
     =============================================================================
     RELACIONES CARGADAS EN $product

@@ -5,11 +5,18 @@ namespace App\Http\Controllers\Shop;
 use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
+use App\Services\Products\RelatedProductsResolver;
 use Illuminate\Contracts\View\View;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller
 {
+    private const RELATED_LIMIT = 8;
+
+    public function __construct(
+        private readonly RelatedProductsResolver $relatedProducts,
+    ) {}
+
     public function show(Product $product): View
     {
         if ($product->status !== ProductStatus::Active) {
@@ -29,6 +36,10 @@ class ProductController extends Controller
 
         $reviews = $product->reviews;
 
+        $relatedProducts = $this->relatedProducts
+            ->resolve($product, self::RELATED_LIMIT)
+            ->map(fn (Product $related) => $this->applyCatalogPresentationAttributes($related));
+
         return view('shop.product.show', [
             'product' => $product,
             'reviews' => $reviews,
@@ -38,10 +49,11 @@ class ProductController extends Controller
                     ? null
                     : round((float) $reviews->avg('stars'), 1),
             ],
+            'relatedProducts' => $relatedProducts,
         ]);
     }
 
-    private function applyCatalogPresentationAttributes(Product $product): void
+    private function applyCatalogPresentationAttributes(Product $product): Product
     {
         $pricing = $product->currentPricing();
 
@@ -54,5 +66,7 @@ class ProductController extends Controller
         if ($offer = $product->activeOfferAt()) {
             $product->setAttribute('offer_ends_at', $offer->ends_at);
         }
+
+        return $product;
     }
 }
