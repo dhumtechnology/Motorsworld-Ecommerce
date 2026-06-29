@@ -6,6 +6,7 @@
     - $section        : 'accesorios' (default) | 'motos'
     - $filters        : ['categories' => list<int>, 'brands' => list<int>, 'models' => list<int>, 'search' => ?string]
     - $filterOptions  : ['categories' => Collection, 'brands' => Collection, 'models' => Collection]
+    - $featuredProducts : Collection de Product (top 3 por unidades vendidas en la sección actual)
 
     Query string soportado (filtros múltiples):
     - section=motos|accesorios
@@ -162,54 +163,51 @@
                     @endif
                 </div>
 
-                <div class="mt-10 select-none font-sans">
-    
-                    <h3 class="text-xl font-black uppercase tracking-widest text-white mb-6">
-                        Productos Destacados
-                    </h3>
+                @if($featuredProducts->isNotEmpty())
+                    <div class="mt-10 select-none font-sans">
+                        <h3 class="text-xl font-black uppercase tracking-widest text-white mb-6">
+                            Productos Destacados
+                        </h3>
 
-                    <div class="space-y-5">
-                        @forelse ($products->take(3) as $featuredProduct)
-                            <div class="flex items-center gap-4 group cursor-pointer">
-                                
-                                <div class="relative w-20 h-20 bg-[#1e1e1e] border border-neutral-800 rounded-sm overflow-hidden shrink-0 flex items-center justify-center p-1">
-                                    @if($featuredProduct->is_on_sale)
-                                        <span class="absolute top-1 left-1 bg-[#f15a24] text-white text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-xs z-10">
-                                            Sale
-                                        </span>
-                                    @endif
-                                    <img src="{{ $featuredProduct->image ?? 'https://via.placeholder.com/150?text=MotoWorld' }}" 
-                                        class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200" 
-                                        alt="{{ $featuredProduct->name }}">
-                                </div>
-
-                                <div class="flex flex-col justify-center">
-                                    <h4 class="text-sm font-black text-white uppercase tracking-wide group-hover:text-[#f15a24] transition-colors duration-150 leading-tight">
-                                        {{ $featuredProduct->name ?? $featuredProduct->sku }}
-                                    </h4>
-                                    <span class="text-xs font-bold text-neutral-500 mt-0.5 uppercase tracking-wider">
-                                        {{ $featuredProduct->category?->name ?? 'MOTO' }}
-                                    </span>
-                                    
-                                    <div class="flex items-baseline gap-2 mt-1">
-                                        <span class="text-sm font-black text-white">
-                                            ${{ $featuredProduct->effective_price }}
-                                        </span>
-                                        
+                        <div class="space-y-5">
+                            @foreach ($featuredProducts as $featuredProduct)
+                                <div class="flex items-center gap-4 group cursor-pointer">
+                                    <div class="relative w-20 h-20 bg-[#1e1e1e] border border-neutral-800 rounded-sm overflow-hidden shrink-0 flex items-center justify-center p-1">
                                         @if($featuredProduct->is_on_sale)
-                                            <span class="text-xs font-bold text-neutral-500 line-through">
-                                                ${{ $featuredProduct->list_price }}
+                                            <span class="absolute top-1 left-1 bg-[#f15a24] text-white text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-xs z-10">
+                                                Sale
                                             </span>
                                         @endif
+                                        <img src="{{ $featuredProduct->image ?? 'https://via.placeholder.com/150?text=MotoWorld' }}"
+                                            class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                                            alt="{{ $featuredProduct->name }}">
+                                    </div>
+
+                                    <div class="flex flex-col justify-center">
+                                        <h4 class="text-sm font-black text-white uppercase tracking-wide group-hover:text-[#f15a24] transition-colors duration-150 leading-tight">
+                                            {{ $featuredProduct->name ?? $featuredProduct->sku }}
+                                        </h4>
+                                        <span class="text-xs font-bold text-neutral-500 mt-0.5 uppercase tracking-wider">
+                                            {{ $featuredProduct->category?->name ?? 'MOTO' }}
+                                        </span>
+
+                                        <div class="flex items-baseline gap-2 mt-1">
+                                            <span class="text-sm font-black text-white">
+                                                ${{ $featuredProduct->effective_price }}
+                                            </span>
+
+                                            @if($featuredProduct->is_on_sale)
+                                                <span class="text-xs font-bold text-neutral-500 line-through">
+                                                    ${{ $featuredProduct->list_price }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-
-                            </div>
-                        @empty
-                            <p class="text-xs text-neutral-500 italic">No hay productos para mostrar.</p>
-                        @endforelse
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
 
             </form>
         </div>

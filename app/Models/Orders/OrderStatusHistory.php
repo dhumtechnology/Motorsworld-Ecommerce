@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['order_id', 'status', 'note'])]
 class OrderStatusHistory extends Model
 {
+    protected $table = 'order_status_history';
+
     public $timestamps = false;
 
     const CREATED_AT = 'created_at';

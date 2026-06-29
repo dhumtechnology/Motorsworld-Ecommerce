@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Shop;
 
+use App\Enums\Orders\OrderStatus;
 use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\CatalogIndexRequest;
+use App\Models\Orders\OrderItem;
 use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
@@ -12,6 +14,7 @@ use App\Models\Products\VehicleModel;
 use App\Support\QueryResultCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -20,6 +23,8 @@ class CatalogController extends Controller
     private const MOTOS_CATEGORY = 'MOTOS';
 
     private const PER_PAGE = 12;
+
+    private const FEATURED_LIMIT = 3;
 
     private const LOG_CHANNEL = 'catalog';
 
@@ -54,8 +59,11 @@ class CatalogController extends Controller
                 'models' => $this->modelOptions($section, $request->brandIds()),
             ];
 
+            $featuredProducts = $this->featuredProducts($section);
+
             return view('shop.catalog.index', [
                 'products' => $products,
+                'featuredProducts' => $featuredProducts,
                 'section' => $section,
                 'filters' => [
                     'categories' => $request->categoryIds(),
@@ -109,6 +117,52 @@ class CatalogController extends Controller
         }
 
         return $product;
+    }
+
+    /**
+     * Top productos por unidades vendidas (pedidos no cancelados ni reembolsados).
+     *
+     * @return Collection<int, Product>
+     */
+    private function featuredProducts(string $section): Collection
+    {
+        $motosCategoryId = $this->motosCategoryId();
+
+        $rankedIds = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'products.id', '=', 'order_items.product_id')
+            ->where('products.status', ProductStatus::Active)
+            ->whereNotIn('orders.status', [
+                OrderStatus::Cancelled,
+                OrderStatus::Refunded,
+            ])
+            ->when(
+                $section === 'motos',
+                fn (Builder $q) => $motosCategoryId
+                    ? $q->where('products.category_id', $motosCategoryId)
+                    : $q->whereRaw('0 = 1'),
+                fn (Builder $q) => $motosCategoryId
+                    ? $q->where('products.category_id', '!=', $motosCategoryId)
+                    : $q,
+            )
+            ->groupBy('order_items.product_id')
+            ->orderByRaw('SUM(order_items.quantity) DESC')
+            ->limit(self::FEATURED_LIMIT)
+            ->pluck('order_items.product_id');
+
+        if ($rankedIds->isEmpty()) {
+            return collect();
+        }
+
+        $orderById = $rankedIds->values()->all();
+
+        return Product::query()
+            ->whereIn('id', $orderById)
+            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer'])
+            ->get()
+            ->sortBy(fn (Product $product): int => array_search($product->id, $orderById, true))
+            ->values()
+            ->map(fn (Product $product) => $this->withActiveOfferPricing($product));
     }
 
     /**
