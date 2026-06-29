@@ -1,14 +1,14 @@
 @if ($paginator->hasPages())
-    <div class="w-full flex justify-start items-center p-4 bg-[#151515] select-none mt-12 font-sans">
+    <div class="w-full flex justify-start items-center p-4 select-none mt-12 font-sans">
         <nav class="inline-flex gap-2" aria-label="Paginación del catálogo">
             
             {{-- Botón Anterior (<) --}}
             @if ($paginator->onFirstPage())
-                <span class="w-12 h-12 flex items-center justify-center bg-transparent border border-neutral-800 text-neutral-600 font-black text-sm rounded-sm cursor-not-allowed">
+                <span class="w-12 h-12 flex items-center justify-center bg-transparent border border-white-300 text-neutral-600 font-black text-sm rounded-sm cursor-not-allowed">
                     &lt;
                 </span>
             @else
-                <a href="{{ $paginator->previousPageUrl() }}" class="w-12 h-12 flex items-center justify-center bg-transparent border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-600 transition-colors duration-150 font-black text-sm rounded-sm">
+                <a href="{{ $paginator->previousPageUrl() }}" class="w-12 h-12 flex items-center justify-center bg-transparent border border-white-300 text-neutral-300 hover:text-white hover:border-neutral-600 transition-colors duration-150 font-black text-sm rounded-sm">
                     &lt;
                 </a>
             @endif
@@ -17,7 +17,7 @@
             @foreach ($elements as $element)
                 {{-- Separador de puntos "..." --}}
                 @if (is_string($element))
-                    <span class="w-12 h-12 flex items-center justify-center bg-transparent border border-neutral-800 text-neutral-500 font-black text-sm rounded-sm">
+                    <span class="w-12 h-12 flex items-center justify-center bg-transparent border border-white-300 text-neutral-500 font-black text-sm rounded-sm">
                         {{ $element }}
                     </span>
                 @endif
@@ -30,7 +30,7 @@
                                 {{ $page }}
                             </span>
                         @else
-                            <a href="{{ $url }}" class="w-12 h-12 flex items-center justify-center bg-transparent border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-600 transition-colors duration-150 font-black text-sm rounded-sm">
+                            <a href="{{ $url }}" class="w-12 h-12 flex items-center justify-center bg-transparent border border-white-300 text-neutral-300 hover:text-white hover:border-neutral-600 transition-colors duration-150 font-black text-sm rounded-sm">
                                 {{ $page }}
                             </a>
                         @endif
@@ -40,11 +40,11 @@
 
             {{-- Botón Siguiente (>) --}}
             @if ($paginator->hasMorePages())
-                <a href="{{ $paginator->nextPageUrl() }}" class="w-12 h-12 flex items-center justify-center bg-transparent border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-600 transition-colors duration-150 font-black text-sm rounded-sm">
+                <a href="{{ $paginator->nextPageUrl() }}" class="w-12 h-12 flex items-center justify-center bg-transparent border border-white-300 text-neutral-300 hover:text-white hover:border-neutral-600 transition-colors duration-150 font-black text-sm rounded-sm">
                     &gt;
                 </a>
             @else
-                <span class="w-12 h-12 flex items-center justify-center bg-transparent border border-neutral-800 text-neutral-600 font-black text-sm rounded-sm cursor-not-allowed">
+                <span class="w-12 h-12 flex items-center justify-center bg-transparent border border-white-300 text-neutral-600 font-black text-sm rounded-sm cursor-not-allowed">
                     &gt;
                 </span>
             @endif
