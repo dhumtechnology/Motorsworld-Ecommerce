@@ -20,6 +20,10 @@ services:
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
+      - app_vendor:/var/www/html/vendor
+      - app_blade_cache:/var/www/html/storage/framework/views
+      - app_bootstrap_cache:/var/www/html/bootstrap/cache
+      - app_file_cache:/var/www/html/storage/framework/cache
     networks:
       - motosworld
     depends_on:
@@ -34,6 +38,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-motosworld}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
       - TMPDIR=/var/www/html/storage/framework/cache
+      - SEED_ON_START=${SEED_ON_START:-true}
 
   nginx:
     image: nginx:alpine
@@ -79,4 +84,12 @@ volumes:
   mysql_data:
     driver: local
   node_modules:
+    driver: local
+  app_vendor:
+    driver: local
+  app_blade_cache:
+    driver: local
+  app_bootstrap_cache:
+    driver: local
+  app_file_cache:
     driver: local

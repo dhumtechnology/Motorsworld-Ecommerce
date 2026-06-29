@@ -150,11 +150,54 @@ DB_PORT_EXTERNAL=3307   # solo puerto en tu PC
 
 **Lentitud general en Docker Desktop (Windows/Mac)**
 
-- Usa `SESSION_DRIVER=file` y `CACHE_STORE=file` en `.env` (ver `.env.example`).
+El cuello de botella habitual es el bind mount del proyecto (`.:/var/www/html`): miles de lecturas desde el disco de Windows hacia Linux.
+
+El `docker-compose.yml` ya monta volúmenes Linux para las rutas más costosas:
+
+| Volumen | Ruta en el contenedor | Efecto |
+|---------|----------------------|--------|
+| `app_vendor` | `vendor/` | Autoload de Composer en disco rápido |
+| `app_blade_cache` | `storage/framework/views/` | Vistas Blade compiladas sin tocar Windows |
+| `app_bootstrap_cache` | `bootstrap/cache/` | Caché de Laravel en disco rápido |
+| `app_file_cache` | `storage/framework/cache/` | Caché de archivos (`CACHE_STORE=file`) en disco rápido |
+
+Tras actualizar `docker-compose.yml`, recrea los contenedores una vez:
+
+```bash
+docker compose down
+docker compose up -d --build
+```
+
+En `.env` (ver `.env.example`):
+
+```env
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUERY_CACHE_TTL=300
+LOG_LEVEL=warning
+SEED_ON_START=false   # tras el primer arranque, evita re-seed en cada restart
+```
+
+Variables de rendimiento **globales** (no solo catálogo):
+
+| Variable | Efecto |
+|----------|--------|
+| Volúmenes Docker (`vendor`, vistas, bootstrap, file cache) | Menos I/O Windows en **toda** la app |
+| `QUERY_CACHE_TTL` | Cache de consultas repetidas en cualquier módulo vía `QueryResultCache` |
+| `LOG_LEVEL=warning` | Menos escritura a disco en logs |
+| `SEED_ON_START=false` | Arranque Docker más rápido |
+- En Docker Desktop → Settings → General, activa **Use the WSL 2 based engine** (no requiere mover el repo a WSL) y, si aparece, **VirtioFS** para mejorar I/O de bind mounts.
+- Mantén el proyecto en un disco SSD local (no OneDrive/red).
 - Reconstruye contenedores tras cambios en `docker/php/php.ini` (OPcache):
 
 ```bash
 docker compose up -d --build
+```
+
+Si añades paquetes Composer en el host, sincroniza el volumen `vendor`:
+
+```bash
+docker compose exec app composer install
 ```
 
 ## Levantar el proyecto localmente (sin Docker)

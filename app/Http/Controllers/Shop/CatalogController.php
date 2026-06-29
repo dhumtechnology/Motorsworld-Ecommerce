@@ -9,6 +9,7 @@ use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Models\Products\VehicleModel;
+use App\Support\QueryResultCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -28,10 +29,7 @@ class CatalogController extends Controller
 
     public function index(CatalogIndexRequest $request): View
     {
-        $startedAt = microtime(true);
         $context = $this->requestContext($request);
-
-        Log::channel(self::LOG_CHANNEL)->info('Catalog request received', $context);
 
         try {
             $section = $request->section();
@@ -41,14 +39,6 @@ class CatalogController extends Controller
                 Log::channel(self::LOG_CHANNEL)->warning('MOTOS category missing in database', [
                     'expected_name' => self::MOTOS_CATEGORY,
                     'section' => $section,
-                ]);
-            }
-
-            if ($this->hasIncompatibleCategoryFilter($request, $section, $motosCategoryId)) {
-                Log::channel(self::LOG_CHANNEL)->notice('Category filter incompatible with section', [
-                    'section' => $section,
-                    'category_ids' => $request->categoryIds(),
-                    'motos_category_id' => $motosCategoryId,
                 ]);
             }
 
@@ -63,19 +53,6 @@ class CatalogController extends Controller
                 'brands' => $this->brandOptions($section),
                 'models' => $this->modelOptions($section, $request->brandIds()),
             ];
-
-            Log::channel(self::LOG_CHANNEL)->info('Catalog request completed', [
-                ...$context,
-                'total_products' => $products->total(),
-                'current_page' => $products->currentPage(),
-                'products_on_sale' => $products->getCollection()->where('is_on_sale', true)->count(),
-                'filter_options_count' => [
-                    'categories' => $filterOptions['categories']->count(),
-                    'brands' => $filterOptions['brands']->count(),
-                    'models' => $filterOptions['models']->count(),
-                ],
-                'duration_ms' => $this->elapsedMs($startedAt),
-            ]);
 
             return view('shop.catalog.index', [
                 'products' => $products,
@@ -95,7 +72,6 @@ class CatalogController extends Controller
                 'message' => $exception->getMessage(),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
-                'duration_ms' => $this->elapsedMs($startedAt),
             ]);
 
             throw $exception;
@@ -117,30 +93,6 @@ class CatalogController extends Controller
             'ip' => $request->ip(),
             'user_id' => $request->user()?->id,
         ];
-    }
-
-    private function hasIncompatibleCategoryFilter(
-        CatalogIndexRequest $request,
-        string $section,
-        ?int $motosCategoryId,
-    ): bool {
-        $categoryIds = $request->categoryIds();
-
-        if ($categoryIds === [] || $motosCategoryId === null) {
-            return false;
-        }
-
-        if ($section === 'motos') {
-            return count($categoryIds) > 1
-                || ! in_array($motosCategoryId, $categoryIds, true);
-        }
-
-        return in_array($motosCategoryId, $categoryIds, true);
-    }
-
-    private function elapsedMs(float $startedAt): int
-    {
-        return (int) round((microtime(true) - $startedAt) * 1000);
     }
 
     private function withActiveOfferPricing(Product $product): Product
@@ -264,67 +216,88 @@ class CatalogController extends Controller
         }
 
         $this->motosCategoryIdResolved = true;
-        $this->motosCategoryId = Category::query()
-            ->whereRaw('UPPER(name) = ?', [self::MOTOS_CATEGORY])
-            ->value('id');
+        $this->motosCategoryId = QueryResultCache::remember(
+            'catalog.motos_category_id',
+            fn (): ?int => $this->resolveMotosCategoryId(),
+        );
 
         return $this->motosCategoryId;
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Collection<int, Category>
-     */
-    private function categoryOptions(string $section)
+    private function resolveMotosCategoryId(): ?int
     {
-        $motosCategoryId = $this->motosCategoryId();
-
         return Category::query()
-            ->whereHas('products', fn (Builder $q) => $q->where('status', ProductStatus::Active))
-            ->when(
-                $section === 'motos',
-                fn (Builder $q) => $motosCategoryId
-                    ? $q->where('id', $motosCategoryId)
-                    : $q->whereRaw('0 = 1'),
-                fn (Builder $q) => $motosCategoryId
-                    ? $q->where('id', '!=', $motosCategoryId)
-                    : $q,
-            )
-            ->orderBy('name')
-            ->get(['id', 'name']);
+            ->whereRaw('UPPER(name) = ?', [self::MOTOS_CATEGORY])
+            ->value('id');
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Collection<int, Brand>
+     * @return \Illuminate\Support\Collection<int, object>
+     */
+    private function categoryOptions(string $section)
+    {
+        return QueryResultCache::rememberRows(
+            "catalog.filter_options.categories.{$section}",
+            function () use ($section) {
+                $motosCategoryId = $this->motosCategoryId();
+
+                return Category::query()
+                    ->whereHas('products', fn (Builder $q) => $q->where('status', ProductStatus::Active))
+                    ->when(
+                        $section === 'motos',
+                        fn (Builder $q) => $motosCategoryId
+                            ? $q->where('id', $motosCategoryId)
+                            : $q->whereRaw('0 = 1'),
+                        fn (Builder $q) => $motosCategoryId
+                            ? $q->where('id', '!=', $motosCategoryId)
+                            : $q,
+                    )
+                    ->orderBy('name')
+                    ->get(['id', 'name']);
+            },
+        );
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, object>
      */
     private function brandOptions(string $section)
     {
-        return Brand::query()
-            ->whereHas('vehicleModels.products', function (Builder $q) use ($section) {
-                $q->where('status', ProductStatus::Active);
-                $this->applySectionFilterOnProductQuery($q, $section);
-            })
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        return QueryResultCache::rememberRows(
+            "catalog.filter_options.brands.{$section}",
+            fn () => Brand::query()
+                ->whereHas('vehicleModels.products', function (Builder $q) use ($section) {
+                    $q->where('status', ProductStatus::Active);
+                    $this->applySectionFilterOnProductQuery($q, $section);
+                })
+                ->orderBy('name')
+                ->get(['id', 'name']),
+        );
     }
 
     /**
      * @param  list<int>  $brandIds
-     * @return \Illuminate\Database\Eloquent\Collection<int, VehicleModel>
+     * @return \Illuminate\Support\Collection<int, object>
      */
     private function modelOptions(string $section, array $brandIds)
     {
-        return VehicleModel::query()
-            ->when(
-                $brandIds !== [],
-                fn (Builder $q) => $q->whereIn('brand_id', $brandIds),
-            )
-            ->whereHas('products', function (Builder $q) use ($section) {
-                $q->where('status', ProductStatus::Active);
-                $this->applySectionFilterOnProductQuery($q, $section);
-            })
-            ->with('brand:id,name')
-            ->orderBy('name')
-            ->get(['id', 'name', 'brand_id']);
+        $brandKey = $brandIds === [] ? 'all' : implode(',', $brandIds);
+
+        return QueryResultCache::rememberRows(
+            "catalog.filter_options.models.{$section}.{$brandKey}",
+            fn () => VehicleModel::query()
+                ->when(
+                    $brandIds !== [],
+                    fn (Builder $q) => $q->whereIn('brand_id', $brandIds),
+                )
+                ->whereHas('products', function (Builder $q) use ($section) {
+                    $q->where('status', ProductStatus::Active);
+                    $this->applySectionFilterOnProductQuery($q, $section);
+                })
+                ->with('brand:id,name')
+                ->orderBy('name')
+                ->get(['id', 'name', 'brand_id']),
+        );
     }
 
     /**

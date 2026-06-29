@@ -122,6 +122,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Query result TTL (seconds)
+    |--------------------------------------------------------------------------
+    |
+    | Tiempo de vida para consultas repetidas cacheadas con QueryResultCache.
+    | 0 desactiva el cacheo. Afecta a toda la aplicación, no solo al catálogo.
+    |
+    */
+
+    'query_ttl' => (int) env('QUERY_CACHE_TTL', 300),
+
+    /*
+    |--------------------------------------------------------------------------
     | Serializable Classes
     |--------------------------------------------------------------------------
     |

@@ -7,7 +7,7 @@ chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
 export TMPDIR=/var/www/html/storage/framework/cache
 
-if [ ! -d "vendor" ]; then
+if [ ! -f "vendor/autoload.php" ] || [ "composer.lock" -nt "vendor/autoload.php" ]; then
     echo "Instalando dependencias de Composer..."
     composer install --prefer-dist --no-interaction
 fi
@@ -24,9 +24,6 @@ fi
 # Conexión interna Docker: siempre mysql:3306 (DB_PORT_EXTERNAL solo mapea el host).
 export DB_HOST=mysql
 export DB_PORT=3306
-
-php artisan config:clear >/dev/null 2>&1 || true
-php artisan view:clear >/dev/null 2>&1 || true
 
 echo "Esperando conexión a la base de datos (mysql:3306)..."
 max_retries=30
@@ -46,9 +43,13 @@ if ! php artisan migrate --force --no-interaction; then
     echo "Advertencia: no se pudieron aplicar todas las migraciones. Revise con: php artisan migrate:status"
 fi
 
-echo "Ejecutando seeders (upsert)..."
-if ! php artisan db:seed --force --no-interaction; then
-    echo "Advertencia: no se pudieron ejecutar los seeders. Revise los logs de la aplicación."
+if [ "${SEED_ON_START:-true}" = "true" ]; then
+    echo "Ejecutando seeders (upsert)..."
+    if ! php artisan db:seed --force --no-interaction; then
+        echo "Advertencia: no se pudieron ejecutar los seeders. Revise los logs de la aplicación."
+    fi
+else
+    echo "Seeders omitidos (SEED_ON_START=false)."
 fi
 
 exec docker-php-entrypoint "$@"
