@@ -1,31 +1,129 @@
 {{--
-    Detalle de producto — plantilla base para el equipo frontend.
+    Detalle de producto — documentación para el equipo frontend.
+    El HTML inferior es maqueta estática; conectar con las variables descritas aquí.
 
-    Variable disponible:
-    - $product : Product (solo status active; 404 en otros casos)
+    =============================================================================
+    VARIABLES DEL CONTROLADOR (ProductController@show)
+    =============================================================================
 
-    Relaciones cargadas:
-    - $product->category       : Category (id, name, description)
-    - $product->vehicleModel   : VehicleModel|null (id, name, brand_id)
-    - $product->vehicleModel->brand : Brand|null (id, name, image)
-    - $product->inventory      : Inventory|null (total_stock, available_stock, reserved_stock)
+    - $product         : Product (solo status active; 404 en otros casos)
+    - $reviews         : Collection<int, Comment> — reseñas del producto, más recientes primero
+    - $reviewSummary   : ['count' => int, 'average_stars' => float|null]
 
-    Atributos directos del producto:
+    =============================================================================
+    RELACIONES CARGADAS EN $product
+    =============================================================================
+
+    - $product->category              : Category (id, name, description)
+    - $product->vehicleModel          : VehicleModel|null (id, name, brand_id)
+    - $product->vehicleModel->brand   : Brand|null (id, name, image)
+    - $product->inventory             : Inventory|null (total_stock, available_stock, reserved_stock)
+    - $product->images                : Collection<int, ProductImage> ordenadas por sort_order
+    - $product->activeOffer           : ProductOffer|null (oferta vigente más barata)
+    - $product->reviews               : alias de $reviews (misma colección)
+
+    Cada ProductImage:
+    - id, product_id, path, sort_order, is_primary (bool)
+
+    =============================================================================
+    ATRIBUTOS DIRECTOS DEL PRODUCTO (columnas en inglés, coherente con la BD)
+    =============================================================================
+
     - $product->sku
-    - $product->description
+    - $product->name
+    - $product->description              → pestaña "Descripción"
+    - $product->additional_information   → pestaña "Información Adicional" (texto plano / multilínea)
     - $product->price_amount
     - $product->currency
-    - $product->status          : ProductStatus enum
-    - $product->image
+    - $product->status                   : ProductStatus enum
+    - $product->image                    → URL principal (compatibilidad catálogo; misma que imagen is_primary)
     - $product->created_at
     - $product->updated_at
 
-    Helpers:
-    - $product->hasAvailableStock() : bool
+    =============================================================================
+    PRECIOS CALCULADOS (misma convención que el catálogo)
+    =============================================================================
 
-    Rutas relacionadas:
-    - Volver al catálogo: {{ route('shop.catalog') }}
+    - $product->effective_price  → precio a mostrar / cobrar
+    - $product->list_price       → precio de catálogo (price_amount)
+    - $product->sale_price       → precio en oferta; null si no aplica
+    - $product->is_on_sale       → bool
+    - $product->offer_ends_at    → Carbon|null
+
+    Oferta activa (relación):
+    - $product->activeOffer->offer_price_amount
+    - $product->activeOffer->starts_at / ends_at
+
+    =============================================================================
+    GALERÍA DE IMÁGENES
+    =============================================================================
+
+    Usar $product->images (todas las fotos). Miniaturas + imagen principal:
+
+    @foreach ($product->images as $image)
+        {{ $image->path }}
+        {{ $image->is_primary ? 'principal' : 'secundaria' }}
+    @endforeach
+
+    Fallback si no hay filas en product_images:
+    {{ $product->image ?? 'url-placeholder' }}
+
+    =============================================================================
+    RESEÑAS ($reviews / pestaña "Reviews")
+    =============================================================================
+
+    Tabla: comments (product_id enlaza reseña ↔ producto).
+
+    Cada $review (Comment):
+    - $review->id
+    - $review->comment          → texto de la reseña
+    - $review->stars            → int 1–5
+    - $review->created_at       → Carbon
+    - $review->user             : User
+    - $review->user->customerProfile : CustomerProfile|null
+        - first_name, last_name (mostrar nombre del autor)
+        - avatar (opcional)
+
+    Resumen agregado:
+    - $reviewSummary['count']
+    - $reviewSummary['average_stars']   → null si no hay reseñas
+
+    Ejemplo estrellas:
+    @forelse ($reviews as $review)
+        {{ $review->user->customerProfile?->first_name }} {{ $review->user->customerProfile?->last_name }}
+        {{ $review->stars }}/5
+        {{ $review->comment }}
+        {{ $review->created_at->format('d/m/Y') }}
+    @empty
+        Sin reseñas aún.
+    @endforelse
+
+    =============================================================================
+    HELPERS
+    =============================================================================
+
+    - $product->hasAvailableStock() : bool
+    - $product->hasActiveOffer()    : bool
+    - $product->currentPricing()    : ProductPricing
+
+    =============================================================================
+    RUTAS
+    =============================================================================
+
+    - Catálogo: {{ route('shop.catalog') }}
     - Este producto: {{ route('shop.product.show', $product) }}
+
+    =============================================================================
+    EJEMPLOS RÁPIDOS PARA LA MAQUETA
+    =============================================================================
+
+    Título:     {{ $product->name }}
+    Categoría:  {{ $product->category->name }}
+    SKU:        {{ $product->sku }}
+    Precio:     ${{ number_format($product->effective_price, 0, '.', '') }}
+    Tachado:    @if($product->is_on_sale) ${{ number_format($product->list_price, 0, '.', '') }} @endif
+    Descripción: {!! nl2br(e($product->description)) !!}
+    Info extra:  {!! nl2br(e($product->additional_information)) !!}
 --}}
 
 @extends('layouts.shop')
