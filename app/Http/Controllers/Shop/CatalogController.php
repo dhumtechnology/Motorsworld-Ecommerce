@@ -116,6 +116,8 @@ class CatalogController extends Controller
             $product->setAttribute('offer_ends_at', $offer->ends_at);
         }
 
+        $product->setAttribute('image', $product->catalogImageUrl());
+
         return $product;
     }
 
@@ -158,7 +160,7 @@ class CatalogController extends Controller
 
         return Product::query()
             ->whereIn('id', $orderById)
-            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer'])
+            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
             ->get()
             ->sortBy(fn (Product $product): int => array_search($product->id, $orderById, true))
             ->values()
@@ -175,7 +177,7 @@ class CatalogController extends Controller
         $query = Product::query()
             ->active()
             ->catalogOrder()
-            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer']);
+            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage']);
 
         $this->applySectionFilter($query, $section, $motosCategoryId);
         $this->applyCatalogFilters($request, $query, $section, $motosCategoryId);

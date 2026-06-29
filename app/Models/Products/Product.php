@@ -45,6 +45,44 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany<ProductImage, $this>
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /**
+     * @return HasOne<ProductImage, $this>
+     */
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    /**
+     * Imagen principal para listados (catálogo, cards). Mantiene compatibilidad con $product->image.
+     */
+    public function catalogImageUrl(): ?string
+    {
+        if ($this->relationLoaded('images')) {
+            $primary = $this->images->firstWhere('is_primary', true);
+
+            return $primary?->path
+                ?? $this->images->first()?->path
+                ?? $this->attributes['image'] ?? null;
+        }
+
+        if ($this->relationLoaded('primaryImage') && $this->primaryImage !== null) {
+            return $this->primaryImage->path;
+        }
+
+        $path = $this->primaryImage()->value('path');
+
+        return $path ?? $this->attributes['image'] ?? null;
+    }
+
+    /**
      * @return HasOne<Inventory, $this>
      */
     public function inventory(): HasOne
