@@ -19,18 +19,8 @@
             </div>
             <div class="flex items-center gap-6">
                 <nav>
-                    <ul class="flex items-center gap-2">
-                        <x-dropdown title="HOME">
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
-                                Desarrollo Web
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
-                                Aplicaciones Móviles
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
-                                Consultoría
-                            </a>
-                        </x-dropdown>
+                    <ul class="flex items-center gap-3">
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">HOME</a></li>
                         <x-dropdown title="SERVICIO">
                             <a href="#" class="block px-4 py-2 hover:bg-gray-100">
                                 SERVICIO 1
@@ -53,19 +43,9 @@
                                 TIENDA 3
                             </a>
                         </x-dropdown>
-                        <x-dropdown title="NOSOTROS">
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
-                                OPCION 1
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
-                                OPCION 2
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
-                                OPCION 3
-                            </a>
-                        </x-dropdown>   
-
-                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">CONTÁCTANOS</a></li>
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">NOSOTROS</a></li>
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">BLOG</a></li>
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">CONTÁCTANOS</a></li> 
                     </ul>
                 </nav>
                 <x-search name="search" placeholder="Buscar productos..." value="{{ request('search') }}" /> 

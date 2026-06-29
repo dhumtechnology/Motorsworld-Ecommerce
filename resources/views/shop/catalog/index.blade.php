@@ -83,7 +83,7 @@
         :image="$product->image"
     --}}
     <h1>Catálogo de productos</h1>
-    <div class="bg-[#151515] min-h-screen py-12 px-4 md:px-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="bg-[#252525] min-h-screen py-12 px-4 md:px-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
            @forelse ($products as $product)
                 <x-card
@@ -101,6 +101,12 @@
                     <p class="mt-2 text-sm">No se encontraron productos disponibles en este momento.</p>
                 </div>
             @endforelse
+
+            @if($products->hasPages())
+                <div>
+                    {{ $products->links('vendor.pagination.tailwind') }}
+                </div>
+            @endif
         </div>
 
         <div class="lg:col-span-3">
@@ -137,13 +143,6 @@
                     :selected="$filters['brands'] ?? []"
                 />
 
-                <x-filters
-                    title="MODELOS"
-                    name="models"
-                    :options="$filterOptions['models']"
-                    :selected="$filters['models'] ?? []"
-                />
-
                 <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white">
                     <h3 class="font-sans font-black tracking-wider uppercase text-xl antialiased mb-4">
                         FILTRAR POR PRECIO
@@ -161,6 +160,55 @@
                             ✕ Limpiar Filtros
                         </a>
                     @endif
+                </div>
+
+                <div class="mt-10 select-none font-sans">
+    
+                    <h3 class="text-xl font-black uppercase tracking-widest text-white mb-6">
+                        Productos Destacados
+                    </h3>
+
+                    <div class="space-y-5">
+                        @forelse ($products->take(3) as $featuredProduct)
+                            <div class="flex items-center gap-4 group cursor-pointer">
+                                
+                                <div class="relative w-20 h-20 bg-[#1e1e1e] border border-neutral-800 rounded-sm overflow-hidden shrink-0 flex items-center justify-center p-1">
+                                    @if($featuredProduct->is_on_sale)
+                                        <span class="absolute top-1 left-1 bg-[#f15a24] text-white text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-xs z-10">
+                                            Sale
+                                        </span>
+                                    @endif
+                                    <img src="{{ $featuredProduct->image ?? 'https://via.placeholder.com/150?text=MotoWorld' }}" 
+                                        class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200" 
+                                        alt="{{ $featuredProduct->name }}">
+                                </div>
+
+                                <div class="flex flex-col justify-center">
+                                    <h4 class="text-sm font-black text-white uppercase tracking-wide group-hover:text-[#f15a24] transition-colors duration-150 leading-tight">
+                                        {{ $featuredProduct->name ?? $featuredProduct->sku }}
+                                    </h4>
+                                    <span class="text-xs font-bold text-neutral-500 mt-0.5 uppercase tracking-wider">
+                                        {{ $featuredProduct->category?->name ?? 'MOTO' }}
+                                    </span>
+                                    
+                                    <div class="flex items-baseline gap-2 mt-1">
+                                        <span class="text-sm font-black text-white">
+                                            ${{ $featuredProduct->effective_price }}
+                                        </span>
+                                        
+                                        @if($featuredProduct->is_on_sale)
+                                            <span class="text-xs font-bold text-neutral-500 line-through">
+                                                ${{ $featuredProduct->list_price }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                            </div>
+                        @empty
+                            <p class="text-xs text-neutral-500 italic">No hay productos para mostrar.</p>
+                        @endforelse
+                    </div>
                 </div>
 
             </form>

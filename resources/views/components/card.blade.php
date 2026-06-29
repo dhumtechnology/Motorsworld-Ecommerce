@@ -8,7 +8,7 @@
     'href' => '#'
 ])
 
-<div class="bg-[#1e1e1e] text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
+<div class="text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
     
     <div class="relative w-full aspect-square bg-[#151515] rounded flex items-center justify-center p-6 overflow-hidden">
         @if($isSale)
