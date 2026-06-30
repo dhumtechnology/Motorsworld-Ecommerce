@@ -23,29 +23,29 @@ class CatalogSeeder extends Seeder
 
     private const GALLERY_ACCESSORY = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtOqavomJGW5tPA-FEUHJy-57xrYacL0x5RqPBFsifow&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtOqavomJGW5tPA-FEUHJy-57xrYacL0x5RqPBFsifow&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtOqavomJGW5tPA-FEUHJy-57xrYacL0x5RqPBFsifow&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8p_qQfIUQUlm2qAOovGykSvsXTaKsEjzMJQ&s',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_533bKzwPa7HlNapio0XiMTbztLYxhewZ1Q&s',
     ];
 
     private const GALLERY_SPARE = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRODvf0CYLoOonNG8SA-LEqIY2HLPy9-Jpk2opBwAXXDQ&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRODvf0CYLoOonNG8SA-LEqIY2HLPy9-Jpk2opBwAXXDQ&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2NwAQzchCoeuJHdyeSlaH82Q5WZtGtXiJHQ&s',
     ];
 
     private const GALLERY_BATTERY = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo1Apuh8MtRO8dQi07ibQQryI7bM7P1bN7xg&s',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo1Apuh8MtRO8dQi07ibQQryI7bM7P1bN7xg&s',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrjAmxb39fbWahEuWIzOOJXyDVl7zO9323Ug&s',
     ];
 
     private const GALLERY_LUBRICANT = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjAAuJMs0Qgkdfsd86Lq-TPQEhx3BYINCcoCvlQmnt3Q&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjAAuJMs0Qgkdfsd86Lq-TPQEhx3BYINCcoCvlQmnt3Q&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyNrTtAE5c5A0PLSX5Iim6adv4kfPqhWSTqw&s',
     ];
 
     private const GALLERY_TIRE = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PJZtzjBBWGxTe1K6DLtEn06h8xfYn8x1FFivSn4HAw&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PJZtzjBBWGxTe1K6DLtEn06h8xfYn8x1FFivSn4HAw&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PJZtzjBBWGxTe1K6DLtEn06h8xfYn8x1FFivSn4HAw&s=10',
+        'https://casalopez.com.co/wp-content/uploads/2025/04/1806-LLANTA_PARA_MOTO_MICHELIN_90-80-17_PILOT_STREET_2-5.jpg',
+        'https://mantallanta.com/cdn/shop/products/4512332146455_1.jpg?v=1674888224&width=800',
     ];
 
     /**
