@@ -163,27 +163,36 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-white max-w-[95%] mx-auto p-4 select-none font-sans">
             <div class="lg:col-span-7 flex flex-col sm:flex-row gap-4 h-fit">        
-                <div class="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-36">   
-                    <div class="w-20 h-20 sm:w-36 sm:h-30 border-2 border-[#f15a24] bg-[#000000] rounded-sm overflow-hidden cursor-pointer transition-colors">
-                        <img src="https://diggerdetailing.co.nz/wp-content/uploads/2022/08/product-10.png" class="w-full h-full object-contain p-1" alt="Miniatura 1">
-                    </div>
+                
+                <div class="lg:col-span-7 flex flex-col sm:flex-row gap-4 h-fit" 
+                    x-data="{ activeImage: '{{ $product->images->first()?->path ?? ($product->image ?? 'https://via.placeholder.com/600?text=MotoWorld') }}' }">        
+                    
+                    {{-- Miniaturas laterales optimizadas --}}
+                    @if($product->images->count() > 1)
+                        <div class="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-36 overflow-x-auto sm:overflow-x-visible max-h-[480px]">   
+                            @foreach ($product->images as $img)
+                                @if(!empty($img->path))
+                                    <div class="w-20 h-20 sm:w-36 sm:h-28 bg-[#000000] rounded-sm border border-neutral-800 hover:border-neutral-600 overflow-hidden cursor-pointer transition-all duration-150 p-1 flex items-center justify-center shrink-0"
+                                        :class="activeImage === '{{ $img->path }}' ? 'border-2 border-[#f15a24]' : 'border border-neutral-800'"
+                                        @click="activeImage = '{{ $img->path }}'">
+                                        <img src="{{ $img->path }}" class="w-full h-full object-contain mix-blend-lighten" alt="Minis">
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
 
-                    <div class="w-20 h-20 sm:w-36 sm:h-30 border border-neutral-800 bg-[#000000] rounded-sm overflow-hidden cursor-pointer hover:border-neutral-600 transition-colors">
-                        <img src="https://diggerdetailing.co.nz/wp-content/uploads/2022/08/product-10.png" class="w-full h-full object-contain p-1" alt="Miniatura 2">
+                    {{-- Imagen Principal Dinámica interactiva --}}              
+                    <div class="flex-1 bg-[#000000] rounded-sm p-6 flex items-center justify-center border border-neutral-800 min-h-[350px] lg:min-h-[480px] overflow-hidden relative">
+                        @if($product->is_on_sale)
+                            <span class="absolute top-4 left-4 bg-[#f15a24] text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-sm shadow-sm z-10">
+                                SALE
+                            </span>
+                        @endif
+                        <img :src="activeImage" class="max-w-full max-h-[440px] object-contain transition-all duration-200" alt="{{ $product->name }}">
                     </div>
+                </div>    
 
-                    <div class="w-20 h-20 sm:w-36 sm:h-30 border border-neutral-800 bg-[#000000] rounded-sm overflow-hidden cursor-pointer hover:border-neutral-600 transition-colors">
-                        <img src="https://diggerdetailing.co.nz/wp-content/uploads/2022/08/product-10.png" class="w-full h-full object-contain p-1" alt="Miniatura 3">
-                    </div>
-
-                    <div class="w-20 h-20 sm:w-36 sm:h-30 border border-neutral-800 bg-[#000000] rounded-sm overflow-hidden cursor-pointer hover:border-neutral-600 transition-colors">
-                        <img src="https://diggerdetailing.co.nz/wp-content/uploads/2022/08/product-10.png" class="w-full h-full object-contain p-1" alt="Miniatura 4">
-                    </div>
-                </div>
-
-                <div class="flex-1 bg-[#000000] rounded-sm p-6 flex items-center justify-center border border-neutral-800 min-h-[350px] lg:min-h-[480px]">
-                    <img src="https://diggerdetailing.co.nz/wp-content/uploads/2022/08/product-10.png" class="max-w-full max-h-[440px] object-contain" alt="Imagen principal">
-                </div>
             </div>
       
             <div class="lg:col-span-5 flex flex-col justify-start font-sans">

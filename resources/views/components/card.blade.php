@@ -16,8 +16,9 @@
                 SALE
             </span>
         @endif
-        
-        <img src="{{ $image }}" alt="{{ $title }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <a href="{{ $href }}">
+            <img src="{{ $image }}" alt="{{ $title }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        </a>
     </div>
 
     <div class="mt-4 flex flex-col flex-grow">
