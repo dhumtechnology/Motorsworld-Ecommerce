@@ -195,7 +195,7 @@
 @section('content')
     <div>
         <div>
-            -- bradcrumb
+           <!-- bradcrumb -->
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-white max-w-[95%] mx-auto p-4 select-none font-sans">
@@ -246,72 +246,138 @@
                     >
                 </div>
             </div>
-      
+
+            <!-- DATOS DEL PRODUCTO -->
             <div class="lg:col-span-5 flex flex-col justify-start font-sans">
-                <h3 class="text-3xl font-black tracking-wide uppercase leading-tight antialiased">
-                    Tendicatena Tension Roller
+                <h3 class="text-3xl font-black tracking-wide uppercase leading-tight antialiased text-white">
+                    {{ $product->name }}
                 </h3>
-                <h5 class="text-sm font-bold tracking-widest text-neutral-400 mt-1 uppercase">
-                    ROLLER
-                </h5>
+                
+                @if($product->vehicleModel?->brand)
+                    <h5 class="text-sm font-bold tracking-widest text-[#f15a24] mt-1 uppercase">
+                        {{ $product->vehicleModel->brand->name }}
+                    </h5>
+                @endif
+
                 <div class="mt-6 space-y-1 text-sm text-neutral-400 font-medium">
-                    <p>Categories: Automatic Mechanic</p>
-                    <p>SKU: 123456</p>
-                    <p>Tags: Energy Speed System</p>
+                    <p><span class="text-neutral-500 font-bold">Categoría:</span> {{ $product->category->name }}</p>
+                    <p><span class="text-neutral-500 font-bold">SKU:</span> {{ $product->sku }}</p>
+                    @if($product->vehicleModel)
+                        <p><span class="text-neutral-500 font-bold">Modelo:</span> {{ $product->vehicleModel->name }}</p>
+                    @endif
+                    <p>
+                        <span class="text-neutral-500 font-bold">Disponibilidad:</span> 
+                        @if($product->hasAvailableStock())
+                            <span class="text-emerald-500 font-bold">En Stock ({{ $product->inventory->available_stock }} u.)</span>
+                        @else
+                            <span class="text-rose-500 font-bold">Agotado</span>
+                        @endif
+                    </p>
                 </div>
+
+                {{-- Bloque de precios inteligente --}}
                 <div class="my-6 flex items-baseline gap-4">
-                    <span class="text-2xl font-black tracking-tight text-white">$69000</span>
-                    <span class="text-sm font-bold text-neutral-500 line-through">$76000</span>
+                    <span class="text-3xl font-black tracking-tight text-white">
+                        ${{ number_format($product->effective_price, 0, '.', '') }}
+                    </span>
+                    @if($product->is_on_sale)
+                        <span class="text-base font-bold text-neutral-500 line-through">
+                            ${{ number_format($product->list_price, 0, '.', '') }}
+                        </span>
+                    @endif
                 </div>
-                <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm">
-                    <button type="button" class="w-12 h-full flex items-center justify-center bg-white text-orange-600 font-sans font-black text-2xl focus:outline-none">
+
+                {{-- Selector de cantidad dinámico --}}
+                <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm" x-data="{ qty: 1 }">
+                    <button type="button" @click="if(qty > 1) qty--" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors">
                         -
                     </button>
                     <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center">
-                        <input type="number" value="1" class="w-full bg-transparent text-center text-white font-sans font-black text-lg focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <input type="number" name="quantity" x-model.number="qty" readonly class="w-full bg-transparent text-center text-white font-sans font-black text-lg focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                     </div>
-                    <button type="button" class="w-12 h-full flex items-center justify-center bg-white text-orange-600 font-sans font-black text-xl focus:outline-none">
+                    <button type="button" @click="qty++" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors">
                         +
                     </button>
                 </div>
             </div>
+
         </div>
 
-        <div class="w-full px-10 py-5 text-white font-sans mt-12 select-none">
+        <!-- Informacion adicional -->
+        
+        <div class="w-full px-10 py-5 text-white font-sans mt-12 select-none" x-data="{ currentTab: 'description' }">
     
+            {{-- Cabecera de pestañas interactiva --}}
             <div class="flex flex-wrap items-center gap-x-8 border-b border-neutral-800">
-                
-                <button type="button" class="pb-3 text-2xl font-black uppercase tracking-wide text-white border-b-2 border-[#f15a24] focus:outline-none transition-colors duration-150">
+                <button type="button" 
+                        @click="currentTab = 'description'"
+                        :class="currentTab === 'description' ? 'text-white border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-white'"
+                        class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Descripción
                 </button>
 
-                <button type="button" class="pb-3 text-2xl font-black uppercase tracking-wide text-neutral-400 hover:text-white border-b-2 border-transparent hover:border-[#f15a24]/50 focus:outline-none transition-colors duration-150">
+                <button type="button" 
+                        @click="currentTab = 'info'"
+                        :class="currentTab === 'info' ? 'text-white border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-white'"
+                        class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Información Adicional
                 </button>
 
-                <button type="button" class="pb-3 text-2xl font-black uppercase tracking-wide text-neutral-400 hover:text-white border-b-2 border-transparent hover:border-[#f15a24]/50 focus:outline-none transition-colors duration-150">
-                    Reviews
+                <button type="button" 
+                        @click="currentTab = 'reviews'"
+                        :class="currentTab === 'reviews' ? 'text-white border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-white'"
+                        class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
+                    Reviews ({{ $reviewSummary['count'] }})
                 </button>
-
             </div>
 
+            {{-- Contenidos dinámicos de pestañas --}}
             <div class="mt-8 text-neutral-300 text-sm leading-relaxed max-w-5xl">
                 
-                <div id="tab-content-description" class="block">
-                    <p class="mb-4">
-                        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout, it is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-                    </p>
-                    <ul class="list-disc pl-5 space-y-2 text-neutral-400">
-                        <li>The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters.</li>
-                        <li>Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text.</li>
-                        <li>Various versions have evolved over the years, sometimes by accident, sometimes on purpose.</li>
-                        <li>Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text.</li>
-                        <li>Various versions have evolved over the years, sometimes by accident, sometimes on purpose.</li>
-                    </ul>
+                {{-- Tab: Descripción --}}
+                <div x-show="currentTab === 'description'" class="space-y-4">
+                    @if($product->description)
+                        <p>{!! nl2br(e($product->description)) !!}</p>
+                    @else
+                        <p class="text-neutral-500 italic">No hay descripción disponible para este artículo.</p>
+                    @endif
+                </div>
+
+                {{-- Tab: Información Adicional --}}
+                <div x-show="currentTab === 'info'" class="space-y-4" style="display: none;">
+                    @if($product->additional_information)
+                        <p>{!! nl2br(e($product->additional_information)) !!}</p>
+                    @else
+                        <p class="text-neutral-500 italic">No hay especificaciones adicionales registradas.</p>
+                    @endif
+                </div>
+
+                {{-- Tab: Reseñas / Comentarios --}}
+                <div x-show="currentTab === 'reviews'" class="space-y-6" style="display: none;">
+                    @forelse ($reviews as $review)
+                        <div class="border-b border-neutral-900 pb-4">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-black text-white text-base">
+                                    {{ $review->user->customerProfile?->first_name ?? 'Usuario' }} 
+                                    {{ $review->user->customerProfile?->last_name ?? 'MotoWorld' }}
+                                </span>
+                                <span class="text-xs font-bold text-neutral-500">
+                                    {{ $review->created_at->format('d/m/Y') }}
+                                </span>
+                            </div>
+                            {{-- Estrellas numéricas --}}
+                            <div class="text-[#f15a24] font-black text-xs mb-2 tracking-widest">
+                                @for ($i = 0; $i < $review->stars; $i++) ★ @endfor
+                                @for ($i = $review->stars; $i < 5; $i++) ☆ @endfor
+                            </div>
+                            <p class="text-neutral-400">{{ $review->comment }}</p>
+                        </div>
+                    @empty
+                        <p class="text-neutral-500 italic">Este producto aún no cuenta con reseñas de clientes.</p>
+                    @endforelse
                 </div>
 
             </div>
-
         </div>
     </div>
 
