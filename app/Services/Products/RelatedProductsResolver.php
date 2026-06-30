@@ -100,10 +100,13 @@ class RelatedProductsResolver
 
         return $this->rankedProductIdsInScope(
             Product::query()
-                ->active()
-                ->where('category_id', $product->category_id)
-                ->where('id', '!=', $product->id)
-                ->whereNotIn('id', $excludeIds)
+                ->where('products.status', ProductStatus::Active)
+                ->where('products.category_id', $product->category_id)
+                ->where('products.id', '!=', $product->id)
+                ->when(
+                    $excludeIds !== [],
+                    fn (Builder $query) => $query->whereNotIn('products.id', $excludeIds),
+                )
                 ->whereHas(
                     'vehicleModel',
                     fn (Builder $query) => $query->where('brand_id', $brandId),
@@ -123,10 +126,13 @@ class RelatedProductsResolver
     ): Collection {
         return $this->rankedProductIdsInScope(
             Product::query()
-                ->active()
-                ->where('category_id', $product->category_id)
-                ->where('id', '!=', $product->id)
-                ->whereNotIn('id', $excludeIds),
+                ->where('products.status', ProductStatus::Active)
+                ->where('products.category_id', $product->category_id)
+                ->where('products.id', '!=', $product->id)
+                ->when(
+                    $excludeIds !== [],
+                    fn (Builder $query) => $query->whereNotIn('products.id', $excludeIds),
+                ),
             $limit - count($excludeIds),
         );
     }
@@ -144,12 +150,13 @@ class RelatedProductsResolver
         }
 
         return $query
+            ->select('products.id')
             ->leftJoin('order_items', 'order_items.product_id', '=', 'products.id')
             ->leftJoin('orders', function ($join) {
                 $join->on('orders.id', '=', 'order_items.order_id')
                     ->whereNotIn('orders.status', [
-                        OrderStatus::Cancelled->value,
-                        OrderStatus::Refunded->value,
+                        OrderStatus::Cancelled,
+                        OrderStatus::Refunded,
                     ]);
             })
             ->leftJoin('inventory', 'inventory.product_id', '=', 'products.id')

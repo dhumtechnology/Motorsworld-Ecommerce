@@ -5,11 +5,18 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\Auth\LoginUserAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginUserRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    public function create(): View
+    {
+        return view('auth.login');
+    }
+
     public function store(
         LoginUserRequest $request,
         LoginUserAction $loginUser,
@@ -19,16 +26,28 @@ class LoginController extends Controller
             password: $request->password(),
         );
 
-        Auth::login($user);
+        Auth::login($user, $request->boolean('remember'));
 
         if ($user->hasRole('Administrador')) {
             return redirect()
-                ->route('admin.dashboard')
+                ->intended(route('admin.dashboard'))
                 ->with('status', 'Sesión iniciada correctamente.');
         }
 
         return redirect()
-            ->route('shop.home')
+            ->intended(route('shop.catalog'))
             ->with('status', 'Sesión iniciada correctamente.');
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Sesión cerrada correctamente.');
     }
 }
