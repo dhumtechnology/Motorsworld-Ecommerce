@@ -60,6 +60,34 @@
     @else
         {{ number_format($product->effective_price, 2) }} {{ $product->currency }}
     @endif
+
+    =============================================================================
+    CARRITO — integración frontend (backend listo, sin wire en esta vista aún)
+    =============================================================================
+
+    Invitado: carrito ligado a session_id (cookie de sesión Laravel).
+    Logueado: carrito ligado a user_id. Al login/registro se fusiona el carrito invitado.
+
+    Rutas (POST/PATCH, requieren @csrf). Respuesta: redirect back + flash o JSON si Accept: application/json
+
+    | Acción                         | Ruta                                      | Body              |
+    |--------------------------------|-------------------------------------------|-------------------|
+    | Agregar al carrito (catálogo)  | POST shop.cart.items.store                | quantity? (def 1) |
+    | Cantidad absoluta (input)      | PATCH shop.cart.items.update              | quantity (0=quita)|
+    | Botón +                        | POST shop.cart.items.increment            | —                 |
+    | Botón −                        | POST shop.cart.items.decrement            | —                 |
+
+    Ejemplo catálogo (x-card), sin ir al detalle:
+    <form method="POST" action="{{ route('shop.cart.items.store', $product) }}">
+        @csrf
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit">AGREGAR AL CARRITO</button>
+    </form>
+
+    Flash tras redirect: session('cart_status'), session('cart_summary')
+    cart_summary: item_count, line_count, items[{ product_id, quantity, sku, name }]
+
+    Validación: producto active, stock en inventory.available_stock.
 --}} -->
 
 @extends('layouts.shop')

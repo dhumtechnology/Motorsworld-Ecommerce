@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'expiration_date'])]
+#[Fillable(['user_id', 'session_id', 'expiration_date'])]
 class Cart extends Model
 {
     /**
@@ -17,6 +17,16 @@ class Cart extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function isGuest(): bool
+    {
+        return $this->user_id === null;
+    }
+
+    public function totalItemQuantity(): int
+    {
+        return (int) $this->items()->sum('quantity');
     }
 
     /**

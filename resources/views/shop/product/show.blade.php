@@ -10,6 +10,43 @@
     - $reviews         : Collection<int, Comment> — reseñas del producto, más recientes primero
     - $reviewSummary   : ['count' => int, 'average_stars' => float|null]
     - $relatedProducts : Collection<int, Product> — hasta 8 productos relacionados (ver algoritmo abajo)
+    - $cartLineQuantity : int — unidades de este producto ya en el carrito (0 si no está)
+
+    =============================================================================
+    CARRITO — botones + / − y cantidad (backend listo)
+    =============================================================================
+
+    | Control UI              | Método | Ruta                           | Body                    |
+    |-------------------------|--------|--------------------------------|-------------------------|
+    | Input cantidad (submit) | PATCH  | shop.cart.items.update         | quantity (entero ≥ 0)   |
+    | Botón +                 | POST   | shop.cart.items.increment      | @csrf solamente         |
+    | Botón −                 | POST   | shop.cart.items.decrement      | @csrf solamente         |
+    | Agregar 1ª vez          | POST   | shop.cart.items.store          | quantity? (default 1)   |
+
+    Valor inicial del input: {{ $cartLineQuantity > 0 ? $cartLineQuantity : 1 }}
+    Máximo sugerido: $product->inventory?->available_stock
+
+    Ejemplo botón +:
+    <form method="POST" action="{{ route('shop.cart.items.increment', $product) }}">@csrf
+        <button type="submit">+</button>
+    </form>
+
+    Ejemplo botón −:
+    <form method="POST" action="{{ route('shop.cart.items.decrement', $product) }}">@csrf
+        <button type="submit">−</button>
+    </form>
+
+    Ejemplo PATCH cantidad absoluta:
+    <form method="POST" action="{{ route('shop.cart.items.update', $product) }}">
+        @csrf @method('PATCH')
+        <input type="number" name="quantity" value="{{ $cartLineQuantity }}" min="0" max="{{ $product->inventory?->available_stock }}">
+        <button type="submit">Actualizar</button>
+    </form>
+
+    Tras cada acción: redirect back con session('cart_status') y session('cart_summary').
+    JSON: header Accept: application/json → { message, item_count, line_count, items[] }
+
+    Invitado vs logueado: mismo flujo; al login el carrito de sesión se fusiona (MergeGuestCartAction).
 
     =============================================================================
     PRODUCTOS RELACIONADOS ($relatedProducts)

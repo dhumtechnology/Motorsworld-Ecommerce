@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Shop;
 use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
+use App\Services\Cart\CartResolver;
 use App\Services\Products\RelatedProductsResolver;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ProductController extends Controller
@@ -15,9 +17,10 @@ class ProductController extends Controller
 
     public function __construct(
         private readonly RelatedProductsResolver $relatedProducts,
+        private readonly CartResolver $cartResolver,
     ) {}
 
-    public function show(Product $product): View
+    public function show(Request $request, Product $product): View
     {
         if ($product->status !== ProductStatus::Active) {
             throw new NotFoundHttpException;
@@ -40,6 +43,11 @@ class ProductController extends Controller
             ->resolve($product, self::RELATED_LIMIT)
             ->map(fn (Product $related) => $this->applyCatalogPresentationAttributes($related));
 
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+        $cartLineQuantity = (int) $cart->items()
+            ->where('product_id', $product->id)
+            ->value('quantity');
+
         return view('shop.product.show', [
             'product' => $product,
             'reviews' => $reviews,
@@ -50,6 +58,7 @@ class ProductController extends Controller
                     : round((float) $reviews->avg('stars'), 1),
             ],
             'relatedProducts' => $relatedProducts,
+            'cartLineQuantity' => $cartLineQuantity,
         ]);
     }
 
