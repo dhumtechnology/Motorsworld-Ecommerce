@@ -10,14 +10,20 @@
 
 <div class="text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
     
-    <div class="relative w-full aspect-square bg-[#151515] rounded flex items-center justify-center overflow-hidden">
+    <div class="relative w-full aspect-squares border border-neutral-800 rounded-sm overflow-hidden">
+    
+        {{-- Etiqueta SALE flotante si aplica --}}
         @if($isSale)
-            <span class="absolute top-3 left-3 bg-orange-600 text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-md shadow-sm z-10">
-                SALE
+            <span class="absolute top-2 left-2 bg-[#f15a24] text-white text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs z-10">
+                Sale
             </span>
         @endif
+
+        {{-- Imagen obligada a llenar el contenedor por completo --}}
         <a href="{{ $href }}">
-            <img src="{{ $image }}" alt="{{ $title }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+            <img src="{{ $image }}" 
+                alt="{{ $title }}" 
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
         </a>
     </div>
 

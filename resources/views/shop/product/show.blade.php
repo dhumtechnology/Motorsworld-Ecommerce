@@ -198,7 +198,8 @@
            <!-- bradcrumb -->
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 text-white max-w-[95%] mx-auto p-4 select-none font-sans">
+        <div class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-4 select-none font-sans">
+            <!-- IMAGENES -->
             @php
                 $galleryImages = $product->images->filter(fn ($image) => filled($image->path))->values();
 
@@ -211,18 +212,21 @@
 
             <div class="lg:col-span-7 flex flex-col sm:flex-row gap-4 h-fit">
                 @if ($galleryImages->isNotEmpty())
+                    {{-- Contenedor de miniaturas laterales --}}
                     <div class="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-36 overflow-x-auto sm:overflow-y-auto sm:max-h-[480px] py-1">
                         @foreach ($galleryImages as $index => $image)
                             <button
                                 type="button"
                                 data-gallery-thumb
                                 data-image="{{ $image->path }}"
-                                class="gallery-thumb grid place-items-center w-20 h-20 sm:w-36 sm:h-32 bg-[#1e1e1e] rounded-sm overflow-hidden cursor-pointer transition-all duration-150 p-2 shrink-0 {{ $index === 0 ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500' }}"
+                                {{-- QUITAMOS p-2 y CORREGIMOS aspect-square --}}
+                                class="gallery-thumb w-20 h-20 sm:w-36 sm:h-32 aspect-square bg-[#1e1e1e] rounded-sm overflow-hidden cursor-pointer transition-all duration-150 shrink-0 {{ $index === 0 ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500' }}"
                                 aria-label="Ver imagen {{ $index + 1 }}"
                             >
+                                {{-- w-full h-full y object-cover para rellenar TODO el botón --}}
                                 <img
                                     src="{{ $image->path }}"
-                                    class="block max-w-full max-h-full object-contain"
+                                    class="w-full h-full object-cover"
                                     alt="{{ $product->name }} — imagen {{ $index + 1 }}"
                                     loading="lazy"
                                     decoding="async"
@@ -232,16 +236,20 @@
                     </div>
                 @endif
 
-                <div class="flex-1 bg-[#000000] rounded-sm p-6 flex items-center justify-center border border-neutral-800 min-h-[350px] lg:min-h-[480px] overflow-hidden relative">
+                {{-- Contenedor de la Imagen Principal Grande --}}
+                {{-- CORREGIMOS aspect-square y aseguramos un alto robusto en pantallas grandes --}}
+                <div class="relative flex-1 w-full aspect-square min-h-[350px] lg:min-h-[480px] bg-[#000000] border border-neutral-800 rounded-sm overflow-hidden flex items-center justify-center">
                     @if ($product->is_on_sale)
                         <span class="absolute top-4 left-4 bg-[#f15a24] text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-sm shadow-sm z-10">
                             SALE
                         </span>
                     @endif
+                    
+                    {{-- CAMBIAMOS A w-full h-full object-cover para que tome todo el tamaño disponible --}}
                     <img
                         id="product-main-image"
                         src="{{ $initialImage }}"
-                        class="max-w-full max-h-[440px] object-contain transition-all duration-200"
+                        class="w-full h-full object-cover transition-all duration-200"
                         alt="{{ $product->name }}"
                     >
                 </div>
