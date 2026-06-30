@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Shop;
 
+use App\Actions\Cart\MergeGuestCartAction;
 use App\Actions\Shop\RegisterCustomerAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\RegisterCustomerRequest;
@@ -13,7 +14,10 @@ class RegisterCustomerController extends Controller
     public function store(
         RegisterCustomerRequest $request,
         RegisterCustomerAction $registerCustomer,
+        MergeGuestCartAction $mergeGuestCart,
     ): RedirectResponse {
+        $sessionId = $request->session()->getId();
+
         $user = $registerCustomer->execute(
             email: $request->email(),
             password: $request->password(),
@@ -24,6 +28,8 @@ class RegisterCustomerController extends Controller
         );
 
         Auth::login($user);
+
+        $mergeGuestCart->execute($user, $sessionId);
 
         return redirect()
             ->route('shop.home')

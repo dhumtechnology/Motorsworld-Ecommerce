@@ -23,29 +23,29 @@ class CatalogSeeder extends Seeder
 
     private const GALLERY_ACCESSORY = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtOqavomJGW5tPA-FEUHJy-57xrYacL0x5RqPBFsifow&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-example-accessory-2&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-example-accessory-3&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtOqavomJGW5tPA-FEUHJy-57xrYacL0x5RqPBFsifow&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtOqavomJGW5tPA-FEUHJy-57xrYacL0x5RqPBFsifow&s=10',
     ];
 
     private const GALLERY_SPARE = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRODvf0CYLoOonNG8SA-LEqIY2HLPy9-Jpk2opBwAXXDQ&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-example-spare-2&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRODvf0CYLoOonNG8SA-LEqIY2HLPy9-Jpk2opBwAXXDQ&s=10',
     ];
 
     private const GALLERY_BATTERY = [
-        'https://img.yigetechsaas.com/19/source/e236b288e205c642e3b3fd99f87cd01e.5-BS2',
-        'https://img.yigetechsaas.com/19/source/e236b288e205c642e3b3fd99f87cd01e.5-BS2?v=2',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo1Apuh8MtRO8dQi07ibQQryI7bM7P1bN7xg&s',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo1Apuh8MtRO8dQi07ibQQryI7bM7P1bN7xg&s',
     ];
 
     private const GALLERY_LUBRICANT = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjAAuJMs0Qgkdfsd86Lq-TPQEhx3BYINCcoCvlQmnt3Q&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-example-lub-2&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjAAuJMs0Qgkdfsd86Lq-TPQEhx3BYINCcoCvlQmnt3Q&s=10',
     ];
 
     private const GALLERY_TIRE = [
         'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PJZtzjBBWGxTe1K6DLtEn06h8xfYn8x1FFivSn4HAw&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-example-tire-2&s=10',
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-example-tire-3&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PJZtzjBBWGxTe1K6DLtEn06h8xfYn8x1FFivSn4HAw&s=10',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-PJZtzjBBWGxTe1K6DLtEn06h8xfYn8x1FFivSn4HAw&s=10',
     ];
 
     /**

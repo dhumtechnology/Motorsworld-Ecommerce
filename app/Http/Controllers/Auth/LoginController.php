@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\LoginUserAction;
+use App\Actions\Cart\MergeGuestCartAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginUserRequest;
 use Illuminate\Contracts\View\View;
@@ -20,13 +21,18 @@ class LoginController extends Controller
     public function store(
         LoginUserRequest $request,
         LoginUserAction $loginUser,
+        MergeGuestCartAction $mergeGuestCart,
     ): RedirectResponse {
+        $sessionId = $request->session()->getId();
+
         $user = $loginUser->execute(
             email: $request->email(),
             password: $request->password(),
         );
 
         Auth::login($user, $request->boolean('remember'));
+
+        $mergeGuestCart->execute($user, $sessionId);
 
         if ($user->hasRole('Administrador')) {
             return redirect()
