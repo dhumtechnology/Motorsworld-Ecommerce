@@ -10,14 +10,14 @@
 
 <div class="text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
     
-    <div class="relative w-full aspect-square bg-[#151515] rounded flex items-center justify-center p-6 overflow-hidden">
+    <div class="relative w-full aspect-square bg-[#151515] rounded flex items-center justify-center overflow-hidden">
         @if($isSale)
             <span class="absolute top-3 left-3 bg-orange-600 text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-md shadow-sm z-10">
                 SALE
             </span>
         @endif
         
-        <img src="{{ $image }}" alt="{{ $title }}" class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105">
+        <img src="{{ $image }}" alt="{{ $title }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
     </div>
 
     <div class="mt-4 flex flex-col flex-grow">
