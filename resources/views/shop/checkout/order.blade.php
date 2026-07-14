@@ -3,6 +3,11 @@
 @section('title', 'Pedido #'.$order->id.' — '.config('app.name'))
 
 @section('content')
+@php
+    $profile = $order->user?->customerProfile;
+    $shipping = $order->shippingAddress;
+    $customerName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+@endphp
 <div class="mx-auto max-w-3xl px-4 py-10 text-white">
     <h1 class="text-3xl font-black uppercase tracking-wide mb-6">Pedido #{{ $order->id }}</h1>
 
@@ -33,6 +38,46 @@
         <div class="flex justify-between p-4">
             <span class="text-neutral-400 uppercase text-xs font-bold tracking-widest">Total</span>
             <span class="text-xl font-black">S/ {{ number_format((float) $order->total_amount, 2) }}</span>
+        </div>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2 mb-6">
+        <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 space-y-2">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Datos del cliente</h2>
+            <p class="text-sm">
+                <span class="text-neutral-500">Nombre:</span>
+                <span class="text-white font-semibold">{{ $customerName !== '' ? $customerName : '—' }}</span>
+            </p>
+            <p class="text-sm">
+                <span class="text-neutral-500">Email:</span>
+                <span class="text-white font-semibold">{{ $order->user?->email ?? '—' }}</span>
+            </p>
+            <p class="text-sm">
+                <span class="text-neutral-500">Teléfono:</span>
+                <span class="text-white font-semibold">{{ $profile?->phone ?: '—' }}</span>
+            </p>
+            @if ($profile?->document)
+                <p class="text-sm">
+                    <span class="text-neutral-500">Documento:</span>
+                    <span class="text-white font-semibold">{{ $profile->document }}</span>
+                </p>
+            @endif
+        </div>
+
+        <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 space-y-2">
+            <h2 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Dirección de envío</h2>
+            @if ($shipping)
+                <p class="text-sm text-white font-semibold">{{ $shipping->line1 }}</p>
+                <p class="text-sm text-neutral-300">
+                    {{ $shipping->city }}
+                    @if ($shipping->postal_code)
+                        · {{ $shipping->postal_code }}
+                    @endif
+                </p>
+                <p class="text-sm text-neutral-400">{{ $shipping->country }}</p>
+            @else
+                <p class="text-sm text-neutral-500">No se registró dirección de envío.</p>
+            @endif
         </div>
     </div>
 

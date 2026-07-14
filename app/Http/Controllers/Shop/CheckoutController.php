@@ -88,6 +88,7 @@ class CheckoutController extends Controller
         $cart = $this->cartResolver->resolve($user, $request->session()->getId());
 
         $shippingAddress = $this->resolveAddress($request, $user->id);
+        $this->syncCustomerProfile($user, $request->customerDetails());
 
         $order = null;
 
@@ -168,7 +169,13 @@ class CheckoutController extends Controller
     {
         abort_unless($order->user_id === $request->user()->id, 403);
 
-        $order->load(['items.product.primaryImage', 'payments']);
+        $order->load([
+            'items.product.primaryImage',
+            'payments',
+            'user.customerProfile',
+            'shippingAddress',
+            'billingAddress',
+        ]);
 
         return view('shop.checkout.order', [
             'order' => $order,
@@ -209,6 +216,25 @@ class CheckoutController extends Controller
         return redirect()
             ->route('shop.checkout.orders.show', $order)
             ->with('status', 'Pago simulado correctamente (modo fake).');
+    }
+
+    private function syncCustomerProfile(\App\Models\Auth\User $user, array $customer): void
+    {
+        $profile = $user->customerProfile;
+
+        if ($profile === null) {
+            return;
+        }
+
+        $updates = array_filter([
+            'first_name' => $customer['first_name'] ?? null,
+            'last_name' => $customer['last_name'] ?? null,
+            'phone' => $customer['phone'] ?? null,
+        ], fn ($value) => is_string($value) && trim($value) !== '');
+
+        if ($updates !== []) {
+            $profile->update($updates);
+        }
     }
 
     private function resolveAddress(CheckoutPayRequest $request, int $userId): ?Address
