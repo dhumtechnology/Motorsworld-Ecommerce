@@ -27,6 +27,7 @@ Route::get('/producto/{product}', [ProductController::class, 'show'])->name('pro
 | Carrito (invitado o autenticado — ver CartResolver y MergeGuestCartAction)
 |--------------------------------------------------------------------------
 |
+| GET    /carrito                                  shop.cart.index
 | POST   /carrito/productos/{product}              shop.cart.items.store
 | PATCH  /carrito/productos/{product}              shop.cart.items.update
 | POST   /carrito/productos/{product}/increment    shop.cart.items.increment
@@ -34,6 +35,7 @@ Route::get('/producto/{product}', [ProductController::class, 'show'])->name('pro
 |
 */
 Route::prefix('carrito')->name('cart.')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('/productos/{product}', [CartController::class, 'store'])->name('items.store');
     Route::patch('/productos/{product}', [CartController::class, 'update'])->name('items.update');
     Route::post('/productos/{product}/increment', [CartController::class, 'increment'])->name('items.increment');

@@ -295,17 +295,70 @@
                     @endif
                 </div>
 
-                {{-- Selector de cantidad dinámico --}}
-                <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm" x-data="{ qty: 1 }">
-                    <button type="button" @click="if(qty > 1) qty--" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors">
-                        -
-                    </button>
-                    <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center">
-                        <input type="number" name="quantity" x-model.number="qty" readonly class="w-full bg-transparent text-center text-white font-sans font-black text-lg focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                    </div>
-                    <button type="button" @click="qty++" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors">
-                        +
-                    </button>
+                {{-- Carrito: Agregar / cantidad (AJAX, sin recargar) --}}
+                <div
+                    class="mt-2 space-y-3"
+                    data-product-cart
+                    data-product-id="{{ $product->id }}"
+                    data-max-stock="{{ (int) ($product->inventory?->available_stock ?? 0) }}"
+                    data-store-url="{{ route('shop.cart.items.store', $product) }}"
+                    data-increment-url="{{ route('shop.cart.items.increment', $product) }}"
+                    data-decrement-url="{{ route('shop.cart.items.decrement', $product) }}"
+                >
+                    <p data-cart-error class="hidden text-sm text-rose-400 font-semibold"></p>
+
+                    @if ($product->hasAvailableStock() || $cartLineQuantity > 0)
+                        <div data-cart-add class="{{ $cartLineQuantity > 0 ? 'hidden' : '' }}">
+                            @if ($product->hasAvailableStock())
+                                <button
+                                    type="button"
+                                    data-cart-action="store"
+                                    class="w-full sm:w-auto px-8 py-3 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase"
+                                >
+                                    Agregar al carrito
+                                </button>
+                            @else
+                                <button type="button" disabled
+                                        class="w-full sm:w-auto px-8 py-3 bg-neutral-700 text-neutral-400 font-extrabold text-xs tracking-widest rounded uppercase cursor-not-allowed">
+                                    Agotado
+                                </button>
+                            @endif
+                        </div>
+
+                        <div data-cart-qty class="{{ $cartLineQuantity > 0 ? '' : 'hidden' }} space-y-2">
+                            <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm">
+                                <button
+                                    type="button"
+                                    data-cart-action="decrement"
+                                    class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors"
+                                    aria-label="Disminuir"
+                                >
+                                    −
+                                </button>
+                                <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center text-white font-sans font-black text-lg">
+                                    <span data-cart-qty-value>{{ max($cartLineQuantity, 1) }}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    data-cart-action="increment"
+                                    @disabled($cartLineQuantity >= (int) ($product->inventory?->available_stock ?? 0))
+                                    class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40"
+                                    aria-label="Aumentar"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <p class="text-xs text-neutral-500">
+                                En tu carrito.
+                                <a href="{{ route('shop.cart.index') }}" class="text-orange-500 hover:text-orange-400 font-bold">Ver carrito →</a>
+                            </p>
+                        </div>
+                    @else
+                        <button type="button" disabled
+                                class="w-full sm:w-auto px-8 py-3 bg-neutral-700 text-neutral-400 font-extrabold text-xs tracking-widest rounded uppercase cursor-not-allowed">
+                            Agotado
+                        </button>
+                    @endif
                 </div>
             </div>
 

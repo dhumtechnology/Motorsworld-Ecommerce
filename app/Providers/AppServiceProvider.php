@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\Cart\CartResolver;
 use App\Services\Payments\Culqi\CulqiClient;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +22,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('layouts.shop', function ($view): void {
+            $request = request();
+            $count = 0;
+
+            if ($request->hasSession()) {
+                $cart = app(CartResolver::class)->resolve(
+                    $request->user(),
+                    $request->session()->getId(),
+                );
+
+                $count = (int) $cart->items()->sum('quantity');
+            }
+
+            $view->with('cartItemCount', $count);
+        });
     }
 }

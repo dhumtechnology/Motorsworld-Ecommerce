@@ -4,11 +4,7 @@
 
 @section('content')
 <div class="mx-auto max-w-3xl px-4 py-10 text-white">
-    <h1 class="text-3xl font-black uppercase tracking-wide mb-2">Pedido #{{ $order->id }}</h1>
-    <p class="text-neutral-400 text-sm mb-6">
-        Estado: <span class="text-white font-semibold">{{ $order->status->value }}</span>
-        · Pago: <span class="text-white font-semibold">{{ $order->payment_status->value }}</span>
-    </p>
+    <h1 class="text-3xl font-black uppercase tracking-wide mb-6">Pedido #{{ $order->id }}</h1>
 
     @if (session('status'))
         <div class="mb-6 rounded border border-green-800 bg-green-950/40 px-4 py-3 text-sm text-green-300">
@@ -40,12 +36,8 @@
         </div>
     </div>
 
-    @if ($payment)
-        <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 space-y-3">
-            <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-500">Pago Culqi</h2>
-            <p class="text-sm">Método: <strong>{{ $payment->method->label() }}</strong></p>
-            <p class="text-sm">Estado: <strong>{{ $payment->status->value }}</strong></p>
-
+    @if ($payment && $payment->status->value === 'pending')
+        <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 space-y-3 mb-6">
             @if ($payment->payment_code)
                 <div class="rounded border border-orange-800/50 bg-orange-500/10 p-4">
                     <p class="text-xs uppercase tracking-widest text-orange-400 font-bold mb-1">Código CIP (PagoEfectivo)</p>
@@ -65,27 +57,12 @@
                 </div>
             @endif
 
-            @if ($payment->expires_at)
-                <p class="text-xs text-neutral-500">Expira: {{ $payment->expires_at->format('d/m/Y H:i') }}</p>
-            @endif
-
-            @if ($payment->culqi_charge_id)
-                <p class="text-xs text-neutral-500 font-mono">Cargo: {{ $payment->culqi_charge_id }}</p>
-            @endif
-
-            @if ($payment->culqi_order_id)
-                <p class="text-xs text-neutral-500 font-mono">Orden Culqi: {{ $payment->culqi_order_id }}</p>
-            @endif
-
-            @if ($culqiFake && $payment->status->value === 'pending')
+            @if ($culqiFake)
                 <form method="POST" action="{{ route('shop.checkout.orders.simulate', $order) }}" class="pt-2">
                     @csrf
                     <button type="submit" class="rounded bg-sky-700 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-sky-600">
                         Simular pago recibido (fake)
                     </button>
-                    <p class="text-[11px] text-neutral-500 mt-2">
-                        Equivale al webhook de Culqi cuando el cliente paga CIP/QR.
-                    </p>
                 </form>
             @endif
         </div>

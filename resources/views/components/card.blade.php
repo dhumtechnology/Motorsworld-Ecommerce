@@ -5,7 +5,8 @@
     'oldPrice' => null, 
     'image', 
     'isSale' => false,
-    'href' => '#'
+    'href' => '#',
+    'cartQty' => 0,
 ])
 
 <div class="text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
@@ -16,6 +17,12 @@
         @if($isSale)
             <span class="absolute top-2 left-2 bg-[#f15a24] text-white text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs z-10">
                 Sale
+            </span>
+        @endif
+
+        @if($cartQty > 0)
+            <span class="absolute top-2 right-2 z-10 min-w-[28px] h-7 px-2 rounded-full bg-orange-600 text-white text-xs font-black flex items-center justify-center shadow-sm" title="En tu carrito">
+                {{ $cartQty }}
             </span>
         @endif
 
@@ -46,12 +53,12 @@
                 </span>
             @endif
         </div>
-    </div>
 
-    <div class="mt-5">
-        <button type="button" class="w-full py-3 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase transition-transform active:scale-[0.98]">
-            AGREGAR AL CARRITO
-        </button>
+        @if($cartQty > 0)
+            <p class="mt-2 text-xs font-bold text-orange-500 uppercase tracking-wider">
+                En carrito: {{ $cartQty }}
+            </p>
+        @endif
     </div>
 
 </div>

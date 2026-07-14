@@ -11,6 +11,7 @@ use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Models\Products\VehicleModel;
+use App\Services\Cart\CartResolver;
 use App\Support\QueryResultCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -60,10 +61,12 @@ class CatalogController extends Controller
             ];
 
             $featuredProducts = $this->featuredProducts($section);
+            $cartQuantities = $this->cartQuantitiesByProduct($request);
 
             return view('shop.catalog.index', [
                 'products' => $products,
                 'featuredProducts' => $featuredProducts,
+                'cartQuantities' => $cartQuantities,
                 'section' => $section,
                 'filters' => [
                     'categories' => $request->categoryIds(),
@@ -84,6 +87,22 @@ class CatalogController extends Controller
 
             throw $exception;
         }
+    }
+
+    /**
+     * @return array<int, int> product_id => quantity in cart
+     */
+    private function cartQuantitiesByProduct(CatalogIndexRequest $request): array
+    {
+        $cart = app(CartResolver::class)->resolve(
+            $request->user(),
+            $request->session()->getId(),
+        );
+
+        return $cart->items()
+            ->pluck('quantity', 'product_id')
+            ->map(fn ($quantity) => (int) $quantity)
+            ->all();
     }
 
     /**

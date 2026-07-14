@@ -4,8 +4,7 @@
 
 @section('content')
 <div class="mx-auto max-w-6xl px-4 py-10 text-white">
-    <h1 class="text-3xl font-black uppercase tracking-wide mb-2">Checkout</h1>
-    <p class="text-neutral-400 text-sm mb-8">Revisa tu pedido y elige cómo pagar con Culqi.</p>
+    <h1 class="text-3xl font-black uppercase tracking-wide mb-8">Checkout</h1>
 
     @if ($errors->any())
         <div class="mb-6 rounded border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
@@ -13,12 +12,7 @@
         </div>
     @endif
 
-    @if ($culqiFake)
-        <div class="mb-6 rounded border border-sky-800 bg-sky-950/40 px-4 py-3 text-sm text-sky-300">
-            <strong class="font-bold">Modo Culqi fake activo</strong>
-            (`CULQI_FAKE=true`). No se llama a Culqi real: puedes probar tarjeta, Yape, Plin y PagoEfectivo sin cuenta ni llaves.
-        </div>
-    @elseif (! $culqiPublicKey)
+    @if (! $culqiFake && ! $culqiPublicKey)
         <div class="mb-6 rounded border border-yellow-800 bg-yellow-950/40 px-4 py-3 text-sm text-yellow-300">
             Falta configurar <code class="font-mono">CULQI_PUBLIC_KEY</code> y <code class="font-mono">CULQI_SECRET_KEY</code>,
             o activa <code class="font-mono">CULQI_FAKE=true</code> para probar sin Culqi.
@@ -123,7 +117,6 @@
                 </div>
 
                 <div id="card-fields" class="space-y-3 rounded border border-neutral-700 p-4 bg-[#252525]">
-                    <p class="text-xs text-neutral-400">Los datos de tarjeta se tokenizan con Culqi (nunca llegan a nuestro servidor).</p>
                     <div>
                         <label class="block text-xs text-neutral-500 mb-1" for="card_email">Email del cargo</label>
                         <input id="card_email" type="email" value="{{ auth()->user()->email }}"
@@ -154,7 +147,6 @@
                 </div>
 
                 <div id="yape-fields" class="hidden space-y-3 rounded border border-neutral-700 p-4 bg-[#252525]">
-                    <p class="text-xs text-neutral-400">Genera el token Yape (`ype_`) con el número y OTP de prueba Culqi.</p>
                     <div>
                         <label class="block text-xs text-neutral-500 mb-1" for="yape_phone">Celular Yape</label>
                         <input id="yape_phone" placeholder="900000001"
@@ -173,10 +165,6 @@
                         class="w-full rounded bg-orange-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-orange-500 transition-colors disabled:opacity-50">
                     Pagar S/ {{ number_format($total, 2) }}
                 </button>
-
-                <p class="text-[11px] text-neutral-500 leading-relaxed">
-                    Al pagar, el backend crea el pedido y cobra con la API Culqi (cargos para tarjeta/Yape u órdenes para Plin/PagoEfectivo).
-                </p>
             </form>
         </div>
     </div>

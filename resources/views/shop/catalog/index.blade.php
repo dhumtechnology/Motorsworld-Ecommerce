@@ -62,30 +62,21 @@
     @endif
 
     =============================================================================
-    CARRITO — integración frontend (backend listo, sin wire en esta vista aún)
+    CARRITO — se agrega solo desde el detalle de producto (no desde el catálogo)
     =============================================================================
 
-    Invitado: carrito ligado a session_id (cookie de sesión Laravel).
-    Logueado: carrito ligado a user_id. Al login/registro se fusiona el carrito invitado.
+    Icono del header → vista shop.cart.index (GET /carrito)
+    Badge del icono: cantidad total de unidades en el carrito
 
-    Rutas (POST/PATCH, requieren @csrf). Respuesta: redirect back + flash o JSON si Accept: application/json
+    Rutas de acción (POST/PATCH, @csrf). Redirect back + flash:
+    session('cart_status'), session('cart_summary')
 
-    | Acción                         | Ruta                                      | Body              |
-    |--------------------------------|-------------------------------------------|-------------------|
-    | Agregar al carrito (catálogo)  | POST shop.cart.items.store                | quantity? (def 1) |
-    | Cantidad absoluta (input)      | PATCH shop.cart.items.update              | quantity (0=quita)|
-    | Botón +                        | POST shop.cart.items.increment            | —                 |
-    | Botón −                        | POST shop.cart.items.decrement            | —                 |
-
-    Ejemplo catálogo (x-card), sin ir al detalle:
-    <form method="POST" action="{{ route('shop.cart.items.store', $product) }}">
-        @csrf
-        <input type="hidden" name="quantity" value="1">
-        <button type="submit">AGREGAR AL CARRITO</button>
-    </form>
-
-    Flash tras redirect: session('cart_status'), session('cart_summary')
-    cart_summary: item_count, line_count, items[{ product_id, quantity, sku, name }]
+    | Acción              | Ruta                           | Body                    |
+    |---------------------|--------------------------------|-------------------------|
+    | Agregar 1ª vez      | POST shop.cart.items.store     | quantity? (default 1)   |
+    | Botón +             | POST shop.cart.items.increment | —                       |
+    | Botón −             | POST shop.cart.items.decrement | — (0 quita la línea)    |
+    | Ver carrito         | GET  shop.cart.index           | —                       |
 
     Validación: producto active, stock en inventory.available_stock.
 --}} -->
@@ -116,13 +107,14 @@
         <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
            @forelse ($products as $product)
                 <x-card
-                    :title="$product->name ?? $product->sku" {{-- Usa el nombre real que el controlador busca en el Like --}}
-                    :category="$product->category?->name ?? 'MOTO'" {{-- Mapea la relación cargada con ->with() --}}
-                    :price="$product->effective_price" {{-- Tu controlador calcula este como el precio final --}}
-                    :oldPrice="$product->is_on_sale ? $product->list_price : null" {{-- Si está en oferta, muestra el precio de lista original --}}
+                    :title="$product->name ?? $product->sku"
+                    :category="$product->category?->name ?? 'MOTO'"
+                    :price="$product->effective_price"
+                    :oldPrice="$product->is_on_sale ? $product->list_price : null"
                     :image="$product->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
-                    :isSale="$product->is_on_sale" {{-- Se activa directo con el boolean que genera tu método withActiveOfferPricing --}}
+                    :isSale="$product->is_on_sale"
                     :href="route('shop.product.show', $product)"
+                    :cartQty="$cartQuantities[$product->id] ?? 0"
                 /> 
             @empty
                 <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 text-gray-400">

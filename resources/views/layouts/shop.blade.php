@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name'))</title>
 
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -50,14 +51,19 @@
                 </nav>
                 <x-search name="search" placeholder="Buscar productos..." value="{{ request('search') }}" /> 
                 <div class="flex items-center gap-4">
-                    <div class= "color-white">
+                    <a href="{{ route('shop.cart.index') }}" data-cart-icon class="relative inline-flex items-center justify-center" title="Ver carrito" aria-label="Ver carrito">
                         <svg width="25" height="23" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M9.33366 22C9.90896 22 10.3753 21.5523 10.3753 21C10.3753 20.4477 9.90896 20 9.33366 20C8.75836 20 8.29199 20.4477 8.29199 21C8.29199 21.5523 8.75836 22 9.33366 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M20.7917 22C21.367 22 21.8333 21.5523 21.8333 21C21.8333 20.4477 21.367 20 20.7917 20C20.2164 20 19.75 20.4477 19.75 21C19.75 21.5523 20.2164 22 20.7917 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" fill="#121212"/>
                             <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                    </div>
+                        @if (($cartItemCount ?? 0) > 0)
+                            <span data-cart-badge class="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black leading-[18px] text-center">
+                                {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
+                            </span>
+                        @endif
+                    </a>
                     <div>
                         @auth
                             <form action="{{ route('logout') }}" method="POST" class="inline">
@@ -164,5 +170,6 @@
 
         </div>
     </footer>
+    <script src="{{ asset('js/shop-cart.js') }}" defer></script>
 </body>
 </html>
