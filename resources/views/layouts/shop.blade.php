@@ -15,12 +15,12 @@
     <header class="border-b border-gray-200">
         <div class="mx-auto px-10 py-4 flex max-w-full items-center justify-between bg-[#252525]">
             <div class="logo">
-                <x-logo href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" />
+                <x-logo href="{{ route('shop.home') }}" />
             </div>
             <div class="flex items-center gap-6">
                 <nav>
                     <ul class="flex items-center gap-3">
-                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">HOME</a></li>
+                        <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">HOME</a></li>
                         <x-dropdown title="SERVICIO">
                             <a href="#" class="block px-4 py-2 hover:bg-gray-100">
                                 SERVICIO 1
@@ -88,7 +88,7 @@
         <div class="mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 max-w-[95%] px-4 md:px-8">
             
             <div class="flex flex-col gap-3 md:col-span-3">
-                <x-logo href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" size="lg" />
+                <x-logo href="{{ route('shop.home') }}" size="lg" />
                 <p class="text-gray-400 text-xs leading-relaxed max-w-xs font-medium">
                     Motos, repuestos, accesorios, servicio de mantenimiento y reparación para tu moto, todo en un solo lugar.  
                 </p>    

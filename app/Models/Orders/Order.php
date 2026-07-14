@@ -62,6 +62,19 @@ class Order extends Model
     }
 
     /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function latestPayment(): ?Payment
+    {
+        return $this->payments()->latest('id')->first();
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
