@@ -30,25 +30,19 @@
             ],
         ],
         [
-            'label' => 'Gestión de clientes',
+            'label' => 'Gestión de usuarios',
             'items' => [
+                [
+                    'label' => 'Usuarios',
+                    'route' => 'admin.users.index',
+                    'active' => request()->routeIs('admin.users.*'),
+                    'enabled' => true,
+                ],
                 [
                     'label' => 'Clientes',
                     'route' => 'admin.customers.index',
                     'active' => request()->routeIs('admin.customers.*'),
                     'enabled' => true,
-                ],
-                [
-                    'label' => 'Órdenes',
-                    'route' => 'admin.orders.index',
-                    'active' => request()->routeIs('admin.orders.*'),
-                    'enabled' => true,
-                ],
-                [
-                    'label' => 'Reservas',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
                 ],
             ],
         ],
@@ -56,32 +50,50 @@
             'label' => 'Gestión de compras',
             'items' => [
                 [
+                    'label' => 'Órdenes',
+                    'route' => 'admin.orders.index',
+                    'active' => request()->routeIs('admin.orders.*'),
+                    'enabled' => true,
+                ],
+                [
                     'label' => 'Pagos',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
+                    'route' => 'admin.payments.index',
+                    'active' => request()->routeIs('admin.payments.*'),
+                    'enabled' => true,
                 ],
                 [
                     'label' => 'Medios de pago',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
+                    'route' => 'admin.payment-methods.index',
+                    'active' => request()->routeIs('admin.payment-methods.*'),
+                    'enabled' => true,
                 ],
             ],
-        ],        [
+        ],
+        [
+            'label' => 'Gestión de reservas',
+            'items' => [
+                [
+                    'label' => 'Reservas',
+                    'route' => 'admin.appointments.index',
+                    'active' => request()->routeIs('admin.appointments.*'),
+                    'enabled' => true,
+                ],
+                [
+                    'label' => 'Servicios',
+                    'route' => 'admin.service-types.index',
+                    'active' => request()->routeIs('admin.service-types.*'),
+                    'enabled' => true,
+                ],
+            ],
+        ],
+        [
             'label' => 'Gestión de inventario',
             'items' => [
                 [
-                    'label' => 'Entradas',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
-                ],
-                [
-                    'label' => 'Salidas',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
+                    'label' => 'Inventario',
+                    'route' => 'admin.inventory.index',
+                    'active' => request()->routeIs('admin.inventory.*'),
+                    'enabled' => true,
                 ],
             ],
         ],

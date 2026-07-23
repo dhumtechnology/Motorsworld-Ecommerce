@@ -218,21 +218,35 @@
                         @foreach ($order->payments as $payment)
                             @php
                                 $methodLabel = $payment->method instanceof \App\Enums\Payments\PaymentMethod
-                                    ? $payment->method->value
+                                    ? $payment->method->label()
                                     : (string) ($payment->method ?? '—');
                                 $paymentStatusLabel = $payment->status instanceof \App\Enums\Payments\PaymentRecordStatus
-                                    ? $payment->status->value
+                                    ? match ($payment->status->value) {
+                                        'pending' => 'Pendiente',
+                                        'paid' => 'Pagado',
+                                        'failed' => 'Fallido',
+                                        'expired' => 'Expirado',
+                                        'refunded' => 'Reembolsado',
+                                        default => $payment->status->value,
+                                    }
                                     : (string) ($payment->status ?? '—');
                             @endphp
                             <li class="border-b border-neutral-800 pb-3 last:border-0 last:pb-0">
-                                <p class="text-white font-semibold">
-                                    {{ number_format(((int) $payment->amount_cents) / 100, 2) }}
-                                    {{ $payment->currency ?? $order->currency }}
-                                </p>
-                                <p class="text-xs text-neutral-500 mt-1 uppercase tracking-wide">
-                                    {{ $paymentStatusLabel }}
-                                    · {{ $methodLabel }}
-                                </p>
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-white font-semibold">
+                                            {{ number_format(((int) $payment->amount_cents) / 100, 2) }}
+                                            {{ $payment->currency ?? $order->currency }}
+                                        </p>
+                                        <p class="text-xs text-neutral-500 mt-1 uppercase tracking-wide">
+                                            {{ $paymentStatusLabel }}
+                                            · {{ $methodLabel }}
+                                        </p>
+                                    </div>
+                                    <a href="{{ route('admin.payments.show', $payment) }}" class="text-xs font-bold uppercase tracking-wide text-sky-400 hover:text-sky-300 shrink-0">
+                                        Ver
+                                    </a>
+                                </div>
                             </li>
                         @endforeach
                     </ul>

@@ -2,13 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Inventory\RegisterInventoryMovementAction;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
+use App\Enums\Payments\PaymentMethod as PaymentMethodEnum;
+use App\Enums\Payments\PaymentRecordStatus;
 use App\Models\Auth\User;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
+use App\Models\Orders\Payment;
 use App\Models\Products\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -77,6 +81,11 @@ class OrderSalesSeeder extends Seeder
             }
 
             $this->recordStatusHistory($order, $definition['status'], $placedAt);
+            $this->recordPayment($order, $definition, $placedAt, $index);
+
+            if ($definition['payment_status'] === PaymentStatus::Paid) {
+                $this->recordSaleExits($order);
+            }
         }
     }
 
@@ -87,6 +96,10 @@ class OrderSalesSeeder extends Seeder
             ->pluck('order_id');
 
         if ($orderIds->isNotEmpty()) {
+            \App\Models\Products\InventoryMovement::query()
+                ->whereIn('order_id', $orderIds)
+                ->delete();
+
             Order::query()->whereIn('id', $orderIds)->delete();
         }
     }
@@ -170,6 +183,58 @@ class OrderSalesSeeder extends Seeder
             'note' => self::SEED_NOTE,
             'created_at' => $placedAt,
         ]);
+    }
+
+    /**
+     * @param  array{
+     *     status: OrderStatus,
+     *     payment_status: PaymentStatus,
+     *     days_ago: int,
+     *     lines: list<array{sku: string, qty: int}>
+     * }  $definition
+     */
+    private function recordPayment(Order $order, array $definition, Carbon $placedAt, int $index): void
+    {
+        $methods = PaymentMethodEnum::cases();
+        $method = $methods[$index % count($methods)];
+
+        $paymentStatus = match ($definition['payment_status']) {
+            PaymentStatus::Paid => PaymentRecordStatus::Paid,
+            PaymentStatus::Failed => PaymentRecordStatus::Failed,
+            PaymentStatus::Refunded, PaymentStatus::PartiallyRefunded => PaymentRecordStatus::Refunded,
+            default => PaymentRecordStatus::Pending,
+        };
+
+        $paidAt = $paymentStatus === PaymentRecordStatus::Paid
+            ? $placedAt->copy()->addMinutes(5)
+            : null;
+
+        Payment::query()->create([
+            'order_id' => $order->id,
+            'provider' => 'culqi',
+            'method' => $method,
+            'status' => $paymentStatus,
+            'amount_cents' => (int) round(((float) $order->total_amount) * 100),
+            'currency' => $order->currency ?: 'PEN',
+            'culqi_charge_id' => $paymentStatus === PaymentRecordStatus::Paid
+                ? 'chr_seed_'.$order->id
+                : null,
+            'culqi_order_id' => $method->isAsync() ? 'ord_seed_'.$order->id : null,
+            'payment_code' => $method === PaymentMethodEnum::PagoEfectivo ? 'CIP-'.$order->id : null,
+            'paid_at' => $paidAt,
+            'created_at' => $placedAt,
+            'updated_at' => $paidAt ?? $placedAt,
+        ]);
+    }
+
+    private function recordSaleExits(Order $order): void
+    {
+        $order->loadMissing('items');
+        $register = app(RegisterInventoryMovementAction::class);
+
+        foreach ($order->items as $item) {
+            $register->registerSaleExit($order, $item);
+        }
     }
 
     /**
