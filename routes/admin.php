@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VehicleModelController;
 use Illuminate\Support\Facades\Route;
@@ -56,4 +57,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/modelos', [VehicleModelController::class, 'bulkDestroy'])->name('models.bulk-destroy');
 
     Route::get('/clientes', [CustomerController::class, 'index'])->name('customers.index');
+
+    Route::get('/ordenes', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/ordenes/{order}', [OrderController::class, 'show'])->name('orders.show');
 });
