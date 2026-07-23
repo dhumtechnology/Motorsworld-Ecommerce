@@ -7,11 +7,11 @@
 @section('content')
     @php
         $statusLabels = [
-            'pending' => ['label' => 'Pendiente', 'class' => 'bg-yellow-950 text-yellow-400 border-yellow-800'],
-            'in_progress' => ['label' => 'En curso', 'class' => 'bg-sky-950 text-sky-400 border-sky-800'],
-            'attended' => ['label' => 'Atendida', 'class' => 'bg-green-950 text-green-400 border-green-800'],
-            'absent' => ['label' => 'Ausente', 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'],
-            'cancelled' => ['label' => 'Cancelada', 'class' => 'bg-red-950 text-red-400 border-red-800'],
+            'pending' => ['label' => 'Pendiente', 'class' => 'bg-amber-50 text-amber-700 border-amber-200'],
+            'in_progress' => ['label' => 'En curso', 'class' => 'bg-sky-50 text-sky-700 border-sky-200'],
+            'attended' => ['label' => 'Atendida', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+            'absent' => ['label' => 'Ausente', 'class' => 'bg-secondary text-muted border-border'],
+            'cancelled' => ['label' => 'Cancelada', 'class' => 'bg-red-50 text-red-600 border-red-200'],
         ];
 
         $queryBase = array_filter([
@@ -41,7 +41,7 @@
         ]));
     @endphp
 
-    <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 mb-6">
+    <div class="rounded-lg border border-border bg-surface p-5 mb-6">
         <form method="GET" action="{{ route('admin.appointments.index') }}" id="admin-appointments-filters" class="space-y-4">
             <input type="hidden" name="mode" value="{{ $mode }}">
             @if ($mode === 'calendar')
@@ -51,20 +51,20 @@
 
             <div class="grid gap-4 lg:grid-cols-12">
                 <div class="lg:col-span-5">
-                    <label for="search" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Buscar</label>
+                    <label for="search" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Buscar</label>
                     <input
                         type="search"
                         id="search"
                         name="search"
                         value="{{ $filters['search'] ?? '' }}"
                         placeholder="Cliente, placa, email o #reserva..."
-                        class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                 </div>
 
                 <div class="lg:col-span-3">
-                    <label for="status" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Estado</label>
-                    <select id="status" name="status" class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                    <label for="status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado</label>
+                    <select id="status" name="status" class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">Todos</option>
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>
@@ -75,8 +75,8 @@
                 </div>
 
                 <div class="lg:col-span-4">
-                    <label for="service_type_id" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Servicio</label>
-                    <select id="service_type_id" name="service_type_id" class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                    <label for="service_type_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Servicio</label>
+                    <select id="service_type_id" name="service_type_id" class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">Todos los servicios</option>
                         @foreach ($serviceTypes as $serviceType)
                             <option value="{{ $serviceType->id }}" @selected((int) ($filters['service_type_id'] ?? 0) === $serviceType->id)>
@@ -89,22 +89,22 @@
 
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <p id="filters-live-hint" class="text-xs text-neutral-500">Los filtros se aplican automáticamente</p>
+                    <p id="filters-live-hint" class="text-xs text-muted">Los filtros se aplican automáticamente</p>
                     @if ($hasActiveFilters)
                         <a
                             href="{{ route('admin.appointments.index', ['mode' => $mode, 'month' => $filters['month'] ?? null, 'date' => $filters['date'] ?? null]) }}"
-                            class="rounded border border-neutral-700 px-4 py-2 text-sm font-bold uppercase tracking-wide text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors"
+                            class="rounded border border-border px-4 py-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
                         >
                             Limpiar
                         </a>
                     @endif
                 </div>
 
-                <div class="inline-flex rounded border border-neutral-700 overflow-hidden">
-                    <a href="{{ $listUrl }}" class="px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors {{ $mode === 'list' ? 'bg-orange-600 text-white' : 'bg-[#252525] text-neutral-400 hover:text-white' }}">
+                <div class="inline-flex rounded border border-border overflow-hidden">
+                    <a href="{{ $listUrl }}" class="px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors {{ $mode === 'list' ? 'bg-primary text-white' : 'bg-secondary text-muted hover:text-text' }}">
                         Lista
                     </a>
-                    <a href="{{ $calendarUrl }}" class="px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors border-l border-neutral-700 {{ $mode === 'calendar' ? 'bg-orange-600 text-white' : 'bg-[#252525] text-neutral-400 hover:text-white' }}">
+                    <a href="{{ $calendarUrl }}" class="px-4 py-2 text-xs font-bold uppercase tracking-wide transition-colors border-l border-border {{ $mode === 'calendar' ? 'bg-primary text-white' : 'bg-secondary text-muted hover:text-text' }}">
                         Horario
                     </a>
                 </div>
@@ -113,18 +113,18 @@
     </div>
 
     @if ($mode === 'list')
-        <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] overflow-hidden">
-            <div class="px-5 py-4 border-b border-neutral-800">
-                <p class="text-sm text-neutral-400">
-                    <span class="text-white font-bold">{{ $appointments->total() }}</span>
+        <div class="rounded-lg border border-border bg-surface overflow-hidden">
+            <div class="px-5 py-4 border-b border-border">
+                <p class="text-sm text-muted">
+                    <span class="text-text font-bold">{{ $appointments->total() }}</span>
                     {{ $appointments->total() === 1 ? 'reserva' : 'reservas' }}
-                    @if ($hasActiveFilters)<span class="text-neutral-500">(filtradas)</span>@endif
+                    @if ($hasActiveFilters)<span class="text-muted">(filtradas)</span>@endif
                 </p>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
-                    <thead class="bg-[#252525] text-xs uppercase tracking-wider text-neutral-500 border-b border-neutral-800">
+                    <thead class="bg-secondary text-xs uppercase tracking-wider text-muted border-b border-border">
                         <tr>
                             <th class="px-5 py-3 font-bold">Fecha</th>
                             <th class="px-5 py-3 font-bold">Cliente</th>
@@ -134,12 +134,12 @@
                             <th class="px-5 py-3 font-bold text-right">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-neutral-800">
+                    <tbody class="divide-y divide-border">
                         @forelse ($appointments as $appointment)
                             @include('admin.appointments._row', ['appointment' => $appointment, 'statusLabels' => $statusLabels])
                         @empty
                             <tr>
-                                <td colspan="6" class="px-5 py-12 text-center text-neutral-500">No se encontraron reservas.</td>
+                                <td colspan="6" class="px-5 py-12 text-center text-muted">No se encontraron reservas.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -147,25 +147,25 @@
             </div>
 
             @if ($appointments->hasPages())
-                <div class="px-5 py-4 border-t border-neutral-800">
-                    {{ $appointments->links('vendor.pagination.tailwind') }}
+                <div class="px-5 py-4 border-t border-border">
+                    {{ $appointments->links('vendor.pagination.admin') }}
                 </div>
             @endif
         </div>
     @else
         <div class="grid gap-6 xl:grid-cols-5">
-            <div class="xl:col-span-3 rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5">
+            <div class="xl:col-span-3 rounded-lg border border-border bg-surface p-5">
                 <div class="flex items-center justify-between gap-3 mb-5">
-                    <a href="{{ $prevMonthUrl }}" class="rounded border border-neutral-700 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neutral-400 hover:text-white hover:border-neutral-500">←</a>
-                    <h2 class="text-sm font-black uppercase tracking-wider text-white">
+                    <a href="{{ $prevMonthUrl }}" class="rounded border border-border px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong">←</a>
+                    <h2 class="text-sm font-title text-text">
                         {{ $month->locale('es')->translatedFormat('F Y') }}
                     </h2>
-                    <a href="{{ $nextMonthUrl }}" class="rounded border border-neutral-700 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-neutral-400 hover:text-white hover:border-neutral-500">→</a>
+                    <a href="{{ $nextMonthUrl }}" class="rounded border border-border px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong">→</a>
                 </div>
 
                 <div class="grid grid-cols-7 gap-1 mb-2">
                     @foreach (['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $weekday)
-                        <div class="px-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-neutral-600">{{ $weekday }}</div>
+                        <div class="px-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-muted">{{ $weekday }}</div>
                     @endforeach
                 </div>
 
@@ -185,38 +185,38 @@
                             <a
                                 href="{{ $dayUrl }}"
                                 class="relative min-h-[4.5rem] rounded border p-2 transition-colors
-                                    {{ $day['isSelected'] ? 'border-orange-500 bg-orange-950/30' : 'border-neutral-800 bg-[#252525] hover:border-neutral-600' }}
-                                    {{ $day['isToday'] && ! $day['isSelected'] ? 'ring-1 ring-orange-600/40' : '' }}"
+                                    {{ $day['isSelected'] ? 'border-primary bg-primary-soft/30' : 'border-border bg-secondary hover:border-border-strong' }}
+                                    {{ $day['isToday'] && ! $day['isSelected'] ? 'ring-1 ring-primary/40' : '' }}"
                             >
-                                <span class="text-sm font-bold {{ $day['isSelected'] ? 'text-orange-400' : 'text-white' }}">
+                                <span class="text-sm font-bold {{ $day['isSelected'] ? 'text-primary' : 'text-text' }}">
                                     {{ $date->day }}
                                 </span>
                                 @if ($day['count'] > 0)
-                                    <span class="absolute bottom-2 left-2 right-2 inline-flex items-center justify-center rounded bg-orange-600/20 px-1 py-0.5 text-[10px] font-bold text-orange-400">
+                                    <span class="absolute bottom-2 left-2 right-2 inline-flex items-center justify-center rounded bg-primary/20 px-1 py-0.5 text-[10px] font-bold text-primary">
                                         {{ $day['count'] }} {{ $day['count'] === 1 ? 'cita' : 'citas' }}
                                     </span>
                                 @endif
                             </a>
                         @else
                             <div class="min-h-[4.5rem] rounded border border-transparent bg-transparent p-2">
-                                <span class="text-sm text-neutral-700">{{ $date->day }}</span>
+                                <span class="text-sm text-text-soft">{{ $date->day }}</span>
                             </div>
                         @endif
                     @endforeach
                 </div>
             </div>
 
-            <div class="xl:col-span-2 rounded-lg border border-neutral-800 bg-[#1e1e1e] overflow-hidden">
-                <div class="px-5 py-4 border-b border-neutral-800">
-                    <h2 class="text-sm font-black uppercase tracking-wider text-white">
+            <div class="xl:col-span-2 rounded-lg border border-border bg-surface overflow-hidden">
+                <div class="px-5 py-4 border-b border-border">
+                    <h2 class="text-sm font-title text-text">
                         {{ $selectedDate?->locale('es')->translatedFormat('l d/m/Y') ?? 'Selecciona un día' }}
                     </h2>
-                    <p class="text-xs text-neutral-500 mt-1">
+                    <p class="text-xs text-muted mt-1">
                         {{ $dayAppointments->count() }} {{ $dayAppointments->count() === 1 ? 'reserva' : 'reservas' }}
                     </p>
                 </div>
 
-                <div class="divide-y divide-neutral-800 max-h-[34rem] overflow-y-auto">
+                <div class="divide-y divide-border max-h-[34rem] overflow-y-auto">
                     @forelse ($dayAppointments as $appointment)
                         @php
                             $profile = $appointment->user?->customerProfile;
@@ -224,18 +224,18 @@
                             $statusKey = $appointment->status instanceof \App\Enums\Appointments\AppointmentStatus
                                 ? $appointment->status->value
                                 : (string) $appointment->status;
-                            $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'];
+                            $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-secondary text-muted border-border'];
                         @endphp
-                        <div class="px-5 py-4 hover:bg-[#252525]/50 transition-colors">
+                        <div class="px-5 py-4 hover:bg-secondary/50 transition-colors">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <p class="text-orange-400 font-mono text-sm font-bold">
+                                    <p class="text-primary font-mono text-sm font-bold">
                                         {{ $appointment->appointment_at?->format('H:i') }}
                                     </p>
-                                    <p class="text-white font-semibold mt-1 truncate">
+                                    <p class="text-text font-semibold mt-1 truncate">
                                         {{ $fullName !== '' ? $fullName : ($appointment->user?->email ?? 'Sin cliente') }}
                                     </p>
-                                    <p class="text-xs text-neutral-500 mt-0.5">
+                                    <p class="text-xs text-muted mt-0.5">
                                         {{ $appointment->serviceType?->name ?? 'Sin servicio' }}
                                         @if ($appointment->plate)
                                             · {{ $appointment->plate }}
@@ -246,14 +246,14 @@
                                     <span class="inline-flex items-center rounded border px-2 py-0.5 text-[10px] font-bold uppercase {{ $statusMeta['class'] }}">
                                         {{ $statusMeta['label'] }}
                                     </span>
-                                    <a href="{{ route('admin.appointments.edit', $appointment) }}" class="text-xs font-bold uppercase tracking-wide text-sky-400 hover:text-sky-300">
+                                    <a href="{{ route('admin.appointments.edit', $appointment) }}" class="text-xs font-bold uppercase tracking-wide text-sky-700 hover:text-sky-800">
                                         Editar
                                     </a>
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="px-5 py-12 text-center text-neutral-500 text-sm">
+                        <div class="px-5 py-12 text-center text-muted text-sm">
                             No hay reservas para este día.
                         </div>
                     @endforelse

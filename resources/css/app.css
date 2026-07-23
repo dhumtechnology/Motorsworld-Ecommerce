@@ -1,37 +1,192 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Oswald:wght@200..700&family=Roboto:wght@100;300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,400&display=swap');
 
 @import "tailwindcss";
 
-:root {
-    /* Colores */
-    --color-primary: #FF6600;
-    --color-secondary: #F8F8F8;
+/*
+|--------------------------------------------------------------------------
+| Design tokens → Tailwind utilities (v4 @theme)
+|--------------------------------------------------------------------------
+| --color-*  → bg-*, text-*, border-*, ring-*, fill-*, stroke-*
+| --font-*   → font-*
+*/
+@theme {
+    --color-primary: #ff6600;
+    --color-primary-hover: #e65c00;
+    --color-primary-soft: #fff1e6;
+
+    --color-secondary: #f8f8f8;
     --color-background: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f8f8f8;
+
     --color-text: #202020;
+    --color-text-soft: #404040;
+    --color-muted: #737373;
 
-    /* Tipografía */
-    --font-primary: 'Inter', sans-serif;
-    --font-secondary: 'Roboto', sans-serif;
-    --font-title: 'Oswald', sans-serif;
+    --color-border: #e6e6e6;
+    --color-border-strong: #d4d4d4;
 
-    /* Bordes 
-    --radius: 12px; */
+    --color-sidebar: #1a1a1a;
+    --color-sidebar-elevated: #242424;
+    --color-sidebar-border: #2e2e2e;
+    --color-sidebar-text: #b3b3b3;
+    --color-sidebar-muted: #6b6b6b;
+
+    --font-primary: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-secondary: "Roboto", ui-sans-serif, system-ui, sans-serif;
+    --font-title: "Oswald", ui-sans-serif, system-ui, sans-serif;
+
+    --radius-admin: 0.75rem;
+}
+
+:root {
+    --color-primary: #ff6600;
+    --color-primary-hover: #e65c00;
+    --color-primary-soft: #fff1e6;
+    --color-secondary: #f8f8f8;
+    --color-background: #ffffff;
+    --color-surface: #ffffff;
+    --color-text: #202020;
+    --color-text-soft: #404040;
+    --color-muted: #737373;
+    --color-border: #e6e6e6;
+    --color-sidebar: #1a1a1a;
+    --font-primary: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-secondary: "Roboto", ui-sans-serif, system-ui, sans-serif;
+    --font-title: "Oswald", ui-sans-serif, system-ui, sans-serif;
+    --radius: 0.75rem;
 }
 
 @layer base {
-
+    body {
+        font-family: var(--font-primary);
+        color: var(--color-text);
+        background: var(--color-background);
+    }
 }
 
 @layer components {
-
-    .btn-primary{
+    .btn-primary {
         background: var(--color-primary);
-        color:white;
+        color: #fff;
         border-radius: var(--radius);
+        font-family: var(--font-secondary);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        transition: background-color 0.15s ease;
     }
 
-}
+    .btn-primary:hover {
+        background: var(--color-primary-hover);
+    }
 
-body {
-    background: red !important;
+    /* —— Admin shell —— */
+    .admin-shell {
+        font-family: var(--font-primary);
+        color: var(--color-text);
+        background: var(--color-secondary);
+        min-height: 100vh;
+    }
+
+    .admin-shell .admin-page-title {
+        font-family: var(--font-title);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--color-text);
+    }
+
+    .admin-shell .admin-page-subtitle {
+        font-family: var(--font-secondary);
+        color: var(--color-muted);
+    }
+
+    .admin-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: 0 1px 2px rgb(32 32 32 / 4%);
+    }
+
+    .admin-input {
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid var(--color-border);
+        background: var(--color-background);
+        color: var(--color-text);
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        font-family: var(--font-secondary);
+    }
+
+    .admin-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 1px var(--color-primary);
+    }
+
+    .admin-input::placeholder {
+        color: var(--color-muted);
+    }
+
+    .admin-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+        font-family: var(--font-secondary);
+    }
+
+    .admin-table thead {
+        background: var(--color-secondary);
+        color: var(--color-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .admin-table tbody tr {
+        border-bottom: 1px solid var(--color-border);
+        transition: background-color 0.12s ease;
+    }
+
+    .admin-table tbody tr:hover {
+        background: color-mix(in srgb, var(--color-secondary) 80%, white);
+    }
+
+    .admin-nav-link {
+        display: block;
+        border-radius: 0.5rem;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--color-sidebar-text);
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--color-sidebar-elevated);
+        color: #fff;
+    }
+
+    .admin-nav-link.is-active {
+        background: var(--color-primary);
+        color: #fff;
+    }
+
+    .admin-nav-group {
+        padding: 0 1rem 0.35rem;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-sidebar-muted);
+        font-family: var(--font-secondary);
+    }
 }

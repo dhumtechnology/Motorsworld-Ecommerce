@@ -59,13 +59,13 @@
 
                         if (labels.length === 0) {
                             summary.textContent = placeholder;
-                            summary.classList.add('text-neutral-500');
-                            summary.classList.remove('text-white');
+                            summary.classList.add('text-muted');
+                            summary.classList.remove('text-text');
                             return;
                         }
 
-                        summary.classList.remove('text-neutral-500');
-                        summary.classList.add('text-white');
+                        summary.classList.remove('text-muted');
+                        summary.classList.add('text-text');
                         summary.textContent = labels.length === 1
                             ? labels[0]
                             : (labels.length <= 3 ? labels.join(', ') : labels.length + ' seleccionadas');

@@ -37,7 +37,7 @@
     @endif
 >
     @if ($label)
-        <label for="{{ $fieldId }}-trigger" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
+        <label for="{{ $fieldId }}-trigger" class="admin-label">
             {{ $label }}
         </label>
     @endif
@@ -46,21 +46,21 @@
         type="button"
         id="{{ $fieldId }}-trigger"
         data-multi-select-trigger
-        class="flex w-full items-center justify-between gap-2 rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-left text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+        class="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-surface px-4 py-2.5 text-left text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary font-secondary"
         aria-haspopup="listbox"
         aria-expanded="false"
     >
-        <span data-multi-select-summary class="truncate {{ $selectedLabels->isEmpty() ? 'text-neutral-500' : 'text-white' }}">
+        <span data-multi-select-summary class="truncate {{ $selectedLabels->isEmpty() ? 'text-muted' : 'text-text' }}">
             {{ $summary }}
         </span>
-        <svg class="h-4 w-4 shrink-0 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <svg class="h-4 w-4 shrink-0 text-muted" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
         </svg>
     </button>
 
     <div
         data-multi-select-panel
-        class="absolute left-0 right-0 z-30 mt-1 hidden overflow-hidden rounded border border-neutral-700 bg-[#1e1e1e] shadow-xl"
+        class="absolute left-0 right-0 z-30 mt-1 hidden overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
         role="listbox"
         aria-multiselectable="true"
     >
@@ -82,7 +82,7 @@
                 >
                     <label
                         for="{{ $optionDomId }}"
-                        class="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm text-neutral-300 hover:bg-[#252525] hover:text-white"
+                        class="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm text-text-soft hover:bg-secondary hover:text-text font-secondary"
                     >
                         <input
                             id="{{ $optionDomId }}"
@@ -94,18 +94,18 @@
                             @if ($groupId !== null)
                                 data-group-id="{{ $groupId }}"
                             @endif
-                            class="h-4 w-4 rounded border-neutral-600 bg-[#252525] text-orange-600 focus:ring-orange-500"
+                            class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                             @checked($isChecked)
                         >
                         <span>{{ $option->name }}</span>
                     </label>
                 </li>
             @empty
-                <li class="px-3 py-3 text-xs text-neutral-500" data-multi-select-empty>
+                <li class="px-3 py-3 text-xs text-muted" data-multi-select-empty>
                     No hay opciones disponibles.
                 </li>
             @endforelse
-            <li class="hidden px-3 py-3 text-xs text-neutral-500" data-multi-select-filtered-empty>
+            <li class="hidden px-3 py-3 text-xs text-muted" data-multi-select-filtered-empty>
                 No hay opciones para la selección actual.
             </li>
         </ul>

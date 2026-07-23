@@ -100,25 +100,25 @@
     ];
 @endphp
 
-<aside class="w-64 shrink-0 bg-[#1e1e1e] border-r border-neutral-800 flex flex-col">
-    <div class="p-5 border-b border-neutral-800">
+<aside class="w-64 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col min-h-screen sticky top-0 h-screen">
+    <div class="p-5 border-b border-sidebar-border">
         <x-logo href="{{ route('admin.dashboard') }}" />
-        <p class="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mt-3">
+        <p class="text-[10px] uppercase tracking-widest text-sidebar-muted font-bold mt-3 font-secondary">
             Panel administrativo
         </p>
     </div>
 
-    <nav class="flex-1 p-4 space-y-5 overflow-y-auto">
+    <nav class="flex-1 p-3 space-y-5 overflow-y-auto">
         <a
             href="{{ route('admin.dashboard') }}"
-            class="block px-4 py-2.5 rounded text-sm font-bold uppercase tracking-wide transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-orange-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-[#252525]' }}"
+            class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}"
         >
             Dashboard
         </a>
 
         @foreach ($navGroups as $group)
             <div>
-                <p class="px-4 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                <p class="admin-nav-group">
                     {{ $group['label'] }}
                 </p>
 
@@ -127,14 +127,14 @@
                         @if ($item['enabled'] && $item['route'])
                             <a
                                 href="{{ route($item['route']) }}"
-                                class="block px-4 py-2.5 rounded text-sm font-semibold tracking-wide transition-colors {{ $item['active'] ? 'bg-orange-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-[#252525]' }}"
+                                class="admin-nav-link {{ $item['active'] ? 'is-active' : '' }}"
                             >
                                 {{ $item['label'] }}
                             </a>
                         @else
-                            <span class="block px-4 py-2.5 rounded text-sm font-semibold tracking-wide text-neutral-600 cursor-not-allowed select-none">
+                            <span class="block px-4 py-2.5 rounded-lg text-sm font-semibold tracking-wide text-sidebar-muted cursor-not-allowed select-none">
                                 {{ $item['label'] }}
-                                <span class="ml-1 text-[10px] font-normal text-neutral-700">Pronto</span>
+                                <span class="ml-1 text-[10px] font-normal opacity-70">Pronto</span>
                             </span>
                         @endif
                     @endforeach
@@ -143,7 +143,7 @@
         @endforeach
     </nav>
 
-    <div class="p-4 border-t border-neutral-800 text-xs text-neutral-500">
+    <div class="p-4 border-t border-sidebar-border text-xs text-sidebar-muted font-secondary">
         Motosworld Admin
     </div>
 </aside>

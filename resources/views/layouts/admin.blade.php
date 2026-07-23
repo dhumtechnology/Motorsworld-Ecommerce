@@ -8,41 +8,40 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#252525] text-gray-100 antialiased min-h-screen">
+<body class="admin-shell antialiased">
     <div class="flex min-h-screen">
         @include('admin.partials.sidebar')
 
-        <div class="flex-1 flex flex-col min-w-0">
-            <header class="bg-[#1e1e1e] border-b border-neutral-800 px-6 py-4 flex items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-lg font-black uppercase tracking-wide text-white">
+        <div class="flex-1 flex flex-col min-w-0 bg-secondary">
+            <header class="bg-surface border-b border-border px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
+                <div class="min-w-0">
+                    <h1 class="admin-page-title text-xl sm:text-2xl truncate">
                         @yield('page-title', 'Panel administrativo')
                     </h1>
                     @hasSection('page-subtitle')
-                        <p class="text-xs text-neutral-400 mt-0.5">@yield('page-subtitle')</p>
+                        <p class="admin-page-subtitle text-xs mt-0.5">@yield('page-subtitle')</p>
                     @endif
                 </div>
 
-                <div class="flex items-center gap-4 text-sm">
-                    <a href="{{ route('shop.catalog') }}" class="text-neutral-400 hover:text-orange-500 transition-colors font-semibold">
+                <div class="flex items-center gap-3 sm:gap-4 text-sm font-secondary shrink-0">
+                    <a href="{{ route('shop.catalog') }}" class="text-muted hover:text-primary transition-colors font-semibold">
                         Ver tienda
                     </a>
-                    <span class="text-neutral-600">|</span>
-                    <span class="text-neutral-300 hidden sm:inline">{{ auth()->user()?->email }}</span>
+                    <span class="text-border-strong hidden sm:inline">|</span>
+                    <span class="text-text-soft hidden md:inline font-medium">{{ auth()->user()?->email }}</span>
                     <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="text-orange-500 hover:text-orange-400 font-bold uppercase text-xs tracking-wider">
+                        <button type="submit" class="text-primary hover:text-primary-hover font-bold uppercase text-xs tracking-wider font-secondary">
                             Salir
                         </button>
                     </form>
                 </div>
             </header>
 
-            <main class="flex-1 p-6 overflow-x-auto">
+            <main class="flex-1 p-5 sm:p-6 lg:p-8 overflow-x-auto">
                 @if (session('status'))
-                    <div class="mb-6 rounded border border-green-800 bg-green-950/40 px-4 py-3 text-sm text-green-300">
+                    <div class="mb-6 rounded-admin border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 font-secondary">
                         {{ session('status') }}
                     </div>
                 @endif

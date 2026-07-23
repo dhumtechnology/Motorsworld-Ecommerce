@@ -22,7 +22,7 @@
 @endphp
 
 @if ($errors->any())
-    <div class="mb-6 rounded border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+    <div class="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">
         <ul class="list-disc list-inside space-y-1">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -33,21 +33,21 @@
 
 <div class="grid gap-5 lg:grid-cols-2" data-brand-model-form>
     <div>
-        <label for="sku" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">SKU *</label>
+        <label for="sku" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">SKU *</label>
         <input id="sku" name="sku" type="text" required value="{{ old('sku', $product?->sku) }}"
-               class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+               class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
     </div>
 
     <div>
-        <label for="name" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Nombre *</label>
+        <label for="name" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Nombre *</label>
         <input id="name" name="name" type="text" required value="{{ old('name', $product?->name) }}"
-               class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+               class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
     </div>
 
     <div>
-        <label for="category_id" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Categoría *</label>
+        <label for="category_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Categoría *</label>
         <select id="category_id" name="category_id" required
-                class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
             <option value="">Seleccionar categoría</option>
             @foreach ($categories as $category)
                 <option value="{{ $category->id }}" @selected((int) old('category_id', $product?->category_id) === $category->id)>
@@ -58,9 +58,9 @@
     </div>
 
     <div>
-        <label for="brand_id" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Marca</label>
+        <label for="brand_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Marca</label>
         <select id="brand_id" name="brand_id" data-brand-select
-                class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
             <option value="">Sin marca</option>
             @foreach ($brands as $brand)
                 <option value="{{ $brand->id }}" @selected($selectedBrandId === $brand->id)>
@@ -71,9 +71,9 @@
     </div>
 
     <div>
-        <label for="model_id" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Modelo</label>
+        <label for="model_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Modelo</label>
         <select id="model_id" name="model_id" data-model-select
-                class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
             <option value="">Sin modelo</option>
             @foreach ($models as $model)
                 <option
@@ -85,27 +85,27 @@
                 </option>
             @endforeach
         </select>
-        <p class="mt-1.5 text-xs text-neutral-500">Elige primero la marca para ver sus modelos.</p>
+        <p class="mt-1.5 text-xs text-muted">Elige primero la marca para ver sus modelos.</p>
     </div>
 
     <div>
-        <label for="price_amount" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Precio *</label>
+        <label for="price_amount" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Precio *</label>
         <input id="price_amount" name="price_amount" type="number" step="0.01" min="0" required
                value="{{ old('price_amount', $product?->price_amount) }}"
-               class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+               class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
     </div>
 
     <div>
-        <label for="currency" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Moneda</label>
+        <label for="currency" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Moneda</label>
         <input id="currency" type="text" value="PEN" readonly
-               class="w-full rounded border border-neutral-800 bg-[#1a1a1a] px-4 py-2.5 text-sm text-neutral-400 cursor-not-allowed">
-        <p class="mt-1.5 text-xs text-neutral-500">Fijada en soles (PEN).</p>
+               class="w-full rounded border border-border bg-secondary px-4 py-2.5 text-sm text-muted cursor-not-allowed">
+        <p class="mt-1.5 text-xs text-muted">Fijada en soles (PEN).</p>
     </div>
 
     <div>
-        <label for="status" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Estado *</label>
+        <label for="status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado *</label>
         <select id="status" name="status" required
-                class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
             @foreach ($statuses as $status)
                 <option value="{{ $status->value }}" @selected(old('status', $product?->status?->value ?? 'pending') === $status->value)>
                     {{ $statusLabels[$status->value] ?? $status->value }}
@@ -115,55 +115,55 @@
     </div>
 
     <div>
-        <label for="available_stock" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Stock disponible *</label>
+        <label for="available_stock" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Stock disponible *</label>
         <input id="available_stock" name="available_stock" type="number" min="0" required
                value="{{ old('available_stock', $product?->inventory?->available_stock ?? 0) }}"
-        <p class="mt-1.5 text-xs text-neutral-500">Preferible gestionar altas/bajas desde Entradas y Salidas. Un cambio aquí genera un ajuste en el kardex.</p>
+        <p class="mt-1.5 text-xs text-muted">Preferible gestionar altas/bajas desde Entradas y Salidas. Un cambio aquí genera un ajuste en el kardex.</p>
     </div>
 
     <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Stock reservado</label>
-        <div class="w-full rounded border border-neutral-800 bg-[#1a1a1a] px-4 py-2.5 text-sm text-neutral-300">
+        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Stock reservado</label>
+        <div class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text-soft">
             {{ $reservedStock }}
         </div>
-        <p class="mt-1.5 text-xs text-neutral-500">Se mantiene al editar el stock disponible.</p>
+        <p class="mt-1.5 text-xs text-muted">Se mantiene al editar el stock disponible.</p>
     </div>
 
     <div class="lg:col-span-2">
-        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Descripción</label>
+        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</label>
         <textarea id="description" name="description" rows="4"
-                  class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">{{ old('description', $product?->description) }}</textarea>
+                  class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">{{ old('description', $product?->description) }}</textarea>
     </div>
 
     <div class="lg:col-span-2">
-        <label for="additional_information" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Información adicional</label>
+        <label for="additional_information" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Información adicional</label>
         <textarea id="additional_information" name="additional_information" rows="3"
-                  class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">{{ old('additional_information', $product?->additional_information) }}</textarea>
+                  class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">{{ old('additional_information', $product?->additional_information) }}</textarea>
     </div>
 </div>
 
-<div class="mt-8 space-y-6 border-t border-neutral-800 pt-6" data-product-images>
+<div class="mt-8 space-y-6 border-t border-border pt-6" data-product-images>
     <div>
-        <h3 class="text-sm font-black uppercase tracking-wider text-white">Imágenes</h3>
-        <p class="mt-1 text-xs text-neutral-500">Sube archivos locales (JPG, PNG, WEBP o GIF, máx. 5 MB cada una).</p>
+        <h3 class="text-sm font-title text-text">Imágenes</h3>
+        <p class="mt-1 text-xs text-muted">Sube archivos locales (JPG, PNG, WEBP o GIF, máx. 5 MB cada una).</p>
     </div>
 
     <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Imagen principal</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imagen principal</label>
 
         @if ($primaryImage)
-            <div class="mb-3 flex items-center gap-3 rounded border border-neutral-800 bg-[#252525] p-3" data-existing-primary>
-                <img src="{{ $primaryImage->path }}" alt="" class="h-16 w-16 rounded object-cover border border-neutral-700">
+            <div class="mb-3 flex items-center gap-3 rounded border border-border bg-secondary p-3" data-existing-primary>
+                <img src="{{ $primaryImage->path }}" alt="" class="h-16 w-16 rounded object-cover border border-border">
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm text-white font-semibold truncate">Imagen actual</p>
-                    <p class="text-xs text-neutral-500">Se reemplazará si subes otra.</p>
+                    <p class="text-sm text-text font-semibold truncate">Imagen actual</p>
+                    <p class="text-xs text-muted">Se reemplazará si subes otra.</p>
                 </div>
-                <label class="inline-flex items-center gap-2 text-xs text-red-400 cursor-pointer">
+                <label class="inline-flex items-center gap-2 text-xs text-red-600 cursor-pointer">
                     <input
                         type="checkbox"
                         name="remove_image_ids[]"
                         value="{{ $primaryImage->id }}"
-                        class="rounded border-neutral-600 bg-[#1e1e1e] text-red-500 focus:ring-red-500"
+                        class="rounded border-border-strong bg-surface text-red-500 focus:ring-red-500"
                     >
                     Eliminar
                 </label>
@@ -172,7 +172,7 @@
 
         <div
             data-dropzone="primary"
-            class="flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-700 bg-[#252525] px-4 py-8 text-center transition-colors hover:border-orange-600"
+            class="flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary px-4 py-8 text-center transition-colors hover:border-primary"
         >
             <input
                 id="primary_image"
@@ -183,30 +183,30 @@
                 data-file-input="primary"
             >
             <button type="button" data-dropzone-trigger class="flex flex-col items-center cursor-pointer">
-                <svg class="h-8 w-8 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <svg class="h-8 w-8 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V19a2 2 0 002 2h14a2 2 0 002-2v-2.5M16 8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                <p class="mt-3 text-sm text-neutral-300">Arrastra la imagen principal o haz clic para seleccionar</p>
-                <p class="mt-1 text-xs text-neutral-500">Una sola imagen</p>
+                <p class="mt-3 text-sm text-text-soft">Arrastra la imagen principal o haz clic para seleccionar</p>
+                <p class="mt-1 text-xs text-muted">Una sola imagen</p>
             </button>
             <div data-preview="primary" class="mt-4 hidden w-full"></div>
         </div>
     </div>
 
     <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Imágenes secundarias</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imágenes secundarias</label>
 
         @if ($secondaryImages->isNotEmpty())
             <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 @foreach ($secondaryImages as $image)
-                    <div class="relative overflow-hidden rounded border border-neutral-800 bg-[#252525]">
+                    <div class="relative overflow-hidden rounded border border-border bg-secondary">
                         <img src="{{ $image->path }}" alt="" class="h-28 w-full object-cover">
                         <label class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/70 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-300 cursor-pointer">
                             <input
                                 type="checkbox"
                                 name="remove_image_ids[]"
                                 value="{{ $image->id }}"
-                                class="rounded border-neutral-600 bg-[#1e1e1e] text-red-500 focus:ring-red-500"
+                                class="rounded border-border-strong bg-surface text-red-500 focus:ring-red-500"
                             >
                             Eliminar
                         </label>
@@ -217,7 +217,7 @@
 
         <div
             data-dropzone="secondary"
-            class="flex min-h-[180px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-700 bg-[#252525] px-4 py-8 text-center transition-colors hover:border-orange-600"
+            class="flex min-h-[180px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary px-4 py-8 text-center transition-colors hover:border-primary"
         >
             <input
                 id="secondary_images"
@@ -229,11 +229,11 @@
                 data-file-input="secondary"
             >
             <button type="button" data-dropzone-trigger class="flex flex-col items-center cursor-pointer">
-                <svg class="h-8 w-8 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <svg class="h-8 w-8 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p class="mt-3 text-sm text-neutral-300">Arrastra varias imágenes o haz clic para seleccionar</p>
-                <p class="mt-1 text-xs text-neutral-500">Puedes agregar más sin perder la selección anterior</p>
+                <p class="mt-3 text-sm text-text-soft">Arrastra varias imágenes o haz clic para seleccionar</p>
+                <p class="mt-1 text-xs text-muted">Puedes agregar más sin perder la selección anterior</p>
             </button>
             <div data-preview="secondary" class="mt-4 hidden w-full grid grid-cols-2 gap-3 sm:grid-cols-4"></div>
         </div>
@@ -242,11 +242,11 @@
 
 <div class="mt-6 flex flex-wrap gap-3">
     <button type="submit"
-            class="rounded bg-orange-600 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors">
+            class="rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors">
         {{ $isEdit ? 'Guardar cambios' : 'Crear producto' }}
     </button>
     <a href="{{ route('admin.products.index') }}"
-       class="rounded border border-neutral-700 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors">
+       class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors">
         Cancelar
     </a>
 </div>
@@ -317,10 +317,10 @@
             const url = URL.createObjectURL(file);
             container.classList.remove('hidden');
             container.innerHTML =
-                '<div class="inline-flex items-center gap-3 rounded border border-neutral-700 bg-[#1e1e1e] p-2">' +
+                '<div class="inline-flex items-center gap-3 rounded-lg border border-border bg-surface p-2">' +
                 '<img src="' + url + '" alt="" class="h-16 w-16 rounded object-cover">' +
-                '<div class="text-left"><p class="text-sm text-white font-semibold truncate max-w-[14rem]">' + file.name + '</p>' +
-                '<button type="button" data-clear-primary class="mt-1 text-xs font-bold uppercase tracking-wide text-red-400 hover:text-red-300">Quitar</button></div></div>';
+                '<div class="text-left"><p class="text-sm text-text font-semibold truncate max-w-[14rem]">' + file.name + '</p>' +
+                '<button type="button" data-clear-primary class="mt-1 text-xs font-bold uppercase tracking-wide text-red-600 hover:text-red-300">Quitar</button></div></div>';
 
             container.querySelector('[data-clear-primary]')?.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -344,7 +344,7 @@
             files.forEach((file, index) => {
                 const url = URL.createObjectURL(file);
                 const card = document.createElement('div');
-                card.className = 'relative overflow-hidden rounded border border-neutral-700 bg-[#1e1e1e]';
+                card.className = 'relative overflow-hidden rounded-lg border border-border bg-surface';
                 card.innerHTML =
                     '<img src="' + url + '" alt="" class="h-28 w-full object-cover">' +
                     '<button type="button" data-remove-index="' + index + '" class="absolute inset-x-0 bottom-0 bg-black/70 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-300 hover:text-red-200">Quitar</button>';
@@ -375,8 +375,8 @@
             let stashedFiles = [];
 
             const highlight = (on) => {
-                zone.classList.toggle('border-orange-500', on);
-                zone.classList.toggle('bg-orange-950/20', on);
+                zone.classList.toggle('border-primary', on);
+                zone.classList.toggle('bg-primary-soft/20', on);
             };
 
             const refresh = () => {

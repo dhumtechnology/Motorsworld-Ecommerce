@@ -7,10 +7,10 @@
 @section('content')
     @php
         $statusLabels = [
-            'active' => ['label' => 'Activo', 'class' => 'bg-green-950 text-green-400 border-green-800'],
-            'pending' => ['label' => 'Pendiente', 'class' => 'bg-yellow-950 text-yellow-400 border-yellow-800'],
-            'disabled' => ['label' => 'Inactivo', 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'],
-            'locked' => ['label' => 'Bloqueado', 'class' => 'bg-red-950 text-red-400 border-red-800'],
+            'active' => ['label' => 'Activo', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+            'pending' => ['label' => 'Pendiente', 'class' => 'bg-amber-50 text-amber-700 border-amber-200'],
+            'disabled' => ['label' => 'Inactivo', 'class' => 'bg-secondary text-muted border-border'],
+            'locked' => ['label' => 'Bloqueado', 'class' => 'bg-red-50 text-red-600 border-red-200'],
         ];
 
         $selectedCategories = $filters['categories'] ?? [];
@@ -24,11 +24,11 @@
         }
     @endphp
 
-    <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 mb-6">
+    <div class="rounded-lg border border-border bg-surface p-5 mb-6">
         <form method="GET" action="{{ route('admin.products.index') }}" id="admin-products-filters" class="space-y-5">
             <div class="grid gap-4 lg:grid-cols-12">
                 <div class="lg:col-span-3">
-                    <label for="search" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label for="search" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
                         Buscar
                     </label>
                     <input
@@ -37,7 +37,7 @@
                         name="search"
                         value="{{ $filters['search'] ?? '' }}"
                         placeholder="SKU, nombre, marca o categoría..."
-                        class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                 </div>
 
@@ -73,13 +73,13 @@
                 </div>
 
                 <div class="lg:col-span-2">
-                    <label for="status" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                    <label for="status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
                         Estado
                     </label>
                     <select
                         id="status"
                         name="status"
-                        class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                         <option value="">Todos los estados</option>
                         @foreach ($statuses as $status)
@@ -92,10 +92,10 @@
 
                 <div class="lg:col-span-4">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-muted">
                             Rango de precio
                         </label>
-                        <p class="text-xs text-neutral-400 font-mono">
+                        <p class="text-xs text-muted font-mono">
                             <span id="price-min-label">{{ number_format($filters['price_min'], 2) }}</span>
                             —
                             <span id="price-max-label">{{ number_format($filters['price_max'], 2) }}</span>
@@ -103,16 +103,16 @@
                     </div>
 
                     <div
-                        class="relative h-10 rounded border border-neutral-800 bg-[#252525] px-3 flex items-center"
+                        class="relative h-10 rounded border border-border bg-secondary px-3 flex items-center"
                         data-dual-range
                         data-min="{{ $boundMin }}"
                         data-max="{{ $boundMax }}"
                     >
                         <div class="absolute inset-x-3 top-1/2 h-1.5 -translate-y-1/2">
-                            <div class="relative w-full h-full rounded-full bg-neutral-700">
+                            <div class="relative w-full h-full rounded-full bg-border-strong">
                                 <div
                                     id="price-range-fill"
-                                    class="absolute top-0 h-full rounded-full bg-orange-600"
+                                    class="absolute top-0 h-full rounded-full bg-primary"
                                 ></div>
                             </div>
                         </div>
@@ -144,13 +144,13 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <p id="filters-live-hint" class="text-xs text-neutral-500">
+                <p id="filters-live-hint" class="text-xs text-muted">
                     Los filtros se aplican automáticamente
                 </p>
                 @if ($hasActiveFilters)
                     <a
                         href="{{ route('admin.products.index') }}"
-                        class="rounded border border-neutral-700 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors"
+                        class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
                     >
                         Limpiar
                     </a>
@@ -166,7 +166,7 @@
                 id="bulk-delete-btn"
                 disabled
                 data-open-confirm="bulk-delete-modal"
-                class="rounded border border-red-800 bg-red-950/40 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-400 transition-colors enabled:hover:bg-red-900/50 disabled:cursor-not-allowed disabled:opacity-40"
+                class="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-600 transition-colors enabled:hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
                 Eliminar seleccionados
                 <span id="bulk-delete-count" class="hidden">(0)</span>
@@ -174,7 +174,7 @@
         </div>
         <a
             href="{{ route('admin.products.create') }}"
-            class="inline-flex items-center gap-2 rounded bg-orange-600 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors"
+            class="inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors"
         >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
@@ -184,31 +184,31 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-4 rounded border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">
             {{ $errors->first() }}
         </div>
     @endif
 
-    <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] overflow-hidden" data-products-table>
-        <div class="px-5 py-4 border-b border-neutral-800 flex items-center justify-between gap-4">
-            <p class="text-sm text-neutral-400">
-                <span class="text-white font-bold">{{ $products->total() }}</span>
+    <div class="rounded-lg border border-border bg-surface overflow-hidden" data-products-table>
+        <div class="px-5 py-4 border-b border-border flex items-center justify-between gap-4">
+            <p class="text-sm text-muted">
+                <span class="text-text font-bold">{{ $products->total() }}</span>
                 {{ $products->total() === 1 ? 'producto' : 'productos' }}
                 @if ($hasActiveFilters)
-                    <span class="text-neutral-500">(filtrados)</span>
+                    <span class="text-muted">(filtrados)</span>
                 @endif
             </p>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="bg-[#252525] text-xs uppercase tracking-wider text-neutral-500 border-b border-neutral-800">
+                <thead class="bg-secondary text-xs uppercase tracking-wider text-muted border-b border-border">
                     <tr>
                         <th scope="col" class="px-5 py-3 font-bold w-12">
                             <input
                                 type="checkbox"
                                 id="select-all-products"
-                                class="h-4 w-4 rounded border-neutral-600 bg-[#1e1e1e] text-orange-600 focus:ring-orange-500"
+                                class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 title="Seleccionar todos"
                                 @disabled($products->isEmpty())
                             >
@@ -224,16 +224,16 @@
                         <th scope="col" class="px-5 py-3 font-bold text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-neutral-800">
+                <tbody class="divide-y divide-border">
                     @forelse ($products as $product)
                         @php
                             $statusKey = $product->status instanceof \App\Enums\Products\ProductStatus
                                 ? $product->status->value
                                 : (string) $product->status;
-                            $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'];
+                            $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-secondary text-muted border-border'];
                             $imageUrl = $product->catalogImageUrl();
                         @endphp
-                        <tr class="hover:bg-[#252525]/60 transition-colors">
+                        <tr class="hover:bg-secondary/60 transition-colors">
                             <td class="px-5 py-3">
                                 <input
                                     type="checkbox"
@@ -241,7 +241,7 @@
                                     value="{{ $product->id }}"
                                     data-product-checkbox
                                     data-product-name="{{ $product->name }}"
-                                    class="h-4 w-4 rounded border-neutral-600 bg-[#1e1e1e] text-orange-600 focus:ring-orange-500"
+                                    class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 >
                             </td>
                             <td class="px-5 py-3">
@@ -249,39 +249,39 @@
                                     <img
                                         src="{{ $imageUrl }}"
                                         alt=""
-                                        class="h-10 w-10 rounded object-cover border border-neutral-700 bg-[#252525]"
+                                        class="h-10 w-10 rounded object-cover border border-border bg-secondary"
                                     >
                                 @else
-                                    <div class="h-10 w-10 rounded border border-neutral-700 bg-[#252525] flex items-center justify-center text-neutral-600 text-xs">
+                                    <div class="h-10 w-10 rounded border border-border bg-secondary flex items-center justify-center text-muted text-xs">
                                         —
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 font-mono text-neutral-300">{{ $product->sku }}</td>
+                            <td class="px-5 py-3 font-mono text-text-soft">{{ $product->sku }}</td>
                             <td class="px-5 py-3">
-                                <p class="font-semibold text-white">{{ $product->name }}</p>
+                                <p class="font-semibold text-text">{{ $product->name }}</p>
                                 <a
                                     href="{{ route('shop.product.show', $product) }}"
                                     target="_blank"
-                                    class="text-xs text-orange-500 hover:text-orange-400"
+                                    class="text-xs text-primary hover:text-primary"
                                 >
                                     Ver en tienda ↗
                                 </a>
                             </td>
-                            <td class="px-5 py-3 text-neutral-300">{{ $product->category?->name ?? '—' }}</td>
-                            <td class="px-5 py-3 text-neutral-300">
+                            <td class="px-5 py-3 text-text-soft">{{ $product->category?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-text-soft">
                                 {{ $product->vehicleModel?->brand?->name ?? '—' }}
                                 @if ($product->vehicleModel?->name)
-                                    <span class="block text-xs text-neutral-500">{{ $product->vehicleModel->name }}</span>
+                                    <span class="block text-xs text-muted">{{ $product->vehicleModel->name }}</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 text-white font-semibold whitespace-nowrap">
+                            <td class="px-5 py-3 text-text font-semibold whitespace-nowrap">
                                 {{ number_format((float) $product->price_amount, 2) }}
-                                <span class="text-neutral-500 text-xs">{{ $product->currency }}</span>
+                                <span class="text-muted text-xs">{{ $product->currency }}</span>
                             </td>
                             <td class="px-5 py-3">
                                 @php $stock = $product->inventory?->available_stock ?? 0; @endphp
-                                <span class="{{ $stock > 0 ? 'text-green-400' : 'text-red-400' }} font-semibold">
+                                <span class="{{ $stock > 0 ? 'text-emerald-700' : 'text-red-600' }} font-semibold">
                                     {{ $stock }}
                                 </span>
                             </td>
@@ -294,7 +294,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <a
                                         href="{{ route('admin.products.edit', $product) }}"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-800 bg-sky-950/50 text-sky-400 hover:bg-sky-900/60 transition-colors"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors"
                                         title="Editar"
                                         aria-label="Editar {{ $product->name }}"
                                     >
@@ -305,7 +305,7 @@
                                     </a>
                                     <button
                                         type="button"
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-red-800 bg-red-950/50 text-red-400 hover:bg-red-900/60 transition-colors"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100 transition-colors"
                                         title="Eliminar"
                                         aria-label="Eliminar {{ $product->name }}"
                                         data-open-confirm="single-delete-modal"
@@ -324,7 +324,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-5 py-12 text-center text-neutral-500">
+                            <td colspan="10" class="px-5 py-12 text-center text-muted">
                                 No se encontraron productos con los filtros aplicados.
                             </td>
                         </tr>
@@ -334,8 +334,8 @@
         </div>
 
         @if ($products->hasPages())
-            <div class="px-5 py-4 border-t border-neutral-800">
-                {{ $products->links('vendor.pagination.tailwind') }}
+            <div class="px-5 py-4 border-t border-border">
+                {{ $products->links('vendor.pagination.admin') }}
             </div>
         @endif
     </div>
@@ -434,13 +434,13 @@
 
                 if (labels.length === 0) {
                     summary.textContent = placeholder;
-                    summary.classList.add('text-neutral-500');
-                    summary.classList.remove('text-white');
+                    summary.classList.add('text-muted');
+                    summary.classList.remove('text-text');
                     return;
                 }
 
-                summary.classList.remove('text-neutral-500');
-                summary.classList.add('text-white');
+                summary.classList.remove('text-muted');
+                summary.classList.add('text-text');
 
                 if (labels.length === 1) {
                     summary.textContent = labels[0];

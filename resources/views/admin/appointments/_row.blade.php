@@ -4,26 +4,26 @@
     $statusKey = $appointment->status instanceof \App\Enums\Appointments\AppointmentStatus
         ? $appointment->status->value
         : (string) $appointment->status;
-    $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'];
+    $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-secondary text-muted border-border'];
     $vehicleLabel = trim(
         ($appointment->vehicleModel?->brand?->name ? $appointment->vehicleModel->brand->name.' ' : '').
         ($appointment->vehicleModel?->name ?? '')
     );
 @endphp
-<tr class="hover:bg-[#252525]/60 transition-colors">
-    <td class="px-5 py-3 text-neutral-300 whitespace-nowrap">
-        <span class="block text-white font-semibold">{{ $appointment->appointment_at?->format('d/m/Y') }}</span>
-        <span class="text-xs text-orange-400 font-mono">{{ $appointment->appointment_at?->format('H:i') }}</span>
+<tr class="hover:bg-secondary/60 transition-colors">
+    <td class="px-5 py-3 text-text-soft whitespace-nowrap">
+        <span class="block text-text font-semibold">{{ $appointment->appointment_at?->format('d/m/Y') }}</span>
+        <span class="text-xs text-primary font-mono">{{ $appointment->appointment_at?->format('H:i') }}</span>
     </td>
     <td class="px-5 py-3">
-        <p class="font-semibold text-white">{{ $fullName !== '' ? $fullName : 'Sin nombre' }}</p>
-        <p class="text-xs text-neutral-500 mt-0.5">{{ $appointment->user?->email ?? '—' }}</p>
+        <p class="font-semibold text-text">{{ $fullName !== '' ? $fullName : 'Sin nombre' }}</p>
+        <p class="text-xs text-muted mt-0.5">{{ $appointment->user?->email ?? '—' }}</p>
     </td>
-    <td class="px-5 py-3 text-neutral-300">{{ $appointment->serviceType?->name ?? '—' }}</td>
-    <td class="px-5 py-3 text-neutral-300">
+    <td class="px-5 py-3 text-text-soft">{{ $appointment->serviceType?->name ?? '—' }}</td>
+    <td class="px-5 py-3 text-text-soft">
         {{ $vehicleLabel !== '' ? $vehicleLabel : '—' }}
         @if ($appointment->plate)
-            <span class="block text-xs text-neutral-500 font-mono">{{ $appointment->plate }}</span>
+            <span class="block text-xs text-muted font-mono">{{ $appointment->plate }}</span>
         @endif
     </td>
     <td class="px-5 py-3">
@@ -35,7 +35,7 @@
         <div class="flex justify-end">
             <a
                 href="{{ route('admin.appointments.edit', $appointment) }}"
-                class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-800 bg-sky-950/50 text-sky-400 hover:bg-sky-900/60 transition-colors"
+                class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors"
                 title="Editar"
                 aria-label="Editar reserva #{{ $appointment->id }}"
             >

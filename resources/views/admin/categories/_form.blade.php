@@ -5,7 +5,7 @@
 @endphp
 
 @if ($errors->any())
-    <div class="mb-6 rounded border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+    <div class="mb-6 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">
         <ul class="list-disc list-inside space-y-1">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -16,31 +16,31 @@
 
 <div class="grid gap-5">
     <div>
-        <label for="name" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Nombre *</label>
+        <label for="name" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Nombre *</label>
         <input
             id="name"
             name="name"
             type="text"
             required
             value="{{ old('name', $category?->name) }}"
-            class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >
     </div>
 
     <div>
-        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Descripción</label>
+        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</label>
         <textarea
             id="description"
             name="description"
             rows="4"
-            class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         >{{ old('description', $category?->description) }}</textarea>
     </div>
 
     @if ($isEdit)
         <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Productos asociados</label>
-            <div class="w-full rounded border border-neutral-800 bg-[#1a1a1a] px-4 py-2.5 text-sm text-neutral-300">
+            <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Productos asociados</label>
+            <div class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text-soft">
                 {{ $category->products_count ?? 0 }}
             </div>
         </div>
@@ -50,13 +50,13 @@
 <div class="mt-6 flex flex-wrap gap-3">
     <button
         type="submit"
-        class="rounded bg-orange-600 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors"
+        class="rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors"
     >
         {{ $isEdit ? 'Guardar cambios' : 'Crear categoría' }}
     </button>
     <a
         href="{{ route('admin.categories.index') }}"
-        class="rounded border border-neutral-700 px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors"
+        class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
     >
         Cancelar
     </a>

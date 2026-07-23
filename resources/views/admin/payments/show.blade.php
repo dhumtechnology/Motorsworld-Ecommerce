@@ -11,32 +11,32 @@
         $fullName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
 
         $statusLabels = [
-            'pending' => ['label' => 'Pendiente', 'class' => 'bg-yellow-950 text-yellow-400 border-yellow-800'],
-            'paid' => ['label' => 'Pagado', 'class' => 'bg-green-950 text-green-400 border-green-800'],
-            'failed' => ['label' => 'Fallido', 'class' => 'bg-red-950 text-red-400 border-red-800'],
-            'expired' => ['label' => 'Expirado', 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'],
-            'refunded' => ['label' => 'Reembolsado', 'class' => 'bg-orange-950 text-orange-400 border-orange-800'],
+            'pending' => ['label' => 'Pendiente', 'class' => 'bg-amber-50 text-amber-700 border-amber-200'],
+            'paid' => ['label' => 'Pagado', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+            'failed' => ['label' => 'Fallido', 'class' => 'bg-red-50 text-red-600 border-red-200'],
+            'expired' => ['label' => 'Expirado', 'class' => 'bg-secondary text-muted border-border'],
+            'refunded' => ['label' => 'Reembolsado', 'class' => 'bg-primary-soft text-primary border-primary/30'],
         ];
 
         $statusKey = $payment->status instanceof \App\Enums\Payments\PaymentRecordStatus
             ? $payment->status->value
             : (string) $payment->status;
-        $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-neutral-800 text-neutral-400 border-neutral-700'];
+        $statusMeta = $statusLabels[$statusKey] ?? ['label' => $statusKey, 'class' => 'bg-secondary text-muted border-border'];
     @endphp
 
     <div class="mb-5">
-        <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-neutral-400 hover:text-orange-400 transition-colors">
+        <a href="{{ route('admin.payments.index') }}" class="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-primary transition-colors">
             ← Volver a pagos
         </a>
     </div>
 
     <div class="grid gap-6 xl:grid-cols-3">
         <div class="xl:col-span-2 space-y-6">
-            <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-6">
+            <div class="rounded-lg border border-border bg-surface p-6">
                 <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
                     <div>
-                        <h2 class="text-sm font-black uppercase tracking-wider text-white">Información del pago</h2>
-                        <p class="text-xs text-neutral-500 mt-1">Datos principales del cobro</p>
+                        <h2 class="text-sm font-title text-text">Información del pago</h2>
+                        <p class="text-xs text-muted mt-1">Datos principales del cobro</p>
                     </div>
                     <span class="inline-flex items-center rounded border px-2.5 py-1 text-xs font-bold uppercase {{ $statusMeta['class'] }}">
                         {{ $statusMeta['label'] }}
@@ -45,73 +45,73 @@
 
                 <dl class="grid gap-4 sm:grid-cols-2 text-sm">
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Nº de pago</dt>
-                        <dd class="mt-1 font-mono font-semibold text-white">#{{ $payment->id }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Nº de pago</dt>
+                        <dd class="mt-1 font-mono font-semibold text-text">#{{ $payment->id }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Nº de orden</dt>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Nº de orden</dt>
                         <dd class="mt-1">
                             @if ($order)
-                                <a href="{{ route('admin.orders.show', $order) }}" class="font-mono font-semibold text-sky-400 hover:text-sky-300">#{{ $order->id }}</a>
+                                <a href="{{ route('admin.orders.show', $order) }}" class="font-mono font-semibold text-sky-700 hover:text-sky-800">#{{ $order->id }}</a>
                             @else
-                                <span class="font-mono text-neutral-400">#{{ $payment->order_id }}</span>
+                                <span class="font-mono text-muted">#{{ $payment->order_id }}</span>
                             @endif
                         </dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Método de pago</dt>
-                        <dd class="mt-1 font-semibold text-white">{{ $methodLabel }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Método de pago</dt>
+                        <dd class="mt-1 font-semibold text-text">{{ $methodLabel }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Proveedor</dt>
-                        <dd class="mt-1 text-neutral-300 uppercase tracking-wide">{{ $payment->provider ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Proveedor</dt>
+                        <dd class="mt-1 text-text-soft uppercase tracking-wide">{{ $payment->provider ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Monto</dt>
-                        <dd class="mt-1 text-white font-bold text-lg">
+                        <dt class="text-xs uppercase tracking-wider text-muted">Monto</dt>
+                        <dd class="mt-1 text-text font-bold text-lg">
                             {{ number_format(((int) $payment->amount_cents) / 100, 2) }}
-                            <span class="text-sm text-neutral-500 font-semibold">{{ $payment->currency }}</span>
+                            <span class="text-sm text-muted font-semibold">{{ $payment->currency }}</span>
                         </dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Fecha de creación</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $payment->created_at?->format('d/m/Y H:i') ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Fecha de creación</dt>
+                        <dd class="mt-1 text-text-soft">{{ $payment->created_at?->format('d/m/Y H:i') ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Pagado el</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $payment->paid_at?->format('d/m/Y H:i') ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Pagado el</dt>
+                        <dd class="mt-1 text-text-soft">{{ $payment->paid_at?->format('d/m/Y H:i') ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Expira</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $payment->expires_at?->format('d/m/Y H:i') ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Expira</dt>
+                        <dd class="mt-1 text-text-soft">{{ $payment->expires_at?->format('d/m/Y H:i') ?? '—' }}</dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-6">
-                <h2 class="text-sm font-black uppercase tracking-wider text-white mb-5">Referencias del proveedor</h2>
+            <div class="rounded-lg border border-border bg-surface p-6">
+                <h2 class="text-sm font-title text-text mb-5">Referencias del proveedor</h2>
                 <dl class="grid gap-4 sm:grid-cols-2 text-sm">
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Charge ID</dt>
-                        <dd class="mt-1 font-mono text-neutral-300 break-all">{{ $payment->culqi_charge_id ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Charge ID</dt>
+                        <dd class="mt-1 font-mono text-text-soft break-all">{{ $payment->culqi_charge_id ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Order ID (Culqi)</dt>
-                        <dd class="mt-1 font-mono text-neutral-300 break-all">{{ $payment->culqi_order_id ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Order ID (Culqi)</dt>
+                        <dd class="mt-1 font-mono text-text-soft break-all">{{ $payment->culqi_order_id ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Código de pago</dt>
-                        <dd class="mt-1 font-mono text-neutral-300">{{ $payment->payment_code ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Código de pago</dt>
+                        <dd class="mt-1 font-mono text-text-soft">{{ $payment->payment_code ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Source ID</dt>
-                        <dd class="mt-1 font-mono text-neutral-300 break-all">{{ $payment->source_id ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Source ID</dt>
+                        <dd class="mt-1 font-mono text-text-soft break-all">{{ $payment->source_id ?? '—' }}</dd>
                     </div>
                     @if ($payment->payment_url)
                         <div class="sm:col-span-2">
-                            <dt class="text-xs uppercase tracking-wider text-neutral-500">URL de pago</dt>
+                            <dt class="text-xs uppercase tracking-wider text-muted">URL de pago</dt>
                             <dd class="mt-1">
-                                <a href="{{ $payment->payment_url }}" target="_blank" rel="noopener" class="text-sky-400 hover:text-sky-300 break-all">
+                                <a href="{{ $payment->payment_url }}" target="_blank" rel="noopener" class="text-sky-700 hover:text-sky-800 break-all">
                                     {{ $payment->payment_url }}
                                 </a>
                             </dd>
@@ -122,38 +122,38 @@
         </div>
 
         <div class="space-y-6">
-            <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5">
-                <h2 class="text-sm font-black uppercase tracking-wider text-white mb-4">Cliente</h2>
+            <div class="rounded-lg border border-border bg-surface p-5">
+                <h2 class="text-sm font-title text-text mb-4">Cliente</h2>
                 <dl class="space-y-3 text-sm">
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Nombre</dt>
-                        <dd class="mt-1 font-semibold text-white">{{ $fullName !== '' ? $fullName : '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Nombre</dt>
+                        <dd class="mt-1 font-semibold text-text">{{ $fullName !== '' ? $fullName : '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Email</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $order?->user?->email ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Email</dt>
+                        <dd class="mt-1 text-text-soft">{{ $order?->user?->email ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Documento</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $profile?->document ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Documento</dt>
+                        <dd class="mt-1 text-text-soft">{{ $profile?->document ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Teléfono</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $profile?->phone ?? '—' }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Teléfono</dt>
+                        <dd class="mt-1 text-text-soft">{{ $profile?->phone ?? '—' }}</dd>
                     </div>
                 </dl>
             </div>
 
-            <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5">
-                <h2 class="text-sm font-black uppercase tracking-wider text-white mb-4">Orden relacionada</h2>
+            <div class="rounded-lg border border-border bg-surface p-5">
+                <h2 class="text-sm font-title text-text mb-4">Orden relacionada</h2>
                 <dl class="space-y-3 text-sm">
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Nº de orden</dt>
-                        <dd class="mt-1 font-mono font-semibold text-white">#{{ $order?->id ?? $payment->order_id }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Nº de orden</dt>
+                        <dd class="mt-1 font-mono font-semibold text-text">#{{ $order?->id ?? $payment->order_id }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Total orden</dt>
-                        <dd class="mt-1 text-neutral-300">
+                        <dt class="text-xs uppercase tracking-wider text-muted">Total orden</dt>
+                        <dd class="mt-1 text-text-soft">
                             @if ($order)
                                 {{ number_format((float) $order->total_amount, 2) }} {{ $order->currency }}
                             @else
@@ -162,13 +162,13 @@
                         </dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-neutral-500">Ítems</dt>
-                        <dd class="mt-1 text-neutral-300">{{ $order?->items?->count() ?? 0 }}</dd>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Ítems</dt>
+                        <dd class="mt-1 text-text-soft">{{ $order?->items?->count() ?? 0 }}</dd>
                     </div>
                 </dl>
                 @if ($order)
                     <a href="{{ route('admin.orders.show', $order) }}"
-                       class="mt-4 inline-flex items-center rounded border border-neutral-700 px-4 py-2 text-xs font-bold uppercase tracking-wide text-neutral-300 hover:text-white hover:border-neutral-500 transition-colors">
+                       class="mt-4 inline-flex items-center rounded border border-border px-4 py-2 text-xs font-bold uppercase tracking-wide text-text-soft hover:text-text hover:border-border-strong transition-colors">
                         Ver orden
                     </a>
                 @endif
