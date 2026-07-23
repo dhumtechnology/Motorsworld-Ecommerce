@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['order_id', 'status', 'note'])]
+#[Fillable(['order_id', 'status', 'note', 'created_at'])]
 class OrderStatusHistory extends Model
 {
     protected $table = 'order_status_history';

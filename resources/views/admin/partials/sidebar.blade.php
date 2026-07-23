@@ -39,10 +39,10 @@
                     'enabled' => true,
                 ],
                 [
-                    'label' => 'Envíos',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
+                    'label' => 'Órdenes',
+                    'route' => 'admin.orders.index',
+                    'active' => request()->routeIs('admin.orders.*'),
+                    'enabled' => true,
                 ],
                 [
                     'label' => 'Reservas',
@@ -56,12 +56,6 @@
             'label' => 'Gestión de compras',
             'items' => [
                 [
-                    'label' => 'Órdenes',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
-                ],
-                [
                     'label' => 'Pagos',
                     'route' => null,
                     'active' => false,
@@ -74,8 +68,7 @@
                     'enabled' => false,
                 ],
             ],
-        ],
-        [
+        ],        [
             'label' => 'Gestión de inventario',
             'items' => [
                 [
