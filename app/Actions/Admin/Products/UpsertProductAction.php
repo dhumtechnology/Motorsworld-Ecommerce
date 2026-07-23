@@ -2,7 +2,10 @@
 
 namespace App\Actions\Admin\Products;
 
+use App\Enums\Inventory\InventoryMovementReason;
+use App\Enums\Inventory\InventoryMovementType;
 use App\Models\Products\Inventory;
+use App\Models\Products\InventoryMovement;
 use App\Models\Products\Product;
 use App\Models\Products\ProductImage;
 use Illuminate\Http\UploadedFile;
@@ -34,6 +37,10 @@ class UpsertProductAction
         ) {
             unset($attributes['image']);
 
+            $previousAvailable = $product !== null
+                ? (int) ($product->inventory?->available_stock ?? 0)
+                : 0;
+
             if ($product === null) {
                 $product = Product::query()->create($attributes);
             } else {
@@ -50,6 +57,8 @@ class UpsertProductAction
                     'total_stock' => $availableStock + $reservedStock,
                 ],
             );
+
+            $this->recordStockAdjustment($product, $previousAvailable, $availableStock);
 
             $this->removeImages($product, $removeImageIds);
 
@@ -80,6 +89,26 @@ class UpsertProductAction
 
             return $product->fresh(['inventory', 'category', 'vehicleModel', 'images']);
         });
+    }
+
+    private function recordStockAdjustment(Product $product, int $previousAvailable, int $newAvailable): void
+    {
+        $delta = $newAvailable - $previousAvailable;
+
+        if ($delta === 0) {
+            return;
+        }
+
+        InventoryMovement::query()->create([
+            'product_id' => $product->id,
+            'type' => $delta > 0 ? InventoryMovementType::Entry : InventoryMovementType::Exit,
+            'reason' => InventoryMovementReason::Adjustment,
+            'quantity' => abs($delta),
+            'notes' => $previousAvailable === 0 && $delta > 0 && $product->wasRecentlyCreated
+                ? 'Stock inicial al crear el producto'
+                : 'Ajuste desde ficha de producto',
+            'created_by' => auth()->id(),
+        ]);
     }
 
     /**

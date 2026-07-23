@@ -2,17 +2,22 @@
 
 namespace App\Actions\Orders;
 
+use App\Actions\Inventory\RegisterInventoryMovementAction;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
+use App\Enums\Payments\PaymentRecordStatus;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderStatusHistory;
 use App\Models\Orders\Payment;
-use App\Enums\Payments\PaymentRecordStatus;
-use App\Models\Products\Inventory;
+use App\Models\Products\InventoryMovement;
 use Illuminate\Support\Facades\DB;
 
 class MarkOrderAsPaidAction
 {
+    public function __construct(
+        private readonly RegisterInventoryMovementAction $registerInventoryMovement,
+    ) {}
+
     public function execute(Order $order, ?Payment $payment = null, ?string $note = null): Order
     {
         return DB::transaction(function () use ($order, $payment, $note) {
@@ -41,30 +46,27 @@ class MarkOrderAsPaidAction
                 'created_at' => now(),
             ]);
 
-            $this->deductInventory($order);
+            $this->registerSaleExits($order);
 
             return $order->fresh(['items', 'payments']);
         });
     }
 
-    private function deductInventory(Order $order): void
+    private function registerSaleExits(Order $order): void
     {
         $order->loadMissing('items');
 
         foreach ($order->items as $item) {
-            $inventory = Inventory::query()
-                ->where('product_id', $item->product_id)
-                ->lockForUpdate()
-                ->first();
+            $alreadyRegistered = InventoryMovement::query()
+                ->where('order_item_id', $item->id)
+                ->where('reason', 'sale')
+                ->exists();
 
-            if ($inventory === null) {
+            if ($alreadyRegistered) {
                 continue;
             }
 
-            $qty = (int) $item->quantity;
-            $inventory->available_stock = max(0, (int) $inventory->available_stock - $qty);
-            $inventory->total_stock = max(0, (int) $inventory->total_stock - $qty);
-            $inventory->save();
+            $this->registerInventoryMovement->registerSaleExit($order, $item);
         }
     }
 }

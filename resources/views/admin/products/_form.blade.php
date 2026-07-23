@@ -118,7 +118,7 @@
         <label for="available_stock" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Stock disponible *</label>
         <input id="available_stock" name="available_stock" type="number" min="0" required
                value="{{ old('available_stock', $product?->inventory?->available_stock ?? 0) }}"
-               class="w-full rounded border border-neutral-700 bg-[#252525] px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500">
+        <p class="mt-1.5 text-xs text-neutral-500">Preferible gestionar altas/bajas desde Entradas y Salidas. Un cambio aquí genera un ajuste en el kardex.</p>
     </div>
 
     <div>
@@ -126,7 +126,7 @@
         <div class="w-full rounded border border-neutral-800 bg-[#1a1a1a] px-4 py-2.5 text-sm text-neutral-300">
             {{ $reservedStock }}
         </div>
-        <p class="mt-1.5 text-xs text-neutral-500">Se calcula automáticamente según pedidos/reservas.</p>
+        <p class="mt-1.5 text-xs text-neutral-500">Se mantiene al editar el stock disponible.</p>
     </div>
 
     <div class="lg:col-span-2">
