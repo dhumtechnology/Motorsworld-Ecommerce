@@ -34,9 +34,9 @@
             'items' => [
                 [
                     'label' => 'Clientes',
-                    'route' => null,
-                    'active' => false,
-                    'enabled' => false,
+                    'route' => 'admin.customers.index',
+                    'active' => request()->routeIs('admin.customers.*'),
+                    'enabled' => true,
                 ],
                 [
                     'label' => 'Envíos',

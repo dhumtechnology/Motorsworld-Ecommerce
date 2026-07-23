@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VehicleModelController;
@@ -53,4 +54,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/modelos/{vehicleModel}', [VehicleModelController::class, 'update'])->name('models.update');
     Route::delete('/modelos/{vehicleModel}', [VehicleModelController::class, 'destroy'])->name('models.destroy');
     Route::delete('/modelos', [VehicleModelController::class, 'bulkDestroy'])->name('models.bulk-destroy');
+
+    Route::get('/clientes', [CustomerController::class, 'index'])->name('customers.index');
 });
