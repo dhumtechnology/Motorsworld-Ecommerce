@@ -3,7 +3,7 @@
 @section('title', 'Carrito — '.config('app.name'))
 
 @section('content')
-<div class="mx-auto max-w-5xl px-4 py-10 text-white" data-cart-page>
+<div class="mx-auto max-w-5xl px-4 py-10" data-cart-page>
     <h1 class="text-3xl font-black uppercase tracking-wide mb-2">Tu carrito</h1>
     <p class="text-neutral-400 text-sm mb-8" data-cart-summary-text>
         @if ($itemCount > 0)
@@ -18,7 +18,7 @@
     <div data-cart-empty class="{{ $lines->isEmpty() ? '' : 'hidden' }} rounded-lg border border-dashed border-neutral-700 bg-[#1e1e1e]/60 p-10 text-center">
         <p class="text-neutral-400 text-sm mb-6">Aún no has agregado productos.</p>
         <a href="{{ route('shop.catalog') }}"
-           class="inline-block rounded bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors">
+           class="inline-block rounded bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide hover:bg-orange-500 transition-colors">
             Ir al catálogo
         </a>
     </div>
@@ -72,7 +72,7 @@
                         >
                             −
                         </button>
-                        <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center text-white font-black text-lg">
+                        <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center font-black text-lg">
                             <span data-line-qty>{{ $line['quantity'] }}</span>
                         </div>
                         <button
@@ -100,11 +100,11 @@
 
         <div class="flex flex-col sm:flex-row gap-3 sm:justify-between">
             <a href="{{ route('shop.catalog') }}"
-               class="inline-flex justify-center rounded border border-neutral-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-neutral-300 hover:border-neutral-400 hover:text-white transition-colors">
+               class="inline-flex justify-center rounded border border-neutral-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-neutral-300 hover:border-neutral-400 hover transition-colors">
                 Seguir comprando
             </a>
             <a href="{{ route('shop.checkout.show') }}"
-               class="inline-flex justify-center rounded bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors">
+               class="inline-flex justify-center rounded bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide hover:bg-orange-500 transition-colors">
                 Pagar ahora
             </a>
         </div>

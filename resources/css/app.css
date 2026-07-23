@@ -1,15 +1,37 @@
-@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Oswald:wght@200..700&family=Roboto:wght@100;300;400;500;700;900&display=swap');
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../views/**/*.blade.php';
-@source '../js/**/*.js';
+@import "tailwindcss";
 
-@theme {
-    /* Variables de colores globales */
-    color-primario: #000000;
-    color-secundario: #FA6600;
-    
-    /* Variable de tipografía global */
-    --font-corporativa: "Inter", sans-serif;
+:root {
+    /* Colores */
+    --color-primary: #FF6600;
+    --color-secondary: #F8F8F8;
+    --color-background: #ffffff;
+    --color-text: #202020;
+
+    /* Tipografía */
+    --font-primary: 'Inter', sans-serif;
+    --font-secondary: 'Roboto', sans-serif;
+    --font-title: 'Oswald', sans-serif;
+
+    /* Bordes 
+    --radius: 12px; */
+}
+
+@layer base {
+
+}
+
+@layer components {
+
+    .btn-primary{
+        background: var(--color-primary);
+        color:white;
+        border-radius: var(--radius);
+    }
+
+}
+
+body {
+    background: red !important;
 }

@@ -6,15 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name'))</title>
 
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @fonts
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
+<body class="antialiased">
     <header class="border-b border-gray-200">
-        <div class="mx-auto px-10 py-4 flex max-w-full items-center justify-between bg-[#252525]">
+        <div class="mx-auto px-10 py-4 flex max-w-full items-center justify-between bg-black">
             <div class="logo">
                 <x-logo href="{{ route('shop.home') }}" />
             </div>
@@ -86,11 +84,11 @@
         </div>
     </header>
 
-    <main class="bg-[#252525]">
+    <main class="">
         @yield('content')
     </main>
 
-    <footer class="text-white py-14 bg-[#1e1e1e]">
+    <footer class="text-white py-14">
         <div class="mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 max-w-[95%] px-4 md:px-8">
             
             <div class="flex flex-col gap-3 md:col-span-3">

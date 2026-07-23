@@ -103,7 +103,7 @@
         :image="$product->image"
     --}}
     <h1>Catálogo de productos</h1>
-    <div class="bg-[#252525] min-h-screen py-12 px-4 md:px-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="min-h-screen py-12 px-4 md:px-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
            @forelse ($products as $product)
                 <x-card
@@ -137,8 +137,8 @@
                     <input type="hidden" name="section" value="{{ request('section') }}">
                 @endif
 
-                <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white">
-                    <h3 class="font-sans font-black tracking-wider uppercase text-xl mb-4 antialiased">
+                <div class="p-6 rounded-md border border-neutral-800 text-white">
+                    <h3 class="tracking-wider uppercase text-xl mb-4 antialiased">
                         BÚSQUEDA
                     </h3>
                     <input type="search" 
