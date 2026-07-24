@@ -5,7 +5,7 @@ cd /var/www/html
 
 # SKIP_ASSET_BUILD=true → no compila (útil si ya tienes public/build).
 # FORCE_ASSET_BUILD=true → compila siempre.
-# Por defecto: solo compila si no hay manifest o si cambiaron fuentes npm/vite/css/js.
+# Por defecto: solo compila si no hay manifest o si cambiaron fuentes npm/vite/css/js/views.
 if [ "${SKIP_ASSET_BUILD:-false}" = "true" ]; then
     echo "SKIP_ASSET_BUILD=true → omitiendo compilación de assets."
     if [ ! -f public/build/manifest.json ]; then
@@ -22,6 +22,7 @@ if [ "${FORCE_ASSET_BUILD:-false}" != "true" ] && [ -f public/build/manifest.jso
         vite.config.js \
         resources/css \
         resources/js \
+        resources/views \
         -type f \
         -newer public/build/manifest.json \
         2>/dev/null | head -n 1 || true)"

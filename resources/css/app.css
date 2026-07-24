@@ -2,15 +2,21 @@
 
 @import "tailwindcss";
 
+/* Escanea Blade/JS para generar utilidades usadas en vistas (Tailwind v4). */
+@source "../views/**/*.blade.php";
+@source "../js/**/*.js";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+
 /*
 |--------------------------------------------------------------------------
 | Importante
 |--------------------------------------------------------------------------
-| Editar este archivo NO se refleja solo. Hay que:
+| Editar este archivo O las clases en Blade NO se refleja solo. Hay que:
 |   npm run dev     → cambios en vivo (recomendado al diseñar)
 |   npm run build   → build de producción
 | Con Docker, el servicio "node" recompila al hacer up (salvo SKIP_ASSET_BUILD=true).
-| Después de editar CSS: npm run dev / npm run build, o recrea el servicio node.
+| Después de editar CSS o clases en views: npm run build, o:
+|   FORCE_ASSET_BUILD=true docker compose run --rm node
 |
 | Tokens en @theme → utilidades Tailwind: bg-primary, text-text, font-title…
 | Tokens en :root  → var(--color-primary) en CSS personalizado
