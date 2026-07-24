@@ -5,8 +5,8 @@
     'selected' => [] // Ahora por defecto es un array vacío
 ])
 
-<div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white select-none">
-    <h3 class="font-sans font-black tracking-wider uppercase text-xl text-white mb-4 antialiased">
+<div class="bg-secondary p-6 rounded-md border-neutral-800 text-black select-none">
+    <h3 class="font-sans font-black bold tracking-wider uppercase text-xl mb-4 antialiased">
         {{ $title }}
     </h3>
 
@@ -21,7 +21,7 @@
                 $isChecked = in_array($id, $selectedArray);
             @endphp
             <li>
-                <label class="flex items-center gap-3 group cursor-pointer text-white font-bold text-sm tracking-wide">
+                <label class="flex items-center gap-3 group cursor-pointer text-black text-sm tracking-wide">
                     <input type="checkbox" 
                            name="{{ $name }}[]" 
                            value="{{ $id }}" 
@@ -33,7 +33,7 @@
                         peer-checked:bg-orange-600 peer-checked:border-orange-600 group-hover:border-orange-500">
                     </span>
                     
-                    <span class="text-gray-300 group-hover:text-white transition-colors duration-150 font-sans normal-case">
+                    <span class="text-gray-300 group-hover:text-primary transition-colors duration-150 font-sans normal-case">
                         {{ $label }}
                     </span>
                 </label>
