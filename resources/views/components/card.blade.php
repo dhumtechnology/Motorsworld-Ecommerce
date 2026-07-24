@@ -11,7 +11,7 @@
 
 <div class="text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
     
-    <div class="relative w-full aspect-squares border border-neutral-800 rounded-sm overflow-hidden">
+    <div class="relative w-full aspect-squares border bg-sidebar border-neutral-800 rounded-sm overflow-hidden">
     
         {{-- Etiqueta SALE flotante si aplica --}}
         @if($isSale)
