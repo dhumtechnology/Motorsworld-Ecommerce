@@ -100,7 +100,7 @@
     ];
 @endphp
 
-<aside class="w-64 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col min-h-screen sticky top-0 h-screen">
+<aside class="w-64 shrink-0 bg-black border-r border-sidebar-border flex flex-col min-h-screen sticky top-0 h-screen">
     <div class="p-5 border-b border-sidebar-border">
         <x-logo href="{{ route('admin.dashboard') }}" />
         <p class="text-[10px] uppercase tracking-widest text-sidebar-muted font-bold mt-3 font-secondary">
