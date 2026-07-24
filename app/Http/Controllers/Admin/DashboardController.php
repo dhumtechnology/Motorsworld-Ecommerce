@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Dashboard\GetDashboardMetricsAction;
 use App\Http\Controllers\Controller;
-use App\Models\Products\Product;
 use Illuminate\Contracts\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(GetDashboardMetricsAction $metrics): View
     {
-        return view('admin.dashboard.index', [
-            'productCount' => Product::count(),
-        ]);
+        return view('admin.dashboard.index', $metrics());
     }
 }

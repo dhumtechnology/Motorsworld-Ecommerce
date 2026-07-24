@@ -120,6 +120,16 @@
         box-shadow: 0 1px 2px rgb(32 32 32 / 4%);
     }
 
+    .admin-kpi-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.65rem;
+        flex-shrink: 0;
+    }
+
     .admin-input {
         width: 100%;
         border-radius: 0.5rem;
