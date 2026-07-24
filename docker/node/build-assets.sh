@@ -20,7 +20,7 @@ else
     npm install --no-audit --no-fund
 fi
 
-echo "Compilando assets con Vite..."
+echo "Compilando assets con Vite (en Docker Desktop/Windows puede tardar 1–3 min)..."
 npm run build
 
 if [ ! -f public/build/manifest.json ]; then
@@ -29,3 +29,4 @@ if [ ! -f public/build/manifest.json ]; then
 fi
 
 echo "Assets compilados en public/build/"
+echo "Listo. Si nginx ya está Up, recarga el navegador para ver los estilos."

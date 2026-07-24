@@ -30,11 +30,20 @@ services:
       - app_file_cache:/var/www/html/storage/framework/cache
     networks:
       - motosworld
+    # PHP arranca en paralelo a Vite (no espera a node). Nginx sí espera a que FPM escuche.
     depends_on:
       mysql:
         condition: service_healthy
-      node:
-        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "php -r '$$s=@fsockopen(\"127.0.0.1\",9000); if(!$$s){exit(1);} fclose($$s);'",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 36
+      start_period: 180s
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -56,7 +65,8 @@ services:
     networks:
       - motosworld
     depends_on:
-      - app
+      app:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0

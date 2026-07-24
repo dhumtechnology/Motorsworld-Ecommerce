@@ -9,8 +9,8 @@
 | Editar este archivo NO se refleja solo. Hay que:
 |   npm run dev     → cambios en vivo (recomendado al diseñar)
 |   npm run build   → build de producción
-| Con Docker, el servicio "node" solo compila al hacer up si no existe
-| public/build; después de editar CSS usa npm run dev o npm run build.
+| Con Docker, el servicio "node" recompila al hacer up (salvo SKIP_ASSET_BUILD=true).
+| Después de editar CSS: npm run dev / npm run build, o recrea el servicio node.
 |
 | Tokens en @theme → utilidades Tailwind: bg-primary, text-text, font-title…
 | Tokens en :root  → var(--color-primary) en CSS personalizado

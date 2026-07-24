@@ -75,12 +75,16 @@ Las variables por defecto ya están configuradas para Docker:
 docker compose up -d --build
 ```
 
-Esto levanta cuatro servicios (en orden):
+Esto levanta cuatro servicios:
 
-1. **node** — compila assets con Vite/Tailwind (`npm ci` + `npm run build`) y termina
-2. **mysql** — base de datos
-3. **app** — PHP-FPM (Laravel); espera a que `node` termine con éxito
-4. **nginx** — proxy en el puerto `APP_PORT` (por defecto 8080)
+1. **mysql** — MySQL 8.0 (puerto externo: `DB_PORT_EXTERNAL`)
+2. **node** — compila assets con Vite/Tailwind y termina (en paralelo a `app`)
+3. **app** — PHP 8.4-FPM (migrate + seed; healthcheck cuando FPM escucha en `:9000`)
+4. **nginx** — proxy en `APP_PORT` (default 8080); **solo arranca cuando `app` está healthy**
+
+Así se evita el **502** típico de abrir el sitio mientras PHP aún migra/seedea.
+
+La primera vez puede tardar varios minutos (npm + migrate/seed). Espera a `docker compose ps` con `nginx` Up y `app` healthy.
 
 > **Importante:** `public/build` está en `.gitignore`. Cada `docker compose up` vuelve a compilar CSS/JS.
 > Si la UI sale sin estilos, fuerza el rebuild:
@@ -91,16 +95,12 @@ Esto levanta cuatro servicios (en orden):
 > docker compose up -d --build --force-recreate node
 > ```
 >
-> No uses el CDN de Tailwind: pisa los estilos del proyecto.2. **mysql** — MySQL 8.0 (puerto externo configurable con `DB_PORT_EXTERNAL`)
-3. **app** — PHP 8.4-FPM (migrate + seed en el entrypoint)
-4. **nginx** — servidor web (puerto `APP_PORT`, default 8080)
-
-La primera vez puede tardar varios minutos mientras `node` instala dependencias npm.
+> No uses el CDN de Tailwind: pisa los estilos del proyecto.
 
 **Recompilar assets** tras cambiar CSS/JS:
 
 ```bash
-docker compose run --rm -e FORCE_ASSET_BUILD=true node
+docker compose run --rm node
 ```
 
 > **Nota:** El entrypoint genera `APP_KEY` automáticamente si falta en `.env`. Solo ejecuta `cp .env.example .env` antes del primer `docker compose up`.
