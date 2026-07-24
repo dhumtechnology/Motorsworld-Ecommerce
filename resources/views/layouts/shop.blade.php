@@ -19,7 +19,7 @@
             <div class="flex items-center gap-6">
                 <nav>
                     <ul class="flex items-center gap-3">
-                        <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-primary hover:text-orange-500">HOME</a></li>
+                        <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">HOME</a></li>
                         <x-dropdown title="SERVICIO">
                             <a href="#" class="block px-4 py-2 hover:bg-gray-100">
                                 SERVICIO 1
@@ -88,7 +88,7 @@
         @yield('content')
     </main>
 
-    <footer class="text-white py-14">
+    <footer class="text-white py-14 bg-black">
         <div class="mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 max-w-[95%] px-4 md:px-8">
             
             <div class="flex flex-col gap-3 md:col-span-3">
