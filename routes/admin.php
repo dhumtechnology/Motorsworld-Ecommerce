@@ -69,6 +69,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/usuarios', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/usuarios/crear', [AdminUserController::class, 'create'])->name('users.create');
     Route::post('/usuarios', [AdminUserController::class, 'store'])->name('users.store');
+    Route::get('/usuarios/{user}', [AdminUserController::class, 'show'])->name('users.show');
     Route::get('/usuarios/{user}/editar', [AdminUserController::class, 'edit'])->name('users.edit');
     Route::put('/usuarios/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/usuarios/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');

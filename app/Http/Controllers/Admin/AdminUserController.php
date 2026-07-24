@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Users\DeleteAdminUsersAction;
+use App\Actions\Admin\Users\GetAdminUserDetailsAction;
 use App\Actions\Admin\Users\UpsertAdminUserAction;
 use App\Enums\Auth\UserStatus;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class AdminUserController extends Controller
     public function __construct(
         private readonly UpsertAdminUserAction $upsertAdminUser,
         private readonly DeleteAdminUsersAction $deleteAdminUsers,
+        private readonly GetAdminUserDetailsAction $getAdminUserDetails,
     ) {}
 
     public function index(AdminUserIndexRequest $request): View
@@ -66,6 +68,13 @@ class AdminUserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('status', "Usuario «{$user->email}» creado correctamente.");
+    }
+
+    public function show(User $user): View
+    {
+        $this->ensureAdminUser($user);
+
+        return view('admin.users.show', $this->getAdminUserDetails->execute($user));
     }
 
     public function edit(User $user): View
