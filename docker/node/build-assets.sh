@@ -3,13 +3,38 @@ set -e
 
 cd /var/www/html
 
-# Por defecto SIEMPRE se compilan los assets (public/build está en .gitignore).
-# Para omitir: SKIP_ASSET_BUILD=true docker compose up
+# SKIP_ASSET_BUILD=true → no compila (útil si ya tienes public/build).
+# FORCE_ASSET_BUILD=true → compila siempre.
+# Por defecto: solo compila si no hay manifest o si cambiaron fuentes npm/vite/css/js.
 if [ "${SKIP_ASSET_BUILD:-false}" = "true" ]; then
     echo "SKIP_ASSET_BUILD=true → omitiendo compilación de assets."
     if [ ! -f public/build/manifest.json ]; then
         echo "ADVERTENCIA: no existe public/build/manifest.json; la UI saldrá sin estilos."
     fi
+    exit 0
+fi
+
+needs_build=true
+if [ "${FORCE_ASSET_BUILD:-false}" != "true" ] && [ -f public/build/manifest.json ]; then
+    newer="$(find \
+        package.json \
+        package-lock.json \
+        vite.config.js \
+        resources/css \
+        resources/js \
+        -type f \
+        -newer public/build/manifest.json \
+        2>/dev/null | head -n 1 || true)"
+
+    if [ -z "$newer" ]; then
+        echo "Assets ya compilados y al día → omitiendo Vite."
+        needs_build=false
+    else
+        echo "Cambios detectados en assets ($newer) → recompilando..."
+    fi
+fi
+
+if [ "$needs_build" = "false" ]; then
     exit 0
 fi
 
@@ -29,4 +54,4 @@ if [ ! -f public/build/manifest.json ]; then
 fi
 
 echo "Assets compilados en public/build/"
-echo "Listo. Si nginx ya está Up, recarga el navegador para ver los estilos."
+echo "Listo. Recarga el navegador si la UI salía sin estilos."

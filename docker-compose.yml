@@ -10,9 +10,10 @@ services:
       - motosworld
     command: sh docker/node/build-assets.sh
     environment:
-      # public/build está en .gitignore: hay que compilar al levantar.
-      # SKIP_ASSET_BUILD=true omite el build (solo si ya tienes public/build local).
+      # Solo recompila si falta public/build o cambiaron css/js/vite/package*.
+      # FORCE_ASSET_BUILD=true → siempre. SKIP_ASSET_BUILD=true → nunca.
       - SKIP_ASSET_BUILD=${SKIP_ASSET_BUILD:-false}
+      - FORCE_ASSET_BUILD=${FORCE_ASSET_BUILD:-false}
     restart: "no"
 
   app:
@@ -30,7 +31,6 @@ services:
       - app_file_cache:/var/www/html/storage/framework/cache
     networks:
       - motosworld
-    # PHP arranca en paralelo a Vite (no espera a node). Nginx sí espera a que FPM escuche.
     depends_on:
       mysql:
         condition: service_healthy
@@ -43,7 +43,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 36
-      start_period: 180s
+      start_period: 120s
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -51,10 +51,13 @@ services:
       - DB_USERNAME=${DB_USERNAME:-motosworld}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
       - TMPDIR=/var/www/html/storage/framework/cache
-      - SEED_ON_START=${SEED_ON_START:-true}
+      # auto = solo si BD vacía | true = siempre | false = nunca
+      - SEED_ON_START=${SEED_ON_START:-auto}
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
     container_name: motosworld_nginx
     restart: unless-stopped
     ports:

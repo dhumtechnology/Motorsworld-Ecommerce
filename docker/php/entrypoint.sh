@@ -43,13 +43,45 @@ if ! php artisan migrate --force --no-interaction; then
     echo "Advertencia: no se pudieron aplicar todas las migraciones. Revise con: php artisan migrate:status"
 fi
 
-if [ "${SEED_ON_START:-true}" = "true" ]; then
-    echo "Ejecutando seeders (upsert)..."
-    if ! php artisan db:seed --force --no-interaction; then
-        echo "Advertencia: no se pudieron ejecutar los seeders. Revise los logs de la aplicación."
-    fi
-else
-    echo "Seeders omitidos (SEED_ON_START=false)."
-fi
+# Seeders en segundo plano para que PHP-FPM (y nginx) no esperen 1–2 min.
+# SEED_ON_START=auto (default): solo si la BD no tiene usuarios.
+# SEED_ON_START=true: siempre. SEED_ON_START=false: nunca.
+run_seeders_if_needed() {
+    case "${SEED_ON_START:-auto}" in
+        false|0|no|NO|False)
+            echo "Seeders omitidos (SEED_ON_START=false)."
+            return 0
+            ;;
+        true|1|yes|YES|True)
+            echo "Ejecutando seeders (SEED_ON_START=true)..."
+            php artisan db:seed --force --no-interaction || echo "Advertencia: fallaron los seeders."
+            return 0
+            ;;
+        *)
+            has_users="$(php -r '
+                try {
+                    $pdo = new PDO(
+                        sprintf("mysql:host=%s;port=%s;dbname=%s", getenv("DB_HOST") ?: "mysql", getenv("DB_PORT") ?: "3306", getenv("DB_DATABASE") ?: "motosworld"),
+                        getenv("DB_USERNAME") ?: "motosworld",
+                        getenv("DB_PASSWORD") ?: "secret"
+                    );
+                    echo (int) $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+                } catch (Throwable $e) {
+                    echo "0";
+                }
+            ' 2>/dev/null || echo "0")"
+
+            if [ "${has_users:-0}" -gt 0 ] 2>/dev/null; then
+                echo "BD ya tiene datos → omitiendo seeders (SEED_ON_START=auto)."
+            else
+                echo "BD vacía → ejecutando seeders (SEED_ON_START=auto)..."
+                php artisan db:seed --force --no-interaction || echo "Advertencia: fallaron los seeders."
+            fi
+            ;;
+    esac
+}
+
+echo "Levantando PHP-FPM (seeders en segundo plano si aplican)..."
+run_seeders_if_needed &
 
 exec docker-php-entrypoint "$@"

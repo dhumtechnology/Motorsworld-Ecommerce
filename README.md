@@ -71,39 +71,42 @@ Las variables por defecto ya están configuradas para Docker:
 
 ### 3. Construir e iniciar los contenedores
 
+**Primera vez** (o si cambió `Dockerfile` / `docker-compose.yml`):
+
 ```bash
 docker compose up -d --build
 ```
 
-Esto levanta cuatro servicios:
+**Día a día** (rápido; no reconstruye imágenes ni fuerza seed/Vite):
 
-1. **mysql** — MySQL 8.0 (puerto externo: `DB_PORT_EXTERNAL`)
-2. **node** — compila assets con Vite/Tailwind y termina (en paralelo a `app`)
-3. **app** — PHP 8.4-FPM (migrate + seed; healthcheck cuando FPM escucha en `:9000`)
-4. **nginx** — proxy en `APP_PORT` (default 8080); **solo arranca cuando `app` está healthy**
+```bash
+docker compose up -d
+```
 
-Así se evita el **502** típico de abrir el sitio mientras PHP aún migra/seedea.
+Servicios:
 
-La primera vez puede tardar varios minutos (npm + migrate/seed). Espera a `docker compose ps` con `nginx` Up y `app` healthy.
+1. **mysql** — MySQL 8.0
+2. **node** — Vite solo si falta `public/build` o cambiaron css/js/package*
+3. **app** — PHP-FPM tras migrate; seeders en segundo plano y solo si la BD está vacía (`SEED_ON_START=auto`)
+4. **nginx** — espera a que FPM escuche en `:9000` antes de aceptar tráfico
 
-> **Importante:** `public/build` está en `.gitignore`. Cada `docker compose up` vuelve a compilar CSS/JS.
-> Si la UI sale sin estilos, fuerza el rebuild:
+Si abres el navegador demasiado pronto verás la página “arrancando…” (no un 502 vacío). Espera a:
+
+```bash
+docker compose ps
+# app = healthy, nginx = Up
+```
+
+> **Importante:** `public/build` está en `.gitignore`. Si la UI sale sin estilos:
 >
 > ```bash
-> docker compose run --rm -e SKIP_ASSET_BUILD=false node
-> # o
-> docker compose up -d --build --force-recreate node
+> docker compose run --rm -e FORCE_ASSET_BUILD=true node
 > ```
 >
 > No uses el CDN de Tailwind: pisa los estilos del proyecto.
 
-**Recompilar assets** tras cambiar CSS/JS:
-
-```bash
-docker compose run --rm node
-```
-
 > **Nota:** El entrypoint genera `APP_KEY` automáticamente si falta en `.env`. Solo ejecuta `cp .env.example .env` antes del primer `docker compose up`.
+> Si tu `.env` aún tiene `SEED_ON_START=true`, cámbialo a `auto` (o `false`) para no reseedeár en cada reinicio.
 
 ### 4. Verificar la aplicación
 
