@@ -6,6 +6,7 @@ use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
 use App\Services\Cart\CartResolver;
+use App\Services\Products\ProductOfferPresenter;
 use App\Services\Products\RelatedProductsResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class ProductController extends Controller
     public function __construct(
         private readonly RelatedProductsResolver $relatedProducts,
         private readonly CartResolver $cartResolver,
+        private readonly ProductOfferPresenter $offerPresenter,
     ) {}
 
     public function show(Request $request, Product $product): View
@@ -64,18 +66,6 @@ class ProductController extends Controller
 
     private function applyCatalogPresentationAttributes(Product $product): Product
     {
-        $pricing = $product->currentPricing();
-
-        $product->setAttribute('is_on_sale', $pricing->hasOffer());
-        $product->setAttribute('sale_price', $pricing->hasOffer() ? $pricing->unitPrice : null);
-        $product->setAttribute('list_price', $pricing->listUnitPrice);
-        $product->setAttribute('effective_price', $pricing->unitPrice);
-        $product->setAttribute('image', $product->catalogImageUrl());
-
-        if ($offer = $product->activeOfferAt()) {
-            $product->setAttribute('offer_ends_at', $offer->ends_at);
-        }
-
-        return $product;
+        return $this->offerPresenter->apply($product);
     }
 }

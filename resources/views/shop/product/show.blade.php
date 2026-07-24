@@ -52,7 +52,8 @@
     PRODUCTOS RELACIONADOS ($relatedProducts)
     =============================================================================
 
-    Misma forma que el catálogo: effective_price, list_price, is_on_sale, image, category, etc.
+    Misma forma que el catálogo: effective_price, list_price, is_on_sale, discount_percent,
+    offer / offer_reason / offer_ends_at, image, category, etc.
     Cada item admite x-card igual que en shop/catalog/index.blade.php.
 
     Algoritmo (RelatedProductsResolver):
@@ -70,6 +71,7 @@
             :oldPrice="$related->is_on_sale ? $related->list_price : null"
             :image="$related->image ?? 'url-placeholder'"
             :isSale="$related->is_on_sale"
+            :discountPercent="$related->discount_percent"
             :href="route('shop.product.show', $related)"
         />
     @endforeach
@@ -84,6 +86,7 @@
     - $product->inventory             : Inventory|null (total_stock, available_stock, reserved_stock)
     - $product->images                : Collection<int, ProductImage> ordenadas por sort_order
     - $product->activeOffer           : ProductOffer|null (oferta vigente más barata)
+      Campos: offer_price_amount, discount_percent, reason, currency, starts_at, ends_at
     - $product->reviews               : alias de $reviews (misma colección)
 
     Cada ProductImage:
@@ -105,18 +108,39 @@
     - $product->updated_at
 
     =============================================================================
-    PRECIOS CALCULADOS (misma convención que el catálogo)
+    PRECIOS Y OFERTA ACTIVA (ProductOfferPresenter — misma convención que el catálogo)
     =============================================================================
 
-    - $product->effective_price  → precio a mostrar / cobrar
-    - $product->list_price       → precio de catálogo (price_amount)
-    - $product->sale_price       → precio en oferta; null si no aplica
-    - $product->is_on_sale       → bool
-    - $product->offer_ends_at    → Carbon|null
+    - $product->effective_price   → precio a mostrar / cobrar
+    - $product->list_price        → precio de catálogo (price_amount)
+    - $product->sale_price        → precio en oferta; null si no aplica
+    - $product->is_on_sale        → bool
+    - $product->discount_percent  → float|null (% de descuento)
+    - $product->offer_reason      → string|null (motivo)
+    - $product->offer_starts_at   → Carbon|null
+    - $product->offer_ends_at     → Carbon|null
+    - $product->offer             → array|null con datos completos:
+        id, product_id, offer_price_amount, discount_percent, reason, currency,
+        starts_at, ends_at, starts_at_formatted, ends_at_formatted,
+        is_active, lifecycle_status
 
-    Oferta activa (relación):
+    Relación Eloquent:
     - $product->activeOffer->offer_price_amount
+    - $product->activeOffer->discount_percent
+    - $product->activeOffer->reason
     - $product->activeOffer->starts_at / ends_at
+    - $product->activeOffer->resolvedDiscountPercent()
+
+    Ejemplo UI oferta:
+    @if ($product->is_on_sale && $product->offer)
+        <span>-{{ number_format($product->discount_percent, 0) }}%</span>
+        <p>{{ $product->offer_reason }}</p>
+        <p>{{ number_format($product->sale_price, 2) }} PEN</p>
+        <p class="line-through">{{ number_format($product->list_price, 2) }} PEN</p>
+        <p>Válida hasta {{ $product->offer['ends_at_formatted'] }}</p>
+    @endif
+
+    Lo mismo aplica a cada item de $relatedProducts.
 
     =============================================================================
     GALERÍA DE IMÁGENES
@@ -241,7 +265,7 @@
                 <div class="relative flex-1 w-full aspect-square min-h-[350px] lg:min-h-[480px] bg-[#000000] border border-neutral-800 rounded-sm overflow-hidden flex items-center justify-center">
                     @if ($product->is_on_sale)
                         <span class="absolute top-4 left-4 bg-[#f15a24] text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-sm shadow-sm z-10">
-                            SALE
+                            Oferta {{ rtrim(rtrim(number_format((float) ($product->discount_percent ?? 0), 2, '.', ''), '0'), '.') }}%
                         </span>
                     @endif
                     

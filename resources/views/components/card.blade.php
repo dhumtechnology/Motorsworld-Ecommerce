@@ -5,6 +5,7 @@
     'oldPrice' => null, 
     'image', 
     'isSale' => false,
+    'discountPercent' => null,
     'href' => '#',
     'cartQty' => 0,
 ])
@@ -13,10 +14,14 @@
     
     <div class="relative w-full aspect-square bg-sidebar border-neutral-800 rounded-sm overflow-hidden">
     
-        {{-- Etiqueta SALE flotante si aplica --}}
-        @if($isSale)
+        {{-- Etiqueta OFERTA + % --}}
+        @if($isSale && $discountPercent)
             <span class="absolute top-2 left-2 bg-primary text-black text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs z-10">
-                Sale
+                Oferta {{ rtrim(rtrim(number_format((float) $discountPercent, 2, '.', ''), '0'), '.') }}%
+            </span>
+        @elseif($isSale)
+            <span class="absolute top-2 left-2 bg-primary text-black text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs z-10">
+                Oferta
             </span>
         @endif
 

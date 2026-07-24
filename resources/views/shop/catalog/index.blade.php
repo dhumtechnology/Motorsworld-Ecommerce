@@ -32,11 +32,29 @@
     - sale_price      : precio en oferta; null si no hay oferta activa
     - is_on_sale      : bool — true si tiene oferta vigente
     - offer_ends_at   : Carbon|null — fin de la oferta activa
+    - offer_starts_at : Carbon|null — inicio de la oferta activa
+    - discount_percent: float|null — % de descuento de la oferta activa
+    - offer_reason    : string|null — motivo de la oferta activa
+    - offer           : array|null — payload completo de la oferta activa (ver abajo)
 
-    Relación activeOffer (ProductOffer|null):
+    Payload $product->offer (null si no hay oferta vigente):
+    - id, product_id
+    - offer_price_amount   : string (precio final de oferta)
+    - discount_percent     : float
+    - reason               : string|null
+    - currency             : string (PEN)
+    - starts_at / ends_at  : ISO-8601 string|null
+    - starts_at_formatted / ends_at_formatted : d/m/Y H:i|null
+    - is_active            : bool
+    - lifecycle_status     : 'active'|'scheduled'|'expired'
+
+    Relación activeOffer (ProductOffer|null) — modelo Eloquent:
     - $product->activeOffer->offer_price_amount
+    - $product->activeOffer->discount_percent
+    - $product->activeOffer->reason
     - $product->activeOffer->starts_at / ends_at
     - $product->activeOffer->currency
+    - $product->activeOffer->resolvedDiscountPercent()
 
     Helpers útiles en Product:
     - $product->hasAvailableStock() : bool
@@ -52,11 +70,14 @@
     - href      => route('shop.product.show', $product)
     - image     => $product->image ?? 'url-placeholder'
 
-    Ejemplo precio manual en Blade:
-    @if ($product->is_on_sale)
-        Oferta: {{ number_format($product->sale_price, 2) }} {{ $product->currency }}
-        Antes: {{ number_format($product->list_price, 2) }}
+    Ejemplo oferta / descuento en Blade:
+    @if ($product->is_on_sale && $product->offer)
+        -{{ $product->discount_percent }}%
+        Motivo: {{ $product->offer['reason'] }}
+        Oferta: {{ number_format($product->sale_price, 2) }} PEN
+        Antes: {{ number_format($product->list_price, 2) }} PEN
         Hasta: {{ $product->offer_ends_at?->format('d/m/Y') }}
+        {{-- o: $product->offer['discount_percent'], $product->offer['ends_at_formatted'] --}}
     @else
         {{ number_format($product->effective_price, 2) }} {{ $product->currency }}
     @endif
@@ -85,20 +106,33 @@
 
 @section('content')
     {{--
-        Ofertas / precios por producto (CatalogController):
-        - $product->effective_price  → precio a mostrar
-        - $product->list_price       → precio de catálogo
-        - $product->sale_price       → precio en oferta (null si no aplica)
-        - $product->is_on_sale       → bool
-        - $product->offer_ends_at    → fin de oferta activa
-        - $product->activeOffer      → relación ProductOffer|null
-        
+        Ofertas / precios por producto (CatalogController + ProductOfferPresenter):
+        - $product->effective_price   → precio a mostrar
+        - $product->list_price        → precio de catálogo
+        - $product->sale_price        → precio en oferta (null si no aplica)
+        - $product->is_on_sale        → bool
+        - $product->discount_percent  → % descuento (null si no hay oferta)
+        - $product->offer_reason      → motivo (null si no hay oferta)
+        - $product->offer_starts_at / offer_ends_at → Carbon|null
+        - $product->offer             → array completo|null
+            id, product_id, offer_price_amount, discount_percent, reason, currency,
+            starts_at, ends_at, starts_at_formatted, ends_at_formatted,
+            is_active, lifecycle_status
+        - $product->activeOffer       → ProductOffer|null (Eloquent)
+
+        Ejemplo descuento:
+        @if ($product->is_on_sale)
+            -{{ number_format($product->discount_percent, 0) }}%
+            {{ $product->offer['reason'] ?? '' }}
+        @endif
+
         x-card sugerido:
         :title="$product->name"
         :category="$product->category->name"
         :price="$product->effective_price"
         :oldPrice="$product->is_on_sale ? $product->list_price : null"
         :isSale="$product->is_on_sale"
+        :discountPercent="$product->discount_percent"
         :href="route('shop.product.show', $product)"
         :image="$product->image"
         --}}
@@ -172,7 +206,7 @@
                                         <div class="relative w-20 h-20 bg-[#1e1e1e] border border-neutral-800 rounded-sm overflow-hidden shrink-0 flex items-center justify-center p-1">
                                             @if($featuredProduct->is_on_sale)
                                                 <span class="absolute top-1 left-1 bg-[#f15a24] text-white text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-xs z-10">
-                                                    Sale
+                                                    Oferta {{ rtrim(rtrim(number_format((float) ($featuredProduct->discount_percent ?? 0), 2, '.', ''), '0'), '.') }}%
                                                 </span>
                                             @endif
                                             <img src="{{ $featuredProduct->image ?? 'https://via.placeholder.com/150?text=MotoWorld' }}"
@@ -218,6 +252,7 @@
                             :oldPrice="$product->is_on_sale ? $product->list_price : null"
                             :image="$product->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
                             :isSale="$product->is_on_sale"
+                            :discountPercent="$product->discount_percent"
                             :href="route('shop.product.show', $product)"
                             :cartQty="$cartQuantities[$product->id] ?? 0"
                         /> 

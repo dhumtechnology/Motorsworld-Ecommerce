@@ -12,6 +12,7 @@ use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Models\Products\VehicleModel;
 use App\Services\Cart\CartResolver;
+use App\Services\Products\ProductOfferPresenter;
 use App\Support\QueryResultCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -124,20 +125,7 @@ class CatalogController extends Controller
 
     private function withActiveOfferPricing(Product $product): Product
     {
-        $pricing = $product->currentPricing();
-
-        $product->setAttribute('is_on_sale', $pricing->hasOffer());
-        $product->setAttribute('sale_price', $pricing->hasOffer() ? $pricing->unitPrice : null);
-        $product->setAttribute('list_price', $pricing->listUnitPrice);
-        $product->setAttribute('effective_price', $pricing->unitPrice);
-
-        if ($offer = $product->activeOfferAt()) {
-            $product->setAttribute('offer_ends_at', $offer->ends_at);
-        }
-
-        $product->setAttribute('image', $product->catalogImageUrl());
-
-        return $product;
+        return app(ProductOfferPresenter::class)->apply($product);
     }
 
     /**
