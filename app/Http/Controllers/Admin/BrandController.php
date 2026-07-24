@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Brands\DeleteBrandsAction;
+use App\Actions\Admin\Brands\GetBrandDetailsAction;
 use App\Actions\Admin\Brands\UpsertBrandAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BrandIndexRequest;
@@ -22,6 +23,7 @@ class BrandController extends Controller
     public function __construct(
         private readonly UpsertBrandAction $upsertBrand,
         private readonly DeleteBrandsAction $deleteBrands,
+        private readonly GetBrandDetailsAction $getBrandDetails,
     ) {}
 
     public function index(BrandIndexRequest $request): View
@@ -68,6 +70,11 @@ class BrandController extends Controller
         return redirect()
             ->route('admin.brands.index')
             ->with('status', "Marca «{$brand->name}» creada correctamente.");
+    }
+
+    public function show(Brand $brand): View
+    {
+        return view('admin.brands.show', $this->getBrandDetails->execute($brand));
     }
 
     public function edit(Brand $brand): View

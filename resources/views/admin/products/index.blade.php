@@ -257,7 +257,15 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 font-mono text-text-soft">{{ $product->sku }}</td>
+                            <td class="px-5 py-3 font-mono text-text-soft">
+                                <a
+                                    href="{{ route('admin.products.show', $product) }}"
+                                    class="text-sky-700 hover:text-sky-800 hover:underline"
+                                    title="Ver detalle"
+                                >
+                                    {{ $product->sku }}
+                                </a>
+                            </td>
                             <td class="px-5 py-3">
                                 <p class="font-semibold text-text">{{ $product->name }}</p>
                                 <a

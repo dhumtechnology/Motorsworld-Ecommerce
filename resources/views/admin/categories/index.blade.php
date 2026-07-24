@@ -102,6 +102,7 @@
                                 @disabled($categories->isEmpty())
                             >
                         </th>
+                        <th scope="col" class="px-5 py-3 font-bold">ID</th>
                         <th scope="col" class="px-5 py-3 font-bold">Nombre</th>
                         <th scope="col" class="px-5 py-3 font-bold">Descripción</th>
                         <th scope="col" class="px-5 py-3 font-bold">Productos</th>
@@ -120,6 +121,17 @@
                                     class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 >
                             </td>
+                            <td class="px-5 py-3 font-mono text-muted">
+                                <span
+                                    role="link"
+                                    tabindex="0"
+                                    class="text-sky-700 cursor-pointer select-none hover:underline"
+                                    title="Doble clic para ver detalle"
+                                    ondblclick="window.location.href='{{ route('admin.categories.show', $category) }}'"
+                                >
+                                    #{{ $category->id }}
+                                </span>
+                            </td>
                             <td class="px-5 py-3 font-semibold text-text">{{ $category->name }}</td>
                             <td class="px-5 py-3 text-muted max-w-md">
                                 <span class="line-clamp-2">{{ $category->description ?: '—' }}</span>
@@ -131,6 +143,17 @@
                             </td>
                             <td class="px-5 py-3">
                                 <div class="flex items-center justify-end gap-2">
+                                    <a
+                                        href="{{ route('admin.categories.show', $category) }}"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                        title="Ver detalle"
+                                        aria-label="Ver {{ $category->name }}"
+                                    >
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    </a>
                                     <a
                                         href="{{ route('admin.categories.edit', $category) }}"
                                         class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors"
@@ -163,7 +186,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-12 text-center text-muted">
+                            <td colspan="6" class="px-5 py-12 text-center text-muted">
                                 No se encontraron categorías.
                             </td>
                         </tr>

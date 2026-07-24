@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Models\DeleteVehicleModelsAction;
+use App\Actions\Admin\Models\GetVehicleModelDetailsAction;
 use App\Actions\Admin\Models\UpsertVehicleModelAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BulkDeleteVehicleModelsRequest;
@@ -23,6 +24,7 @@ class VehicleModelController extends Controller
     public function __construct(
         private readonly UpsertVehicleModelAction $upsertVehicleModel,
         private readonly DeleteVehicleModelsAction $deleteVehicleModels,
+        private readonly GetVehicleModelDetailsAction $getVehicleModelDetails,
     ) {}
 
     public function index(VehicleModelIndexRequest $request): View
@@ -81,6 +83,11 @@ class VehicleModelController extends Controller
         return redirect()
             ->route('admin.models.index')
             ->with('status', "Modelo «{$model->name}» creado correctamente.");
+    }
+
+    public function show(VehicleModel $vehicleModel): View
+    {
+        return view('admin.models.show', $this->getVehicleModelDetails->execute($vehicleModel));
     }
 
     public function edit(VehicleModel $vehicleModel): View

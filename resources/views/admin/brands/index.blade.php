@@ -81,6 +81,7 @@
                         <th scope="col" class="px-5 py-3 font-bold w-12">
                             <input type="checkbox" id="select-all-items" class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary" @disabled($brands->isEmpty())>
                         </th>
+                        <th scope="col" class="px-5 py-3 font-bold">ID</th>
                         <th scope="col" class="px-5 py-3 font-bold w-16">Img</th>
                         <th scope="col" class="px-5 py-3 font-bold">Nombre</th>
                         <th scope="col" class="px-5 py-3 font-bold">Modelos</th>
@@ -101,6 +102,17 @@
                                     class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 >
                             </td>
+                            <td class="px-5 py-3 font-mono text-muted">
+                                <span
+                                    role="link"
+                                    tabindex="0"
+                                    class="text-sky-700 cursor-pointer select-none hover:underline"
+                                    title="Doble clic para ver detalle"
+                                    ondblclick="window.location.href='{{ route('admin.brands.show', $brand) }}'"
+                                >
+                                    #{{ $brand->id }}
+                                </span>
+                            </td>
                             <td class="px-5 py-3">
                                 @if ($brand->image)
                                     <img src="{{ $brand->image }}" alt="" class="h-10 w-10 rounded object-cover border border-border bg-secondary">
@@ -117,6 +129,9 @@
                             </td>
                             <td class="px-5 py-3">
                                 <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.brands.show', $brand) }}" class="inline-flex h-9 w-9 items-center justify-center rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors" title="Ver detalle" aria-label="Ver {{ $brand->name }}">
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                                    </a>
                                     <a href="{{ route('admin.brands.edit', $brand) }}" class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors" title="Editar" aria-label="Editar {{ $brand->name }}">
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
                                     </a>
@@ -130,7 +145,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-5 py-12 text-center text-muted">No se encontraron marcas.</td></tr>
+                        <tr><td colspan="7" class="px-5 py-12 text-center text-muted">No se encontraron marcas.</td></tr>
                     @endforelse
                 </tbody>
             </table>

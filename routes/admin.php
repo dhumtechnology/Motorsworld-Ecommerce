@@ -42,6 +42,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/categorias/crear', [CategoryController::class, 'create'])->name('categories.create');
     Route::post('/categorias', [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categorias/{category}', [CategoryController::class, 'show'])->name('categories.show');
     Route::get('/categorias/{category}/editar', [CategoryController::class, 'edit'])->name('categories.edit');
     Route::put('/categorias/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categorias/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/marcas', [BrandController::class, 'index'])->name('brands.index');
     Route::get('/marcas/crear', [BrandController::class, 'create'])->name('brands.create');
     Route::post('/marcas', [BrandController::class, 'store'])->name('brands.store');
+    Route::get('/marcas/{brand}', [BrandController::class, 'show'])->name('brands.show');
     Route::get('/marcas/{brand}/editar', [BrandController::class, 'edit'])->name('brands.edit');
     Route::put('/marcas/{brand}', [BrandController::class, 'update'])->name('brands.update');
     Route::delete('/marcas/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
@@ -58,6 +60,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/modelos', [VehicleModelController::class, 'index'])->name('models.index');
     Route::get('/modelos/crear', [VehicleModelController::class, 'create'])->name('models.create');
     Route::post('/modelos', [VehicleModelController::class, 'store'])->name('models.store');
+    Route::get('/modelos/{vehicleModel}', [VehicleModelController::class, 'show'])->name('models.show');
     Route::get('/modelos/{vehicleModel}/editar', [VehicleModelController::class, 'edit'])->name('models.edit');
     Route::put('/modelos/{vehicleModel}', [VehicleModelController::class, 'update'])->name('models.update');
     Route::delete('/modelos/{vehicleModel}', [VehicleModelController::class, 'destroy'])->name('models.destroy');

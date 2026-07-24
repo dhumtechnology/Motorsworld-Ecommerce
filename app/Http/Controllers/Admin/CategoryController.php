@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Categories\DeleteCategoriesAction;
+use App\Actions\Admin\Categories\GetCategoryDetailsAction;
 use App\Actions\Admin\Categories\UpsertCategoryAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BulkDeleteCategoriesRequest;
@@ -22,6 +23,7 @@ class CategoryController extends Controller
     public function __construct(
         private readonly UpsertCategoryAction $upsertCategory,
         private readonly DeleteCategoriesAction $deleteCategories,
+        private readonly GetCategoryDetailsAction $getCategoryDetails,
     ) {}
 
     public function index(CategoryIndexRequest $request): View
@@ -72,6 +74,11 @@ class CategoryController extends Controller
         return redirect()
             ->route('admin.categories.index')
             ->with('status', "Categoría «{$category->name}» creada correctamente.");
+    }
+
+    public function show(Category $category): View
+    {
+        return view('admin.categories.show', $this->getCategoryDetails->execute($category));
     }
 
     public function edit(Category $category): View
