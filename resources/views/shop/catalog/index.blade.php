@@ -71,16 +71,16 @@
     - image     => $product->image ?? 'url-placeholder'
 
     Ejemplo oferta / descuento en Blade:
-    @if ($product->is_on_sale && $product->offer)
+    if ($product->is_on_sale && $product->offer):
         -{{ $product->discount_percent }}%
         Motivo: {{ $product->offer['reason'] }}
         Oferta: {{ number_format($product->sale_price, 2) }} PEN
         Antes: {{ number_format($product->list_price, 2) }} PEN
         Hasta: {{ $product->offer_ends_at?->format('d/m/Y') }}
-        {{-- o: $product->offer['discount_percent'], $product->offer['ends_at_formatted'] --}}
-    @else
+        También: $product->offer['discount_percent'], $product->offer['ends_at_formatted']
+    else:
         {{ number_format($product->effective_price, 2) }} {{ $product->currency }}
-    @endif
+    endif
 
     =============================================================================
     CARRITO — se agrega solo desde el detalle de producto (no desde el catálogo)
@@ -121,10 +121,10 @@
         - $product->activeOffer       → ProductOffer|null (Eloquent)
 
         Ejemplo descuento:
-        @if ($product->is_on_sale)
+        if ($product->is_on_sale):
             -{{ number_format($product->discount_percent, 0) }}%
             {{ $product->offer['reason'] ?? '' }}
-        @endif
+        endif
 
         x-card sugerido:
         :title="$product->name"
