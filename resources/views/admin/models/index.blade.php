@@ -5,7 +5,19 @@
 @section('page-subtitle', 'Modelos vinculados a marcas')
 
 @section('content')
-    @php $selectedBrands = $filters['brands'] ?? []; @endphp
+    @php
+        $selectedBrands = $filters['brands'] ?? [];
+        $deleteImpactMessage = function (string $name, int $productsCount): string {
+            $message = "¿Eliminar el modelo «{$name}»?";
+
+            if ($productsCount > 0) {
+                $label = $productsCount === 1 ? '1 producto asociado' : "{$productsCount} productos asociados";
+                $message .= " También se eliminarán {$label}.";
+            }
+
+            return $message.' Esta acción no se puede deshacer.';
+        };
+    @endphp
 
     <div class="rounded-lg border border-border bg-surface p-5 mb-6">
         <form method="GET" action="{{ route('admin.models.index') }}" id="admin-models-filters" class="space-y-4">
@@ -49,7 +61,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">{{ $errors->first() }}</div>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
     @endif
 
     <div class="rounded-lg border border-border bg-surface overflow-hidden">
@@ -78,7 +90,13 @@
                     @forelse ($models as $model)
                         <tr class="hover:bg-secondary/60 transition-colors">
                             <td class="px-5 py-3">
-                                <input type="checkbox" value="{{ $model->id }}" data-row-checkbox class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary">
+                                <input
+                                    type="checkbox"
+                                    value="{{ $model->id }}"
+                                    data-row-checkbox
+                                    data-products-count="{{ $model->products_count }}"
+                                    class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
+                                >
                             </td>
                             <td class="px-5 py-3 font-semibold text-text">{{ $model->name }}</td>
                             <td class="px-5 py-3 text-text-soft">{{ $model->brand?->name ?? '—' }}</td>
@@ -93,7 +111,7 @@
                                     <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100 transition-colors" title="Eliminar" aria-label="Eliminar {{ $model->name }}"
                                             data-open-confirm="single-delete-modal"
                                             data-delete-url="{{ route('admin.models.destroy', $model) }}"
-                                            data-delete-message="¿Eliminar el modelo «{{ $model->name }}»? Esta acción no se puede deshacer.">
+                                            data-delete-message="{{ $deleteImpactMessage($model->name, (int) $model->products_count) }}">
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18" /><path stroke-linecap="round" stroke-linejoin="round" d="M8 6V4h8v2" /><path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14H6L5 6" /><path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6M14 11v6" /></svg>
                                     </button>
                                 </div>
@@ -118,5 +136,8 @@
         'filterFormId' => 'admin-models-filters',
         'entityLabelSingular' => 'modelo',
         'entityLabelPlural' => 'modelos',
+        'relatedCountFields' => [
+            ['attr' => 'productsCount', 'singular' => 'producto', 'plural' => 'productos'],
+        ],
     ])
 @endsection

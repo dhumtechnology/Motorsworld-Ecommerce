@@ -5,6 +5,19 @@
 @section('page-subtitle', 'Organización del catálogo')
 
 @section('content')
+    @php
+        $deleteImpactMessage = function (string $name, int $productsCount): string {
+            $message = "¿Eliminar la categoría «{$name}»?";
+
+            if ($productsCount > 0) {
+                $label = $productsCount === 1 ? '1 producto asociado' : "{$productsCount} productos asociados";
+                $message .= " También se eliminarán {$label}.";
+            }
+
+            return $message.' Esta acción no se puede deshacer.';
+        };
+    @endphp
+
     <div class="rounded-lg border border-border bg-surface p-5 mb-6">
         <form method="GET" action="{{ route('admin.categories.index') }}" id="admin-categories-filters" class="space-y-4">
             <div class="max-w-md">
@@ -38,18 +51,16 @@
     </div>
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2">
-            <button
-                type="button"
-                id="bulk-delete-btn"
-                disabled
-                data-open-confirm="bulk-delete-modal"
-                class="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-600 transition-colors enabled:hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-                Eliminar seleccionados
-                <span id="bulk-delete-count" class="hidden">(0)</span>
-            </button>
-        </div>
+        <button
+            type="button"
+            id="bulk-delete-btn"
+            disabled
+            data-open-confirm="bulk-delete-modal"
+            class="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-600 transition-colors enabled:hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+            Eliminar seleccionados
+            <span id="bulk-delete-count" class="hidden">(0)</span>
+        </button>
         <a
             href="{{ route('admin.categories.create') }}"
             class="inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors"
@@ -62,12 +73,12 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">
+        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
         </div>
     @endif
 
-    <div class="rounded-lg border border-border bg-surface overflow-hidden" data-categories-table>
+    <div class="rounded-lg border border-border bg-surface overflow-hidden">
         <div class="px-5 py-4 border-b border-border">
             <p class="text-sm text-muted">
                 <span class="text-text font-bold">{{ $categories->total() }}</span>
@@ -85,7 +96,7 @@
                         <th scope="col" class="px-5 py-3 font-bold w-12">
                             <input
                                 type="checkbox"
-                                id="select-all-categories"
+                                id="select-all-items"
                                 class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 title="Seleccionar todos"
                                 @disabled($categories->isEmpty())
@@ -103,10 +114,9 @@
                             <td class="px-5 py-3">
                                 <input
                                     type="checkbox"
-                                    name="category_ids[]"
                                     value="{{ $category->id }}"
-                                    data-category-checkbox
-                                    data-category-name="{{ $category->name }}"
+                                    data-row-checkbox
+                                    data-products-count="{{ $category->products_count }}"
                                     class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 >
                             </td>
@@ -139,7 +149,7 @@
                                         aria-label="Eliminar {{ $category->name }}"
                                         data-open-confirm="single-delete-modal"
                                         data-delete-url="{{ route('admin.categories.destroy', $category) }}"
-                                        data-delete-message="¿Eliminar la categoría «{{ $category->name }}»? Esta acción no se puede deshacer."
+                                        data-delete-message="{{ $deleteImpactMessage($category->name, (int) $category->products_count) }}"
                                     >
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18" />
@@ -187,171 +197,12 @@
         :action="route('admin.categories.bulk-destroy')"
     />
 
-    <script>
-        (function () {
-            const form = document.getElementById('admin-categories-filters');
-            if (!form) return;
-
-            let submitTimer = null;
-            let isSubmitting = false;
-
-            const setHint = (text) => {
-                const hint = document.getElementById('filters-live-hint');
-                if (hint) hint.textContent = text;
-            };
-
-            const submitFilters = () => {
-                if (isSubmitting) return;
-                isSubmitting = true;
-                setHint('Actualizando resultados…');
-                form.requestSubmit ? form.requestSubmit() : form.submit();
-            };
-
-            const scheduleSubmit = (delay = 450) => {
-                clearTimeout(submitTimer);
-                setHint('Aplicando búsqueda…');
-                submitTimer = setTimeout(submitFilters, delay);
-            };
-
-            const searchInput = document.getElementById('search');
-            if (searchInput) {
-                searchInput.addEventListener('input', () => scheduleSubmit(450));
-                searchInput.addEventListener('search', () => scheduleSubmit(0));
-            }
-        })();
-
-        (function () {
-            const selectAll = document.getElementById('select-all-categories');
-            const checkboxes = () => Array.from(document.querySelectorAll('[data-category-checkbox]'));
-            const bulkBtn = document.getElementById('bulk-delete-btn');
-            const bulkCount = document.getElementById('bulk-delete-count');
-
-            const selectedCheckboxes = () => checkboxes().filter((cb) => cb.checked);
-
-            const syncSelectionUi = () => {
-                const all = checkboxes();
-                const selected = selectedCheckboxes();
-                const count = selected.length;
-
-                if (selectAll) {
-                    selectAll.checked = all.length > 0 && count === all.length;
-                    selectAll.indeterminate = count > 0 && count < all.length;
-                }
-
-                if (bulkBtn) {
-                    bulkBtn.disabled = count === 0;
-                }
-
-                if (bulkCount) {
-                    if (count > 0) {
-                        bulkCount.textContent = '(' + count + ')';
-                        bulkCount.classList.remove('hidden');
-                    } else {
-                        bulkCount.classList.add('hidden');
-                    }
-                }
-            };
-
-            if (selectAll) {
-                selectAll.addEventListener('change', () => {
-                    checkboxes().forEach((cb) => {
-                        cb.checked = selectAll.checked;
-                    });
-                    syncSelectionUi();
-                });
-            }
-
-            checkboxes().forEach((cb) => {
-                cb.addEventListener('change', syncSelectionUi);
-            });
-
-            syncSelectionUi();
-
-            const openModal = (modal) => {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                modal.setAttribute('aria-hidden', 'false');
-                document.body.classList.add('overflow-hidden');
-            };
-
-            const closeModal = (modal) => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                modal.setAttribute('aria-hidden', 'true');
-                document.body.classList.remove('overflow-hidden');
-
-                const form = modal.querySelector('[data-confirm-form]');
-                const extra = form?.querySelector('[data-confirm-extra-fields]');
-                if (extra) {
-                    extra.innerHTML = '';
-                }
-            };
-
-            document.querySelectorAll('[data-confirm-modal]').forEach((modal) => {
-                modal.querySelectorAll('[data-confirm-cancel], [data-confirm-overlay]').forEach((el) => {
-                    el.addEventListener('click', () => closeModal(modal));
-                });
-
-                modal.querySelector('[data-confirm-submit]')?.addEventListener('click', () => {
-                    modal.querySelector('[data-confirm-form]')?.submit();
-                });
-            });
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key !== 'Escape') return;
-                document.querySelectorAll('[data-confirm-modal]:not(.hidden)').forEach((modal) => {
-                    closeModal(modal);
-                });
-            });
-
-            document.querySelectorAll('[data-open-confirm]').forEach((trigger) => {
-                trigger.addEventListener('click', () => {
-                    if (trigger.disabled) return;
-
-                    const modalId = trigger.getAttribute('data-open-confirm');
-                    const modal = document.getElementById(modalId);
-                    if (!modal) return;
-
-                    const form = modal.querySelector('[data-confirm-form]');
-                    const messageEl = modal.querySelector('[data-confirm-message]');
-                    const extra = form?.querySelector('[data-confirm-extra-fields]');
-
-                    if (modalId === 'single-delete-modal') {
-                        const url = trigger.getAttribute('data-delete-url');
-                        const message = trigger.getAttribute('data-delete-message');
-                        if (form && url) {
-                            form.action = url;
-                        }
-                        if (messageEl && message) {
-                            messageEl.textContent = message;
-                        }
-                    }
-
-                    if (modalId === 'bulk-delete-modal') {
-                        const selected = selectedCheckboxes();
-                        if (selected.length === 0) return;
-
-                        if (messageEl) {
-                            messageEl.textContent = selected.length === 1
-                                ? '¿Eliminar 1 categoría seleccionada? Esta acción no se puede deshacer.'
-                                : '¿Eliminar ' + selected.length + ' categorías seleccionadas? Esta acción no se puede deshacer.';
-                        }
-
-                        if (extra) {
-                            extra.innerHTML = '';
-                            selected.forEach((cb) => {
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = 'ids[]';
-                                input.value = cb.value;
-                                extra.appendChild(input);
-                            });
-                        }
-                    }
-
-                    openModal(modal);
-                });
-            });
-        })();
-    </script>
+    @include('admin.partials.crud-list-scripts', [
+        'filterFormId' => 'admin-categories-filters',
+        'entityLabelSingular' => 'categoría',
+        'entityLabelPlural' => 'categorías',
+        'relatedCountFields' => [
+            ['attr' => 'productsCount', 'singular' => 'producto', 'plural' => 'productos'],
+        ],
+    ])
 @endsection

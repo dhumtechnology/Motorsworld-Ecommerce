@@ -2,12 +2,18 @@
 
 namespace App\Actions\Admin\Models;
 
+use App\Actions\Admin\Products\DeleteProductsAction;
+use App\Models\Products\Product;
 use App\Models\Products\VehicleModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class DeleteVehicleModelsAction
 {
+    public function __construct(
+        private readonly DeleteProductsAction $deleteProducts,
+    ) {}
+
     /**
      * @param  list<int>  $modelIds
      * @return array{deleted: int, blocked: list<string>}
@@ -22,7 +28,6 @@ class DeleteVehicleModelsAction
 
         return DB::transaction(function () use ($modelIds) {
             $models = VehicleModel::query()
-                ->withCount('products')
                 ->whereIn('id', $modelIds)
                 ->get();
 
@@ -30,10 +35,19 @@ class DeleteVehicleModelsAction
             $deletableIds = [];
 
             foreach ($models as $model) {
-                if ($model->products_count > 0) {
+                $products = Product::query()
+                    ->withCount('orderItems')
+                    ->where('model_id', $model->id)
+                    ->get();
+
+                if ($products->contains(fn (Product $product) => $product->order_items_count > 0)) {
                     $blocked[] = $model->name;
 
                     continue;
+                }
+
+                if ($products->isNotEmpty()) {
+                    $this->deleteProducts->execute($products->pluck('id')->all());
                 }
 
                 $deletableIds[] = $model->id;
@@ -45,7 +59,7 @@ class DeleteVehicleModelsAction
 
             if ($deletableIds === [] && $blocked !== []) {
                 throw ValidationException::withMessages([
-                    'ids' => 'No se pueden eliminar modelos con productos asociados: '.implode(', ', $blocked).'.',
+                    'ids' => 'No se pueden eliminar modelos con productos vinculados a pedidos: '.implode(', ', $blocked).'.',
                 ]);
             }
 

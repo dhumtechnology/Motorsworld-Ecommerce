@@ -93,7 +93,7 @@ class CategoryController extends Controller
             : 'No se pudo eliminar la categoría.';
 
         if ($result['blocked'] !== []) {
-            $message .= ' Tiene productos asociados: '.implode(', ', $result['blocked']).'.';
+            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
         }
 
         return redirect()
@@ -112,7 +112,7 @@ class CategoryController extends Controller
         };
 
         if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (tienen productos): '.implode(', ', $result['blocked']).'.';
+            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
         }
 
         return redirect()
