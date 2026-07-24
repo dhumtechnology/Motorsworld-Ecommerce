@@ -108,7 +108,7 @@
         </p>
     </div>
 
-    <nav class="flex-1 p-3 space-y-5 overflow-y-auto">
+    <nav class="admin-sidebar-nav flex-1 p-3 space-y-5">
         <a
             href="{{ route('admin.dashboard') }}"
             class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'is-active' : '' }}"
