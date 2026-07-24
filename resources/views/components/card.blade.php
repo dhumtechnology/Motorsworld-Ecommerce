@@ -9,13 +9,13 @@
     'cartQty' => 0,
 ])
 
-<div class="text-white p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
+<div class="text-black p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none">
     
-    <div class="relative w-full aspect-square border bg-sidebar border-neutral-800 rounded-sm overflow-hidden">
+    <div class="relative w-full aspect-square bg-sidebar border-neutral-800 rounded-sm overflow-hidden">
     
         {{-- Etiqueta SALE flotante si aplica --}}
         @if($isSale)
-            <span class="absolute top-2 left-2 bg-[#f15a24] text-white text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs z-10">
+            <span class="absolute top-2 left-2 bg-primary text-black text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs z-10">
                 Sale
             </span>
         @endif
@@ -35,7 +35,7 @@
     </div>
 
     <div class="mt-4 flex flex-col flex-grow">
-        <a href="{{ $href }}" class="text-white font-bold text-lg leading-tight hover:text-orange-500 transition-colors tracking-wide block font-sans truncate">
+        <a href="{{ $href }}" class="text-black font-bold text-lg leading-tight hover:text-orange-500 transition-colors tracking-wide block font-sans truncate">
             {{ $title }}
         </a>
         
@@ -44,7 +44,7 @@
         </span>
         
         <div class="mt-4 flex items-baseline gap-3">
-            <span class="text-white font-black text-xl tracking-tight">
+            <span class="text-primary font-black text-xl tracking-tight">
                 ${{ number_format($price, 0, '.', '') }}
             </span>
             @if($oldPrice)

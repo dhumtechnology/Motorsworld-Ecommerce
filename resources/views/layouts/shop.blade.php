@@ -21,30 +21,30 @@
                     <ul class="flex items-center gap-3">
                         <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">HOME</a></li>
                         <x-dropdown title="SERVICIO">
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
                                 SERVICIO 1
                             </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
                                 SERVICIO 2
                             </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
                                 SERVICIO 3
                             </a>
                         </x-dropdown>
                         <x-dropdown title="TIENDA">
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
                                 TIENDA 1
                             </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
                                 TIENDA 2
                             </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-100">
+                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
                                 TIENDA 3
                             </a>
                         </x-dropdown>
-                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">NOSOTROS</a></li>
-                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">BLOG</a></li>
-                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-blue-600">CONTÁCTANOS</a></li> 
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">NOSOTROS</a></li>
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">BLOG</a></li>
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">CONTÁCTANOS</a></li> 
                     </ul>
                 </nav>
                 <x-search name="search" placeholder="Buscar productos..." value="{{ request('search') }}" /> 

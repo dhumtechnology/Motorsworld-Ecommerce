@@ -208,31 +208,35 @@
         
                 </form>
             </div>
-            <div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 auto-rows-max">
-                @forelse ($products as $product)
-                    <x-card
-                        :title="$product->name ?? $product->sku"
-                        :category="$product->category?->name ?? 'MOTO'"
-                        :price="$product->effective_price"
-                        :oldPrice="$product->is_on_sale ? $product->list_price : null"
-                        :image="$product->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
-                        :isSale="$product->is_on_sale"
-                        :href="route('shop.product.show', $product)"
-                        :cartQty="$cartQuantities[$product->id] ?? 0"
-                    /> 
-                @empty
-                    <div class="col-span-1 md:col-span-2 lg:col-span-4 text-center py-2 text-gray-400">
-                        <span class="text-3xl">🏍️</span>
-                        <p class="mt-2 text-sm">No se encontraron productos disponibles en este momento.</p>
-                    </div>
-                @endforelse
-    
-                @if($products->hasPages())
-                    <div>
-                        {{ $products->links('vendor.pagination.tailwind') }}
-                    </div>
-                @endif
+            <div class="lg:col-span-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 auto-rows-max">
+                    @forelse ($products as $product)
+                        <x-card
+                            :title="$product->name ?? $product->sku"
+                            :category="$product->category?->name ?? 'MOTO'"
+                            :price="$product->effective_price"
+                            :oldPrice="$product->is_on_sale ? $product->list_price : null"
+                            :image="$product->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
+                            :isSale="$product->is_on_sale"
+                            :href="route('shop.product.show', $product)"
+                            :cartQty="$cartQuantities[$product->id] ?? 0"
+                        /> 
+                    @empty
+                        <div class="col-span-1 md:col-span-2 lg:col-span-4 text-center py-2 text-gray-400">
+                            <span class="text-3xl">🏍️</span>
+                            <p class="mt-2 text-sm">No se encontraron productos disponibles en este momento.</p>
+                        </div>
+                    @endforelse  
+                </div>
+                <div>
+                    @if($products->hasPages())
+                        <div>
+                            {{ $products->links('vendor.pagination.tailwind') }}
+                        </div>
+                    @endif
+                </div>
             </div>
+
         </div>
 
     </div>
