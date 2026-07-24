@@ -3,8 +3,11 @@ set -e
 
 cd /var/www/html
 
+# FORCE_ASSET_BUILD=true fuerza recompilar aunque ya exista public/build
 if [ -f public/build/manifest.json ] && [ "${FORCE_ASSET_BUILD:-false}" != "true" ]; then
     echo "Assets ya compilados (public/build/manifest.json). Omitiendo build."
+    echo "Para recompilar: FORCE_ASSET_BUILD=true docker compose up node"
+    echo "O en el host: npm run build / npm run dev"
     exit 0
 fi
 

@@ -4,11 +4,18 @@
 
 /*
 |--------------------------------------------------------------------------
-| Design tokens → Tailwind utilities (v4 @theme)
+| Importante
 |--------------------------------------------------------------------------
-| --color-*  → bg-*, text-*, border-*, ring-*, fill-*, stroke-*
-| --font-*   → font-*
+| Editar este archivo NO se refleja solo. Hay que:
+|   npm run dev     → cambios en vivo (recomendado al diseñar)
+|   npm run build   → build de producción
+| Con Docker, el servicio "node" solo compila al hacer up si no existe
+| public/build; después de editar CSS usa npm run dev o npm run build.
+|
+| Tokens en @theme → utilidades Tailwind: bg-primary, text-text, font-title…
+| Tokens en :root  → var(--color-primary) en CSS personalizado
 */
+
 @theme {
     --color-primary: #ff6600;
     --color-primary-hover: #e65c00;
@@ -19,7 +26,7 @@
     --color-surface: #ffffff;
     --color-surface-muted: #f8f8f8;
 
-    --color-text: #ae0e0e;
+    --color-text: #202020;
     --color-text-soft: #404040;
     --color-muted: #737373;
 
@@ -46,11 +53,16 @@
     --color-secondary: #f8f8f8;
     --color-background: #ffffff;
     --color-surface: #ffffff;
-    --color-text: #ae0e0e;
+    --color-text: #202020;
     --color-text-soft: #404040;
     --color-muted: #737373;
     --color-border: #e6e6e6;
+    --color-border-strong: #d4d4d4;
     --color-sidebar: #1a1a1a;
+    --color-sidebar-elevated: #242424;
+    --color-sidebar-border: #2e2e2e;
+    --color-sidebar-text: #b3b3b3;
+    --color-sidebar-muted: #6b6b6b;
     --font-primary: "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-secondary: "Roboto", ui-sans-serif, system-ui, sans-serif;
     --font-title: "Oswald", ui-sans-serif, system-ui, sans-serif;
