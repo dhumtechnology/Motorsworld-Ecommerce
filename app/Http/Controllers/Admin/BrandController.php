@@ -26,7 +26,7 @@ class BrandController extends Controller
     public function index(BrandIndexRequest $request): View
     {
         $brands = Brand::query()
-            ->withCount('vehicleModels')
+            ->withCount(['vehicleModels', 'products'])
             ->when(
                 $request->searchTerm(),
                 fn (Builder $query, string $search) => $query->where('name', 'like', '%'.$search.'%'),
@@ -94,7 +94,7 @@ class BrandController extends Controller
             : 'No se pudo eliminar la marca.';
 
         if ($result['blocked'] !== []) {
-            $message .= ' Tiene modelos asociados: '.implode(', ', $result['blocked']).'.';
+            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
         }
 
         return redirect()
@@ -113,7 +113,7 @@ class BrandController extends Controller
         };
 
         if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (tienen modelos): '.implode(', ', $result['blocked']).'.';
+            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
         }
 
         return redirect()

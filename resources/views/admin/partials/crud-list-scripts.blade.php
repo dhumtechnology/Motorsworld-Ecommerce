@@ -2,6 +2,7 @@
     $filterFormId = $filterFormId ?? null;
     $entityLabelSingular = $entityLabelSingular ?? 'elemento';
     $entityLabelPlural = $entityLabelPlural ?? 'elementos';
+    $relatedCountFields = $relatedCountFields ?? [];
 @endphp
 
 <script>
@@ -107,6 +108,41 @@
         const selectedCheckboxes = () => checkboxes().filter((cb) => cb.checked);
         const entitySingular = @json($entityLabelSingular);
         const entityPlural = @json($entityLabelPlural);
+        const relatedCountFields = @json($relatedCountFields);
+
+        const formatCountLabel = (count, singular, plural) => {
+            if (count === 1) return '1 ' + singular;
+            return count + ' ' + plural;
+        };
+
+        const relatedImpactSuffix = (selected) => {
+            if (!Array.isArray(relatedCountFields) || relatedCountFields.length === 0) {
+                return '';
+            }
+
+            const parts = [];
+
+            relatedCountFields.forEach((field) => {
+                const total = selected.reduce((sum, cb) => {
+                    const value = Number(cb.dataset[field.attr] || 0);
+                    return sum + (Number.isFinite(value) ? value : 0);
+                }, 0);
+
+                if (total > 0) {
+                    parts.push(formatCountLabel(
+                        total,
+                        field.singular + ' asociado',
+                        field.plural + ' asociados'
+                    ));
+                }
+            });
+
+            if (parts.length === 0) {
+                return '';
+            }
+
+            return ' También se eliminarán ' + parts.join(' y ') + '.';
+        };
 
         const syncSelectionUi = () => {
             const all = checkboxes();
@@ -194,9 +230,10 @@
                     if (selected.length === 0) return;
 
                     if (messageEl) {
-                        messageEl.textContent = selected.length === 1
-                            ? '¿Eliminar 1 ' + entitySingular + ' seleccionado/a? Esta acción no se puede deshacer.'
-                            : '¿Eliminar ' + selected.length + ' ' + entityPlural + ' seleccionados/as? Esta acción no se puede deshacer.';
+                        const base = selected.length === 1
+                            ? '¿Eliminar 1 ' + entitySingular + ' seleccionado/a?'
+                            : '¿Eliminar ' + selected.length + ' ' + entityPlural + ' seleccionados/as?';
+                        messageEl.textContent = base + relatedImpactSuffix(selected) + ' Esta acción no se puede deshacer.';
                     }
 
                     if (extra) {

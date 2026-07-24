@@ -2,12 +2,18 @@
 
 namespace App\Actions\Admin\Categories;
 
+use App\Actions\Admin\Products\DeleteProductsAction;
 use App\Models\Products\Category;
+use App\Models\Products\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class DeleteCategoriesAction
 {
+    public function __construct(
+        private readonly DeleteProductsAction $deleteProducts,
+    ) {}
+
     /**
      * @param  list<int>  $categoryIds
      * @return array{deleted: int, blocked: list<string>}
@@ -22,7 +28,6 @@ class DeleteCategoriesAction
 
         return DB::transaction(function () use ($categoryIds) {
             $categories = Category::query()
-                ->withCount('products')
                 ->whereIn('id', $categoryIds)
                 ->get();
 
@@ -30,10 +35,19 @@ class DeleteCategoriesAction
             $deletableIds = [];
 
             foreach ($categories as $category) {
-                if ($category->products_count > 0) {
+                $products = Product::query()
+                    ->withCount('orderItems')
+                    ->where('category_id', $category->id)
+                    ->get();
+
+                if ($products->contains(fn (Product $product) => $product->order_items_count > 0)) {
                     $blocked[] = $category->name;
 
                     continue;
+                }
+
+                if ($products->isNotEmpty()) {
+                    $this->deleteProducts->execute($products->pluck('id')->all());
                 }
 
                 $deletableIds[] = $category->id;
@@ -45,7 +59,7 @@ class DeleteCategoriesAction
 
             if ($deletableIds === [] && $blocked !== []) {
                 throw ValidationException::withMessages([
-                    'ids' => 'No se pueden eliminar categorías con productos asociados: '.implode(', ', $blocked).'.',
+                    'ids' => 'No se pueden eliminar categorías con productos vinculados a pedidos: '.implode(', ', $blocked).'.',
                 ]);
             }
 

@@ -2,13 +2,19 @@
 
 namespace App\Actions\Admin\Brands;
 
+use App\Actions\Admin\Products\DeleteProductsAction;
 use App\Models\Products\Brand;
+use App\Models\Products\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class DeleteBrandsAction
 {
+    public function __construct(
+        private readonly DeleteProductsAction $deleteProducts,
+    ) {}
+
     /**
      * @param  list<int>  $brandIds
      * @return array{deleted: int, blocked: list<string>}
@@ -23,7 +29,7 @@ class DeleteBrandsAction
 
         return DB::transaction(function () use ($brandIds) {
             $brands = Brand::query()
-                ->withCount('vehicleModels')
+                ->with('vehicleModels:id,brand_id')
                 ->whereIn('id', $brandIds)
                 ->get();
 
@@ -31,10 +37,22 @@ class DeleteBrandsAction
             $deletable = [];
 
             foreach ($brands as $brand) {
-                if ($brand->vehicle_models_count > 0) {
+                $modelIds = $brand->vehicleModels->pluck('id')->all();
+                $products = $modelIds === []
+                    ? collect()
+                    : Product::query()
+                        ->withCount('orderItems')
+                        ->whereIn('model_id', $modelIds)
+                        ->get();
+
+                if ($products->contains(fn (Product $product) => $product->order_items_count > 0)) {
                     $blocked[] = $brand->name;
 
                     continue;
+                }
+
+                if ($products->isNotEmpty()) {
+                    $this->deleteProducts->execute($products->pluck('id')->all());
                 }
 
                 $deletable[] = $brand;
@@ -45,12 +63,13 @@ class DeleteBrandsAction
                     $this->deleteStoredFile($brand->image);
                 }
 
+                // models.brand_id tiene cascadeOnDelete → elimina modelos asociados.
                 $brand->delete();
             }
 
             if ($deletable === [] && $blocked !== []) {
                 throw ValidationException::withMessages([
-                    'ids' => 'No se pueden eliminar marcas con modelos asociados: '.implode(', ', $blocked).'.',
+                    'ids' => 'No se pueden eliminar marcas con productos vinculados a pedidos: '.implode(', ', $blocked).'.',
                 ]);
             }
 

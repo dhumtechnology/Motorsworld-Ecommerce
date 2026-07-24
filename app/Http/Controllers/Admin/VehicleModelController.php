@@ -102,7 +102,7 @@ class VehicleModelController extends Controller
             : 'No se pudo eliminar el modelo.';
 
         if ($result['blocked'] !== []) {
-            $message .= ' Tiene productos asociados: '.implode(', ', $result['blocked']).'.';
+            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
         }
 
         return redirect()
@@ -121,7 +121,7 @@ class VehicleModelController extends Controller
         };
 
         if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (tienen productos): '.implode(', ', $result['blocked']).'.';
+            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
         }
 
         return redirect()
