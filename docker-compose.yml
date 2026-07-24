@@ -9,6 +9,10 @@ services:
     networks:
       - motosworld
     command: sh docker/node/build-assets.sh
+    environment:
+      # public/build está en .gitignore: hay que compilar al levantar.
+      # SKIP_ASSET_BUILD=true omite el build (solo si ya tienes public/build local).
+      - SKIP_ASSET_BUILD=${SKIP_ASSET_BUILD:-false}
     restart: "no"
 
   app:

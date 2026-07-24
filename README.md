@@ -78,7 +78,20 @@ docker compose up -d --build
 Esto levanta cuatro servicios (en orden):
 
 1. **node** — compila assets con Vite/Tailwind (`npm ci` + `npm run build`) y termina
-2. **mysql** — MySQL 8.0 (puerto externo configurable con `DB_PORT_EXTERNAL`)
+2. **mysql** — base de datos
+3. **app** — PHP-FPM (Laravel); espera a que `node` termine con éxito
+4. **nginx** — proxy en el puerto `APP_PORT` (por defecto 8080)
+
+> **Importante:** `public/build` está en `.gitignore`. Cada `docker compose up` vuelve a compilar CSS/JS.
+> Si la UI sale sin estilos, fuerza el rebuild:
+>
+> ```bash
+> docker compose run --rm -e SKIP_ASSET_BUILD=false node
+> # o
+> docker compose up -d --build --force-recreate node
+> ```
+>
+> No uses el CDN de Tailwind: pisa los estilos del proyecto.2. **mysql** — MySQL 8.0 (puerto externo configurable con `DB_PORT_EXTERNAL`)
 3. **app** — PHP 8.4-FPM (migrate + seed en el entrypoint)
 4. **nginx** — servidor web (puerto `APP_PORT`, default 8080)
 
