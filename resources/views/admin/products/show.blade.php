@@ -26,6 +26,12 @@
         </a>
         <div class="flex flex-wrap items-center gap-2">
             <a
+                href="{{ route('admin.offers.create', ['product_id' => $product->id]) }}"
+                class="inline-flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-amber-800 hover:bg-amber-100 transition-colors"
+            >
+                Crear oferta
+            </a>
+            <a
                 href="{{ route('shop.product.show', $product) }}"
                 target="_blank"
                 class="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
@@ -220,11 +226,99 @@
                         <dt class="text-muted">Oferta activa</dt>
                         <dd class="font-semibold text-text">
                             {{ $product->hasActiveOffer() ? 'Sí' : 'No' }}
+                            <span class="text-muted font-normal">({{ $stats['offers_count'] }} hist.)</span>
                         </dd>
                     </div>
                 </dl>
             </div>
         </div>
+    </div>
+
+    <div class="rounded-lg border border-border bg-surface overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-sm font-title text-text">Historial de ofertas</h2>
+                <p class="text-xs text-muted mt-0.5">Ofertas vigentes, programadas y expiradas</p>
+            </div>
+            <a
+                href="{{ route('admin.offers.create', ['product_id' => $product->id]) }}"
+                class="inline-flex items-center gap-2 rounded border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-amber-800 hover:bg-amber-100 transition-colors"
+            >
+                Nueva oferta
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-secondary text-left text-xs uppercase tracking-wider text-muted">
+                    <tr>
+                        <th class="px-5 py-3 font-bold">ID</th>
+                        <th class="px-5 py-3 font-bold">Descuento</th>
+                        <th class="px-5 py-3 font-bold">Precio oferta</th>
+                        <th class="px-5 py-3 font-bold">Motivo</th>
+                        <th class="px-5 py-3 font-bold">Inicio</th>
+                        <th class="px-5 py-3 font-bold">Fin</th>
+                        <th class="px-5 py-3 font-bold">Estado</th>
+                        <th class="px-5 py-3 font-bold text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    @forelse ($offers as $offer)
+                        @php $meta = $offer->lifecycleMeta(); @endphp
+                        <tr class="hover:bg-secondary/40">
+                            <td class="px-5 py-3 font-mono text-muted">#{{ $offer->id }}</td>
+                            <td class="px-5 py-3 font-semibold text-text whitespace-nowrap">
+                                {{ number_format($offer->resolvedDiscountPercent((float) $product->price_amount), 2) }}%
+                            </td>
+                            <td class="px-5 py-3 font-semibold text-primary whitespace-nowrap">
+                                {{ number_format((float) $offer->offer_price_amount, 2) }}
+                                <span class="text-xs text-muted">PEN</span>
+                            </td>
+                            <td class="px-5 py-3 text-text-soft max-w-[12rem]">
+                                <span class="line-clamp-2" title="{{ $offer->reason }}">{{ $offer->reason ?: '—' }}</span>
+                            </td>
+                            <td class="px-5 py-3 text-text-soft whitespace-nowrap">
+                                {{ $offer->starts_at?->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-5 py-3 text-text-soft whitespace-nowrap">
+                                {{ $offer->ends_at?->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-5 py-3">
+                                <span class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-bold uppercase {{ $meta['class'] }}">
+                                    {{ $meta['label'] }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-3 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <a
+                                        href="{{ route('admin.offers.edit', $offer) }}"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors"
+                                        title="Editar oferta"
+                                    >
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-5 py-12 text-center text-muted">
+                                Este producto aún no tiene ofertas registradas.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($offers->hasPages())
+            <div class="px-5 py-4 border-t border-border">
+                {{ $offers->links('vendor.pagination.admin') }}
+            </div>
+        @endif
     </div>
 
     <div class="rounded-lg border border-border bg-surface overflow-hidden">

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductOfferController;
 use App\Http\Controllers\Admin\ServiceTypeController;
 use App\Http\Controllers\Admin\VehicleModelController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/productos/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/productos/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::delete('/productos', [ProductController::class, 'bulkDestroy'])->name('products.bulk-destroy');
+
+    Route::get('/ofertas', [ProductOfferController::class, 'index'])->name('offers.index');
+    Route::get('/ofertas/crear', [ProductOfferController::class, 'create'])->name('offers.create');
+    Route::post('/ofertas', [ProductOfferController::class, 'store'])->name('offers.store');
+    Route::get('/ofertas/{productOffer}/editar', [ProductOfferController::class, 'edit'])->name('offers.edit');
+    Route::put('/ofertas/{productOffer}', [ProductOfferController::class, 'update'])->name('offers.update');
+    Route::delete('/ofertas/{productOffer}', [ProductOfferController::class, 'destroy'])->name('offers.destroy');
+    Route::delete('/ofertas', [ProductOfferController::class, 'bulkDestroy'])->name('offers.bulk-destroy');
 
     Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/categorias/crear', [CategoryController::class, 'create'])->name('categories.create');

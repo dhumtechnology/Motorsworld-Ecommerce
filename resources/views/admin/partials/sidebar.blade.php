@@ -10,6 +10,12 @@
                     'enabled' => true,
                 ],
                 [
+                    'label' => 'Ofertas',
+                    'route' => 'admin.offers.index',
+                    'active' => request()->routeIs('admin.offers.*'),
+                    'enabled' => true,
+                ],
+                [
                     'label' => 'Categorías',
                     'route' => 'admin.categories.index',
                     'active' => request()->routeIs('admin.categories.*'),

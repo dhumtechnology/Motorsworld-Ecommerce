@@ -6,16 +6,20 @@ use App\Enums\Inventory\InventoryMovementType;
 use App\Enums\Orders\OrderStatus;
 use App\Models\Products\InventoryMovement;
 use App\Models\Products\Product;
+use App\Models\Products\ProductOffer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class GetProductDetailsAction
 {
     private const MOVEMENTS_PER_PAGE = 15;
 
+    private const OFFERS_PER_PAGE = 10;
+
     /**
      * @return array{
      *     product: Product,
      *     movements: LengthAwarePaginator,
+     *     offers: LengthAwarePaginator,
      *     stats: array<string, mixed>
      * }
      */
@@ -33,7 +37,14 @@ class GetProductDetailsAction
             ->with(['creator:id,email', 'order:id'])
             ->where('product_id', $product->id)
             ->orderByDesc('id')
-            ->paginate(self::MOVEMENTS_PER_PAGE)
+            ->paginate(self::MOVEMENTS_PER_PAGE, ['*'], 'movements_page')
+            ->withQueryString();
+
+        $offers = ProductOffer::query()
+            ->where('product_id', $product->id)
+            ->orderByDesc('starts_at')
+            ->orderByDesc('id')
+            ->paginate(self::OFFERS_PER_PAGE, ['*'], 'offers_page')
             ->withQueryString();
 
         $movementTotals = InventoryMovement::query()
@@ -78,6 +89,7 @@ class GetProductDetailsAction
         return [
             'product' => $product,
             'movements' => $movements,
+            'offers' => $offers,
             'stats' => [
                 'available_stock' => $available,
                 'reserved_stock' => $reserved,
@@ -96,6 +108,7 @@ class GetProductDetailsAction
                 'cart_count' => $product->cartItems()->count(),
                 'images_count' => $product->images->count(),
                 'last_movement_at' => $lastMovementAt,
+                'offers_count' => $offers->total(),
             ],
         ];
     }
