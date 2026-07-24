@@ -13,6 +13,7 @@ use App\Models\Products\Brand;
 use App\Models\Products\VehicleModel;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class VehicleModelController extends Controller
@@ -65,9 +66,17 @@ class VehicleModelController extends Controller
         return view('admin.models.create', $this->formData());
     }
 
-    public function store(StoreVehicleModelRequest $request): RedirectResponse
+    public function store(StoreVehicleModelRequest $request): RedirectResponse|JsonResponse
     {
         $model = $this->upsertVehicleModel->execute($request->modelAttributes());
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'id' => $model->id,
+                'name' => $model->name,
+                'brand_id' => $model->brand_id,
+            ]);
+        }
 
         return redirect()
             ->route('admin.models.index')

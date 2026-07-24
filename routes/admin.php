@@ -33,6 +33,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
     Route::get('/productos/crear', [ProductController::class, 'create'])->name('products.create');
     Route::post('/productos', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/productos/{product}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/productos/{product}/editar', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/productos/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/productos/{product}', [ProductController::class, 'destroy'])->name('products.destroy');

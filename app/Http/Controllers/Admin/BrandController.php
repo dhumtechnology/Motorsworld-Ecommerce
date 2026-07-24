@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\UpdateBrandRequest;
 use App\Models\Products\Brand;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class BrandController extends Controller
@@ -49,13 +50,20 @@ class BrandController extends Controller
         return view('admin.brands.create');
     }
 
-    public function store(StoreBrandRequest $request): RedirectResponse
+    public function store(StoreBrandRequest $request): RedirectResponse|JsonResponse
     {
         $brand = $this->upsertBrand->execute(
             $request->brandAttributes(),
             null,
             $request->imageFile(),
         );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'id' => $brand->id,
+                'name' => $brand->name,
+            ]);
+        }
 
         return redirect()
             ->route('admin.brands.index')

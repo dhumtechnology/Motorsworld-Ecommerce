@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Products\DeleteProductsAction;
+use App\Actions\Admin\Products\GenerateProductSkuAction;
+use App\Actions\Admin\Products\GetProductDetailsAction;
 use App\Actions\Admin\Products\UpsertProductAction;
 use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
@@ -25,6 +27,8 @@ class ProductController extends Controller
     public function __construct(
         private readonly UpsertProductAction $upsertProduct,
         private readonly DeleteProductsAction $deleteProducts,
+        private readonly GenerateProductSkuAction $generateProductSku,
+        private readonly GetProductDetailsAction $getProductDetails,
     ) {}
 
     public function index(ProductIndexRequest $request): View
@@ -135,8 +139,11 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
+        $attributes = $request->productAttributes();
+        $attributes['sku'] = ($this->generateProductSku)($attributes['sku'] ?? null);
+
         $product = $this->upsertProduct->execute(
-            $request->productAttributes(),
+            $attributes,
             $request->availableStock(),
             null,
             $request->primaryImage(),
@@ -146,6 +153,11 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.products.index')
             ->with('status', "Producto «{$product->name}» creado correctamente.");
+    }
+
+    public function show(Product $product): View
+    {
+        return view('admin.products.show', $this->getProductDetails->execute($product));
     }
 
     public function edit(Product $product): View
@@ -160,9 +172,11 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        $availableStock = (int) ($product->inventory?->available_stock ?? 0);
+
         $product = $this->upsertProduct->execute(
             $request->productAttributes(),
-            $request->availableStock(),
+            $availableStock,
             $product,
             $request->primaryImage(),
             $request->secondaryImages(),

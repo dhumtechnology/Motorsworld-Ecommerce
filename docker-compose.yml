@@ -51,7 +51,7 @@ services:
       - DB_USERNAME=${DB_USERNAME:-motosworld}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
       - TMPDIR=/var/www/html/storage/framework/cache
-      # auto = solo si BD vacía | true = siempre | false = nunca
+      # auto = roles+admin si BD vacía | true = siempre | false = nunca
       - SEED_ON_START=${SEED_ON_START:-auto}
 
   nginx:

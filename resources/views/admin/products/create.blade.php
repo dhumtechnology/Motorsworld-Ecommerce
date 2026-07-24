@@ -11,4 +11,8 @@
             @include('admin.products._form')
         </form>
     </div>
+
+    {{-- Fuera del form del producto: HTML no admite formularios anidados --}}
+    @include('admin.products._quick-create-modals')
+    @include('admin.products._form-scripts')
 @endsection

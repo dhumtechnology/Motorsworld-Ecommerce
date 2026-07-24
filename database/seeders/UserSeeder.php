@@ -15,14 +15,16 @@ class UserSeeder extends Seeder
     private const DEMO_CUSTOMER_COUNT = 15;
 
     /**
-     * Seed application users (idempotent upsert — safe on every container start).
+     * Solo deja el admin fijo. Los demos quedan listos para reactivar.
      */
     public function run(): void
     {
         $this->seedFixedAdmin();
-        $this->seedFixedCustomer();
-        $this->seedDemoAdmins();
-        $this->seedDemoCustomers();
+
+        // Desactivado temporalmente (reactivar cuando quieras datos demo):
+        // $this->seedFixedCustomer();
+        // $this->seedDemoAdmins();
+        // $this->seedDemoCustomers();
     }
 
     private function seedFixedAdmin(): void

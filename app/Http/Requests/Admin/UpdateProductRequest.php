@@ -24,12 +24,6 @@ class UpdateProductRequest extends FormRequest
         $product = $this->route('product');
 
         return [
-            'sku' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('products', 'sku')->ignore($product->id),
-            ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'additional_information' => ['nullable', 'string'],
@@ -45,7 +39,6 @@ class UpdateProductRequest extends FormRequest
                     fn ($rule) => $rule->where('brand_id', (int) $this->input('brand_id')),
                 ),
             ],
-            'available_stock' => ['required', 'integer', 'min:0'],
             'primary_image' => ['nullable', 'image', 'max:5120'],
             'secondary_images' => ['nullable', 'array', 'max:12'],
             'secondary_images.*' => ['image', 'max:5120'],
@@ -63,7 +56,6 @@ class UpdateProductRequest extends FormRequest
     public function productAttributes(): array
     {
         return [
-            'sku' => trim((string) $this->input('sku')),
             'name' => trim((string) $this->input('name')),
             'description' => $this->nullableString('description'),
             'additional_information' => $this->nullableString('additional_information'),
@@ -73,11 +65,6 @@ class UpdateProductRequest extends FormRequest
             'category_id' => (int) $this->input('category_id'),
             'model_id' => $this->filled('model_id') ? (int) $this->input('model_id') : null,
         ];
-    }
-
-    public function availableStock(): int
-    {
-        return (int) $this->input('available_stock', 0);
     }
 
     public function primaryImage(): ?UploadedFile

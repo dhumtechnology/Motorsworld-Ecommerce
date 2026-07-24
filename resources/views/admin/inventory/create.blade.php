@@ -36,7 +36,7 @@
                             class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                         <option value="">Seleccionar producto...</option>
                         @foreach ($products as $product)
-                            <option value="{{ $product->id }}" @selected((int) old('product_id') === $product->id)>
+                            <option value="{{ $product->id }}" @selected((int) old('product_id', request('product_id')) === $product->id)>
                                 {{ $product->sku }} — {{ $product->name }} (stock: {{ (int) ($product->inventory?->available_stock ?? 0) }})
                             </option>
                         @endforeach

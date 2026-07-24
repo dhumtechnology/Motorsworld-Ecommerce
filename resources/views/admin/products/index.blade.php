@@ -293,6 +293,17 @@
                             <td class="px-5 py-3">
                                 <div class="flex items-center justify-end gap-2">
                                     <a
+                                        href="{{ route('admin.products.show', $product) }}"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                                        title="Ver detalle"
+                                        aria-label="Ver detalle de {{ $product->name }}"
+                                    >
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    </a>
+                                    <a
                                         href="{{ route('admin.products.edit', $product) }}"
                                         class="inline-flex h-9 w-9 items-center justify-center rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors"
                                         title="Editar"

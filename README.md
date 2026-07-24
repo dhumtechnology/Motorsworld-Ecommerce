@@ -108,6 +108,12 @@ docker compose ps
 > **Nota:** El entrypoint genera `APP_KEY` automáticamente si falta en `.env`. Solo ejecuta `cp .env.example .env` antes del primer `docker compose up`.
 > Si tu `.env` aún tiene `SEED_ON_START=true`, cámbialo a `auto` (o `false`) para no reseedeár en cada reinicio.
 
+**Login admin (único usuario sembrado):**
+- Email: `admin@motosworld.test`
+- Password: `password`
+
+Los seeders de catálogo/pedidos/reservas están desactivados en `DatabaseSeeder` (comentados). Para reactivarlos, descomenta las clases y ejecuta `php artisan db:seed`.
+
 ### 4. Verificar la aplicación
 
 Abre en el navegador:

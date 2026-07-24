@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Products\Category;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class CategoryController extends Controller
@@ -57,9 +58,16 @@ class CategoryController extends Controller
         return view('admin.categories.create');
     }
 
-    public function store(StoreCategoryRequest $request): RedirectResponse
+    public function store(StoreCategoryRequest $request): RedirectResponse|JsonResponse
     {
         $category = $this->upsertCategory->execute($request->categoryAttributes());
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'id' => $category->id,
+                'name' => $category->name,
+            ]);
+        }
 
         return redirect()
             ->route('admin.categories.index')

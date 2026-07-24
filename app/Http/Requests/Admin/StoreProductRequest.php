@@ -14,13 +14,20 @@ class StoreProductRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('sku')) {
+            $this->merge(['sku' => null]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
+            'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'additional_information' => ['nullable', 'string'],
@@ -63,7 +70,7 @@ class StoreProductRequest extends FormRequest
     public function productAttributes(): array
     {
         return [
-            'sku' => trim((string) $this->input('sku')),
+            'sku' => trim((string) $this->input('sku', '')),
             'name' => trim((string) $this->input('name')),
             'description' => $this->nullableString('description'),
             'additional_information' => $this->nullableString('additional_information'),

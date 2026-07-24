@@ -101,6 +101,14 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany<InventoryMovement, $this>
+     */
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class)->latest('id');
+    }
+
+    /**
      * @return HasOne<ProductOffer, $this>
      */
     public function activeOffer(): HasOne
