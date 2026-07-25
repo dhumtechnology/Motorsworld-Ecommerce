@@ -136,9 +136,11 @@
         :href="route('shop.product.show', $product)"
         :image="$product->image"
         --}}
-    <div class="min-h-screen py-12 px-4 md:px-8 w-full">
+    <div class="min-h-screen py-12 px-4 md:px-8 w-full font-title text-black">
         <div>
-            catálogo
+            <x-breadcrumb :items="[
+                'Catálogo' => null
+            ]" />
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-8">
             <div class="lg:col-span-2">
@@ -148,15 +150,15 @@
                         <input type="hidden" name="section" value="{{ request('section') }}">
                     @endif
         
-                    <div class="p-6 rounded-md border border-neutral-800 text-white">
-                        <h3 class="font-sans font-black tracking-wider uppercase text-xl mb-4 antialiased">
+                    <div class="p-6 rounded-md border-neutral-800 text-black">
+                        <h3 class="font-secondary font-black tracking-wider uppercase text-xl mb-4 antialiased">
                             BÚSQUEDA
                         </h3>
                         <input type="search" 
                             name="search" 
                             value="{{ $filters['search'] ?? '' }}"
                             placeholder="Buscar..." 
-                            class="w-full px-4 py-2.5 bg-[#151515] text-gray-300 rounded border border-neutral-700 placeholder-neutral-500 focus:outline-none focus:border-orange-600 transition-colors text-sm"
+                            class="w-full px-4 py-2.5 text-black rounded border-neutral-700 placeholder-neutral-500 focus:outline-none focus:border-orange-600 transition-colors text-sm"
                             onkeypress="if(event.key === 'Enter') this.form.submit();"
                             onsearch="if(this.value === '') this.form.submit();"> {{-- Al borrar el texto y darle Enter o vaciarlo, recarga con todo --}}
                     </div>
@@ -175,75 +177,10 @@
                         :selected="$filters['brands'] ?? []"
                     />
         
-                    <div class="bg-[#1e1e1e] p-6 rounded-md border border-neutral-800 text-white">
-                        <h3 class="font-sans font-black tracking-wider uppercase text-xl antialiased mb-4">
-                            FILTRAR POR PRECIO
-                        </h3>
-                        
-                        {{-- Botón inteligente de Limpieza Total --}}
-                        @if(
-                            ($filters['categories'] ?? []) !== []
-                            || ($filters['brands'] ?? []) !== []
-                            || ($filters['models'] ?? []) !== []
-                            || filled($filters['search'] ?? null)
-                        )
-                            <a href="{{ url()->current() }}{{ request('section') ? '?section='.request('section') : '' }}" 
-                            class="inline-block mt-2 text-xs font-bold text-orange-500 hover:text-orange-600 uppercase tracking-widest transition-colors">
-                                ✕ Limpiar Filtros
-                            </a>
-                        @endif
-                    </div>
-        
-                    @if($featuredProducts->isNotEmpty())
-                        <div class="mt-10 select-none font-sans">
-                            <h3 class="text-xl font-black uppercase tracking-widest text-white mb-6">
-                                Productos Destacados
-                            </h3>
-        
-                            <div class="space-y-5">
-                                @foreach ($featuredProducts as $featuredProduct)
-                                    <div class="flex items-center gap-4 group cursor-pointer">
-                                        <div class="relative w-20 h-20 bg-[#1e1e1e] border border-neutral-800 rounded-sm overflow-hidden shrink-0 flex items-center justify-center p-1">
-                                            @if($featuredProduct->is_on_sale)
-                                                <span class="absolute top-1 left-1 bg-[#f15a24] text-white text-[9px] font-black uppercase tracking-wider px-1 py-0.5 rounded-xs z-10">
-                                                    Oferta {{ rtrim(rtrim(number_format((float) ($featuredProduct->discount_percent ?? 0), 2, '.', ''), '0'), '.') }}%
-                                                </span>
-                                            @endif
-                                            <img src="{{ $featuredProduct->image ?? 'https://via.placeholder.com/150?text=MotoWorld' }}"
-                                                class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
-                                                alt="{{ $featuredProduct->name }}">
-                                        </div>
-        
-                                        <div class="flex flex-col justify-center">
-                                            <h4 class="text-sm font-black text-white uppercase tracking-wide group-hover:text-[#f15a24] transition-colors duration-150 leading-tight">
-                                                {{ $featuredProduct->name ?? $featuredProduct->sku }}
-                                            </h4>
-                                            <span class="text-xs font-bold text-neutral-500 mt-0.5 uppercase tracking-wider">
-                                                {{ $featuredProduct->category?->name ?? 'MOTO' }}
-                                            </span>
-        
-                                            <div class="flex items-baseline gap-2 mt-1">
-                                                <span class="text-sm font-black text-white">
-                                                    ${{ $featuredProduct->effective_price }}
-                                                </span>
-        
-                                                @if($featuredProduct->is_on_sale)
-                                                    <span class="text-xs font-bold text-neutral-500 line-through">
-                                                        ${{ $featuredProduct->list_price }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-        
                 </form>
             </div>
             <div class="lg:col-span-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 auto-rows-max">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-max">
                     @forelse ($products as $product)
                         <x-card
                             :title="$product->name ?? $product->sku"
@@ -270,9 +207,109 @@
                         </div>
                     @endif
                 </div>
-            </div>
-
+            </div>    
         </div>
+        <div>
+            @if($featuredProducts->isNotEmpty())
+                <section class="mt-16 mb-10 select-none font-title w-full">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-black uppercase tracking-widest text-black">
+                            Productos Destacados
+                        </h3>
+
+                        <div class="flex gap-2">
+                            <button id="featured-prev" type="button" class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-sm hover:opacity-90 transition cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <button id="featured-next" type="button" class="w-9 h-9 flex items-center justify-center bg-primary text-white rounded-sm hover:opacity-90 transition cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="featured-carousel" class="overflow-hidden">
+                        <div id="featured-track" class="flex">
+                            @foreach ($featuredProducts->take(10) as $featuredProduct)
+                                <div class="featured-slide w-1/4 shrink-0 px-8 flex justify-center">
+                                    <x-card
+                                        class="max-w-[200px] w-full"
+                                        :title="$featuredProduct->name ?? $featuredProduct->sku"
+                                        :category="$featuredProduct->category?->name ?? 'MOTO'"
+                                        :price="$featuredProduct->effective_price"
+                                        :oldPrice="$featuredProduct->is_on_sale ? $featuredProduct->list_price : null"
+                                        :image="$featuredProduct->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
+                                        :isSale="$featuredProduct->is_on_sale"
+                                        :discountPercent="$featuredProduct->discount_percent"
+                                        :href="route('shop.product.show', $featuredProduct)"
+                                        :cartQty="$cartQuantities[$featuredProduct->id] ?? 0"
+                                    />
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+
+                <script>
+                    (function () {
+                        const track = document.getElementById('featured-track');
+                        const prevBtn = document.getElementById('featured-prev');
+                        const nextBtn = document.getElementById('featured-next');
+
+                        const itemsPerPage = 4;
+                        const originalSlides = Array.from(track.children);
+                        const totalReal = originalSlides.length;
+
+                        // Buffer de clones para poder loopear en ambas direcciones
+                        const buffer = itemsPerPage;
+
+                        const startClones = originalSlides.slice(-buffer).map(el => el.cloneNode(true));
+                        const endClones = originalSlides.slice(0, buffer).map(el => el.cloneNode(true));
+
+                        startClones.forEach(clone => track.insertBefore(clone, track.firstChild));
+                        endClones.forEach(clone => track.appendChild(clone));
+
+                        const step = 100 / itemsPerPage;
+                        let currentIndex = buffer; // arranca mostrando el primer producto real
+
+                        function setTransform(animate) {
+                            track.style.transition = animate ? 'transform 300ms ease-out' : 'none';
+                            track.style.transform = `translateX(-${currentIndex * step}%)`;
+                        }
+
+                        function goNext() {
+                            currentIndex++;
+                            setTransform(true);
+                        }
+
+                        function goPrev() {
+                            currentIndex--;
+                            setTransform(true);
+                        }
+
+                        track.addEventListener('transitionend', () => {
+                            if (currentIndex >= buffer + totalReal) {
+                                currentIndex = buffer;
+                                setTransform(false);
+                            } else if (currentIndex < buffer) {
+                                currentIndex = buffer + totalReal - 1;
+                                setTransform(false);
+                            }
+                        });
+
+                        nextBtn.addEventListener('click', goNext);
+                        prevBtn.addEventListener('click', goPrev);
+
+                        // Set inicial sin animación
+                        setTransform(false);
+                    })();
+                </script>
+            @endif
+        </div>
+        
 
     </div>
 @endsection

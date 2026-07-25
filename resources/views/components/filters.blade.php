@@ -6,7 +6,7 @@
 ])
 
 <div class="bg-secondary p-6 rounded-md border-neutral-800 text-black select-none">
-    <h3 class="font-sans font-black bold tracking-wider uppercase text-xl mb-4 antialiased">
+    <h3 class="font-title tracking-wider uppercase text-xl mb-4 antialiased">
         {{ $title }}
     </h3>
 
@@ -33,7 +33,7 @@
                         peer-checked:bg-orange-600 peer-checked:border-orange-600 group-hover:border-orange-500">
                     </span>
                     
-                    <span class="text-gray-300 group-hover:text-primary transition-colors duration-150 font-sans normal-case">
+                    <span class="text-black group-hover:text-primary transition-colors duration-150 font-sans normal-case">
                         {{ $label }}
                     </span>
                 </label>
