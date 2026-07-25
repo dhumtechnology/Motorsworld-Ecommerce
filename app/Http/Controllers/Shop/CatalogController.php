@@ -26,7 +26,7 @@ class CatalogController extends Controller
 
     private const PER_PAGE = 12;
 
-    private const FEATURED_LIMIT = 3;
+    private const FEATURED_LIMIT = 10;
 
     private const LOG_CHANNEL = 'catalog';
 
