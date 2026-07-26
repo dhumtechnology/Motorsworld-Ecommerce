@@ -7,18 +7,19 @@ services:
       - .:/var/www/html
       - node_modules:/var/www/html/node_modules
     ports:
+      # Solo necesario con ASSET_MODE=dev (HMR). En watch se ignora.
       - "${VITE_PORT:-5173}:5173"
     networks:
       - motosworld
-    # Vite en watch: nuevas clases Tailwind en Blade se ven al guardar (sin rebuild manual).
-    # SKIP_ASSET_BUILD=true → no arranca. FORCE_ASSET_BUILD=true → build inicial forzado.
+    # watch (default): public/build + recompila al editar Blade (páginas rápidas).
+    # dev: HMR en :5173 (más lento en Docker). once: una sola build.
     command: sh docker/node/dev-assets.sh
     environment:
       - SKIP_ASSET_BUILD=${SKIP_ASSET_BUILD:-false}
-      - FORCE_ASSET_BUILD=${FORCE_ASSET_BUILD:-false}
+      - ASSET_MODE=${ASSET_MODE:-watch}
       - CHOKIDAR_USEPOLLING=true
-      - VITE_HMR_HOST=${VITE_HMR_HOST:-localhost}
-      - VITE_DEV_SERVER_URL=${VITE_DEV_SERVER_URL:-http://localhost:5173}
+      - CHOKIDAR_INTERVAL=${CHOKIDAR_INTERVAL:-500}
+      - WATCHPACK_POLLING=true
     restart: unless-stopped
 
   app:

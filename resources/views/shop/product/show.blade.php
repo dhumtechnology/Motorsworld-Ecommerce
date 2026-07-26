@@ -237,7 +237,7 @@
                 $initialImage = $galleryImages->first()?->path ?? 'https://via.placeholder.com/600?text=MotoWorld';
             @endphp
 
-            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-8 h-fit bg-red-500">
+            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 h-fit bg-red-500">
                 @if ($galleryImages->isNotEmpty())
                     {{-- Contenedor de miniaturas laterales --}}
                     <div class="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-36 overflow-x-auto sm:overflow-y-auto sm:max-h-[480px] py-1">

@@ -11,7 +11,7 @@ Incluye arquitectura Docker lista para desarrollo y despliegue local.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) 4.x o superior
 - Docker Compose v2
 
-No necesitas Node.js instalado en tu PC: los assets (Vite + Tailwind) se compilan automáticamente en el contenedor `node`.
+No necesitas Node.js instalado en tu PC: el contenedor `node` compila a `public/build` y **recompila al guardar** Blade/CSS/JS (Tailwind incluido).
 
 ### Sin Docker (desarrollo local)
 
@@ -68,6 +68,9 @@ Las variables por defecto ya están configuradas para Docker:
 | `DB_PASSWORD` | `secret`          | Contraseña de MySQL            |
 | `APP_PORT`          | `8080`                    | Puerto expuesto por Nginx      |
 | `DB_PORT_EXTERNAL`  | `3307`                    | Puerto MySQL en el host (evita conflicto con MySQL local) |
+| `ASSET_MODE`        | `watch`                   | `watch` = build rápido + recompilar al guardar; `dev` = HMR (:5173, más lento en Docker); `once` = una build |
+| `SKIP_ASSET_BUILD`  | `false`                   | `true` si usas `npm run dev` en el host en lugar del contenedor |
+| `VITE_PORT`         | `5173`                    | Solo relevante con `ASSET_MODE=dev` |
 
 ### 3. Construir e iniciar los contenedores
 
@@ -77,7 +80,7 @@ Las variables por defecto ya están configuradas para Docker:
 docker compose up -d --build
 ```
 
-**Día a día** (rápido; no reconstruye imágenes ni fuerza seed):
+**Día a día** (rápido; no reconstruye imágenes ni fuerza seed/Vite):
 
 ```bash
 docker compose up -d
@@ -86,7 +89,7 @@ docker compose up -d
 Servicios:
 
 1. **mysql** — MySQL 8.0
-2. **node** — Vite **en watch** (`:5173`): al guardar Blade/CSS/JS regenera Tailwind (no hace falta recompilar a mano)
+2. **node** — Vite + Tailwind en **watch**: sirve CSS/JS estáticos desde `public/build` y recompila al editar Blade/CSS/JS
 3. **app** — PHP-FPM tras migrate; seeders en segundo plano y solo si la BD está vacía (`SEED_ON_START=auto`)
 4. **nginx** — espera a que FPM escuche en `:9000` antes de aceptar tráfico
 
@@ -97,29 +100,42 @@ docker compose ps
 # app = healthy, nginx = Up, node = Up
 ```
 
-### Frontend / Tailwind (importante para todo el equipo)
+### Assets / Tailwind (importante para el equipo)
 
-Tailwind **no** aplica clases “mágicamente” en el navegador: solo genera CSS de las clases que encuentra al escanear las vistas. Por eso, si editas `resources/views/**/*.blade.php` y el CSS no se regenera, **la clase aparece en el HTML pero no se ve**.
+Tailwind **solo genera CSS de las clases presentes en el build**. Sin watcher, una clase nueva en Blade aparece en el HTML pero **sin estilo**.
 
-Con este proyecto, `docker compose up -d` deja el servicio **node** corriendo Vite en watch. Flujo normal:
+**Por qué a uno le funcionaba y a otros no:** quien corre `npm run dev` en el host tiene HMR nativo (rápido). Quien solo hacía `docker compose up` compilaba una vez (o nada) y las clases nuevas nunca entraban al CSS.
 
-1. `docker compose up -d`
-2. Espera a que `motosworld_node` esté `Up` (revisa `docker compose logs -f node` hasta ver Vite listo)
-3. Edita Blade → guarda → recarga el navegador (hard refresh si hace falta)
-
-Si `node` no está arriba, Laravel cae a `public/build` (build estático) y **las clases nuevas no existen** hasta recompilar.
+Con Docker (recomendado para todos — páginas rápidas):
 
 ```bash
-# Ver que Vite está vivo
-docker compose logs -f node
-
-# Build one-shot (sin watch), p. ej. CI o emergencia
-docker compose run --rm -e FORCE_ASSET_BUILD=true node sh docker/node/build-assets.sh
+docker compose up -d
+docker compose logs -f node   # "[assets] Observando…" / "Listo → public/build"
 ```
 
-> No uses el CDN de Tailwind: pisa los estilos del proyecto.
+Flujo:
+
+1. Editas Blade/CSS/JS
+2. En logs de `node` aparece una recompilación
+3. Recargas el navegador (Ctrl+F5 si el CSS quedó cacheado)
+
+> **Si la UI sale sin estilos:**
 >
-> En Docker Desktop (Windows/macOS) el watch usa **polling**; no desactives `CHOKIDAR_USEPOLLING` en `docker-compose.yml`.
+> ```bash
+> docker compose restart node
+> docker compose logs -f node
+> ```
+>
+> Compilación única (CI):
+>
+> ```bash
+> docker compose run --rm -e ASSET_MODE=once node
+> ```
+>
+> No uses el CDN de Tailwind: pisa los estilos del proyecto.
+
+> **HMR más ágil (opcional):** en el host `npm run dev` + `SKIP_ASSET_BUILD=true` y `docker compose stop node`.  
+> `ASSET_MODE=dev` en Docker también da HMR, pero en Docker Desktop/Windows suele ser **mucho más lento**.
 
 > **Nota:** El entrypoint genera `APP_KEY` automáticamente si falta en `.env`. Solo ejecuta `cp .env.example .env` antes del primer `docker compose up`.
 > Si tu `.env` aún tiene `SEED_ON_START=true`, cámbialo a `auto` (o `false`) para no reseedeár en cada reinicio.

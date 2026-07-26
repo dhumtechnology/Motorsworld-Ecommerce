@@ -11,11 +11,10 @@
 |--------------------------------------------------------------------------
 | Importante
 |--------------------------------------------------------------------------
-| Tailwind solo incluye clases que existen al escanear Blade/JS.
-| Con Docker, el servicio "node" deja Vite en watch (:5173): al guardar una
-| vista, las clases nuevas aparecen sin rebuild manual.
-| Fuera de Docker: npm run dev (vivo) o npm run build (producción).
-| One-shot: docker compose run --rm -e FORCE_ASSET_BUILD=true node sh docker/node/build-assets.sh
+| En Docker el servicio `node` usa ASSET_MODE=watch → public/build + recompile al guardar.
+| HMR nativo (más ágil): npm run dev en el host + SKIP_ASSET_BUILD=true + stop node.
+| ASSET_MODE=dev en Docker = HMR, pero suele ser lento en Docker Desktop.
+| Build único: docker compose run --rm -e ASSET_MODE=once node
 |
 | Tokens en @theme → utilidades Tailwind: bg-primary, text-text, font-title…
 | Tokens en :root  → var(--color-primary) en CSS personalizado
