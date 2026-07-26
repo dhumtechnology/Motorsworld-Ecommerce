@@ -77,7 +77,7 @@ Las variables por defecto ya están configuradas para Docker:
 docker compose up -d --build
 ```
 
-**Día a día** (rápido; no reconstruye imágenes ni fuerza seed/Vite):
+**Día a día** (rápido; no reconstruye imágenes ni fuerza seed):
 
 ```bash
 docker compose up -d
@@ -86,7 +86,7 @@ docker compose up -d
 Servicios:
 
 1. **mysql** — MySQL 8.0
-2. **node** — Vite solo si falta `public/build` o cambiaron css/js/package*
+2. **node** — Vite **en watch** (`:5173`): al guardar Blade/CSS/JS regenera Tailwind (no hace falta recompilar a mano)
 3. **app** — PHP-FPM tras migrate; seeders en segundo plano y solo si la BD está vacía (`SEED_ON_START=auto`)
 4. **nginx** — espera a que FPM escuche en `:9000` antes de aceptar tráfico
 
@@ -94,16 +94,32 @@ Si abres el navegador demasiado pronto verás la página “arrancando…” (no
 
 ```bash
 docker compose ps
-# app = healthy, nginx = Up
+# app = healthy, nginx = Up, node = Up
 ```
 
-> **Importante:** `public/build` está en `.gitignore`. Si la UI sale sin estilos:
->
-> ```bash
-> docker compose run --rm -e FORCE_ASSET_BUILD=true node
-> ```
->
+### Frontend / Tailwind (importante para todo el equipo)
+
+Tailwind **no** aplica clases “mágicamente” en el navegador: solo genera CSS de las clases que encuentra al escanear las vistas. Por eso, si editas `resources/views/**/*.blade.php` y el CSS no se regenera, **la clase aparece en el HTML pero no se ve**.
+
+Con este proyecto, `docker compose up -d` deja el servicio **node** corriendo Vite en watch. Flujo normal:
+
+1. `docker compose up -d`
+2. Espera a que `motosworld_node` esté `Up` (revisa `docker compose logs -f node` hasta ver Vite listo)
+3. Edita Blade → guarda → recarga el navegador (hard refresh si hace falta)
+
+Si `node` no está arriba, Laravel cae a `public/build` (build estático) y **las clases nuevas no existen** hasta recompilar.
+
+```bash
+# Ver que Vite está vivo
+docker compose logs -f node
+
+# Build one-shot (sin watch), p. ej. CI o emergencia
+docker compose run --rm -e FORCE_ASSET_BUILD=true node sh docker/node/build-assets.sh
+```
+
 > No uses el CDN de Tailwind: pisa los estilos del proyecto.
+>
+> En Docker Desktop (Windows/macOS) el watch usa **polling**; no desactives `CHOKIDAR_USEPOLLING` en `docker-compose.yml`.
 
 > **Nota:** El entrypoint genera `APP_KEY` automáticamente si falta en `.env`. Solo ejecuta `cp .env.example .env` antes del primer `docker compose up`.
 > Si tu `.env` aún tiene `SEED_ON_START=true`, cámbialo a `auto` (o `false`) para no reseedeár en cada reinicio.

@@ -11,12 +11,11 @@
 |--------------------------------------------------------------------------
 | Importante
 |--------------------------------------------------------------------------
-| Editar este archivo O las clases en Blade NO se refleja solo. Hay que:
-|   npm run dev     → cambios en vivo (recomendado al diseñar)
-|   npm run build   → build de producción
-| Con Docker, el servicio "node" recompila al hacer up (salvo SKIP_ASSET_BUILD=true).
-| Después de editar CSS o clases en views: npm run build, o:
-|   FORCE_ASSET_BUILD=true docker compose run --rm node
+| Tailwind solo incluye clases que existen al escanear Blade/JS.
+| Con Docker, el servicio "node" deja Vite en watch (:5173): al guardar una
+| vista, las clases nuevas aparecen sin rebuild manual.
+| Fuera de Docker: npm run dev (vivo) o npm run build (producción).
+| One-shot: docker compose run --rm -e FORCE_ASSET_BUILD=true node sh docker/node/build-assets.sh
 |
 | Tokens en @theme → utilidades Tailwind: bg-primary, text-text, font-title…
 | Tokens en :root  → var(--color-primary) en CSS personalizado

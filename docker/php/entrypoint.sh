@@ -43,6 +43,9 @@ if ! php artisan migrate --force --no-interaction; then
     echo "Advertencia: no se pudieron aplicar todas las migraciones. Revise con: php artisan migrate:status"
 fi
 
+# Evita vistas Blade compiladas obsoletas (frecuente en Docker Desktop / Windows).
+php artisan view:clear --no-interaction >/dev/null 2>&1 || true
+
 # Seeders en segundo plano para que PHP-FPM (y nginx) no esperen 1–2 min.
 # SEED_ON_START=auto (default): solo si la BD no tiene usuarios.
 # SEED_ON_START=true: siempre. SEED_ON_START=false: nunca.

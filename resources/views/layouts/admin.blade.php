@@ -10,12 +10,12 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 </head>
-<body class="admin-shell antialiased">
+<body class="admin-shell antialiased" style="--color-surface: #ffffff; background: #ffffff;">
     <div class="flex min-h-screen">
         @include('admin.partials.sidebar')
 
-        <div class="flex-1 flex flex-col min-w-0 bg-secondary">
-            <header class="bg-surface border-b border-border px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
+        <div class="flex-1 flex flex-col min-w-0 bg-white">
+            <header class="bg-white border-b border-border px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
                 <div class="min-w-0">
                     <h1 class="admin-page-title text-xl sm:text-2xl truncate">
                         @yield('page-title', 'Panel administrativo')
