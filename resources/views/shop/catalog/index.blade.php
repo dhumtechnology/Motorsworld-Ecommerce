@@ -139,7 +139,7 @@
     <div class="min-h-screen py-12 px-4 md:px-8 w-full font-title text-black">
         <div>
             <x-breadcrumb :items="[
-                'Catálogo' => null
+                ['label' => 'NUESTRA TIENDA', 'url' => null],
             ]" />
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-8">

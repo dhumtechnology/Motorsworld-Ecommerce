@@ -218,11 +218,14 @@
 
 @section('content')
     <div>
-        <div>
-           <!-- bradcrumb -->
+        <div class="px-4 py-2">
+            <x-breadcrumb :items="[
+                ['label' => 'NUESTRA TIENDA', 'url' => route('shop.catalog')],
+                ['label' => 'PRODUCTO', 'url' => null],
+            ]" />
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-4 select-none font-sans">
+        <div class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-8 select-none font-title">
             <!-- IMAGENES -->
             @php
                 $galleryImages = $product->images->filter(fn ($image) => filled($image->path))->values();
@@ -234,7 +237,7 @@
                 $initialImage = $galleryImages->first()?->path ?? 'https://via.placeholder.com/600?text=MotoWorld';
             @endphp
 
-            <div class="lg:col-span-7 flex flex-col sm:flex-row gap-4 h-fit">
+            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-8 h-fit bg-red-500">
                 @if ($galleryImages->isNotEmpty())
                     {{-- Contenedor de miniaturas laterales --}}
                     <div class="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-36 overflow-x-auto sm:overflow-y-auto sm:max-h-[480px] py-1">
@@ -262,7 +265,7 @@
 
                 {{-- Contenedor de la Imagen Principal Grande --}}
                 {{-- CORREGIMOS aspect-square y aseguramos un alto robusto en pantallas grandes --}}
-                <div class="relative flex-1 w-full aspect-square min-h-[350px] lg:min-h-[480px] bg-[#000000] border border-neutral-800 rounded-sm overflow-hidden flex items-center justify-center">
+                <div class="relative flex-1 w-full aspect-square min-h-[350px] lg:min-h-[480px] rounded-sm overflow-hidden flex items-center justify-center">
                     @if ($product->is_on_sale)
                         <span class="absolute top-4 left-4 bg-[#f15a24] text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-sm shadow-sm z-10">
                             Oferta {{ rtrim(rtrim(number_format((float) ($product->discount_percent ?? 0), 2, '.', ''), '0'), '.') }}%
@@ -280,13 +283,13 @@
             </div>
 
             <!-- DATOS DEL PRODUCTO -->
-            <div class="lg:col-span-5 flex flex-col justify-start font-sans">
-                <h3 class="text-3xl font-black tracking-wide uppercase leading-tight antialiased text-white">
+            <div class="lg:col-span-4 flex flex-col justify-start font-title">
+                <h3 class="text-3xl tracking-wide font-bold font-title text-black uppercase leading-tight antialiased">
                     {{ $product->name }}
                 </h3>
                 
                 @if($product->vehicleModel?->brand)
-                    <h5 class="text-sm font-bold tracking-widest text-[#f15a24] mt-1 uppercase">
+                    <h5 class="text-sm font-bold tracking-widest mt-1 uppercase text-black">
                         {{ $product->vehicleModel->brand->name }}
                     </h5>
                 @endif
