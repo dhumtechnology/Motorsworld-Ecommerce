@@ -1,54 +1,159 @@
 {{--
-    Home — maqueta base para diseñador / frontend.
+    Home Motosworld
 
-    Ruta: GET /
-    Nombre: shop.home
+    Imágenes estáticas (copia tus archivos con estos nombres exactos):
+    - public/images/home/banner-hero.png
+    - public/images/home/banner-taller.png
+    - public/images/home/need-motos.png
+    - public/images/home/need-baterias.png
+    - public/images/home/need-accesorios.png
+    - public/images/home/need-neumaticos.png
+    - public/images/home/need-repuestos.png
+
+    Variables:
+    - $popularProducts : Collection<Product> (top 4 por ventas, sin MOTOS)
+    - $needLinks       : enlaces de la sección "TENEMOS TODO LO QUE NECESITAS"
 --}}
 @extends('layouts.shop')
 
 @section('title', config('app.name').' — Inicio')
 
 @section('content')
-<div class="text-white">
-    {{-- Hero (placeholder) --}}
-    <section class="border-b border-neutral-800">
-        <div class="mx-auto max-w-[95%] px-4 md:px-8 py-20 md:py-28">
-            <p class="text-xs font-bold uppercase tracking-widest text-orange-500 mb-3">Motosworld</p>
-            <h1 class="text-3xl md:text-5xl font-black uppercase tracking-wide max-w-2xl leading-tight">
-                Todo para tu moto en un solo lugar
-            </h1>
-            <p class="mt-4 text-neutral-400 text-sm md:text-base max-w-xl leading-relaxed">
-                Maqueta temporal del Home. El diseñador y frontend reemplazarán esta sección.
-            </p>
-            <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}"
-                   class="inline-block rounded bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors">
-                    Ver catálogo
-                </a>
-                <a href="{{ route('shop.catalog', ['section' => 'motos']) }}"
-                   class="inline-block rounded border border-neutral-600 px-6 py-3 text-sm font-bold uppercase tracking-wide text-neutral-300 hover:border-neutral-400 hover:text-white transition-colors">
-                    Ver motos
-                </a>
-            </div>
-        </div>
-    </section>
+@php
+    $heroImage = asset('images/home/banner-hero.png');
+    $tallerImage = asset('images/home/banner-taller.png');
+    $mapEmbedUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3901.965!2d-77.0428!3d-12.0464!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDAyJzQ3LjAiUyA3N8KwMDInMzQuMSJX!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe';
+@endphp
 
-    {{-- Bloques placeholder --}}
-    <section class="border-b border-neutral-800">
-        <div class="mx-auto max-w-[95%] px-4 md:px-8 py-14 grid gap-6 md:grid-cols-3">
-            <div class="rounded border border-dashed border-neutral-700 bg-[#1e1e1e]/60 p-6 min-h-[140px]">
-                <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">Sección 1</p>
-                <p class="text-sm text-neutral-400">Espacio reservado (destacados, banners, etc.).</p>
-            </div>
-            <div class="rounded border border-dashed border-neutral-700 bg-[#1e1e1e]/60 p-6 min-h-[140px]">
-                <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">Sección 2</p>
-                <p class="text-sm text-neutral-400">Espacio reservado (servicios, beneficios, etc.).</p>
-            </div>
-            <div class="rounded border border-dashed border-neutral-700 bg-[#1e1e1e]/60 p-6 min-h-[140px]">
-                <p class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">Sección 3</p>
-                <p class="text-sm text-neutral-400">Espacio reservado (promos, blog, etc.).</p>
-            </div>
+{{-- Banner principal --}}
+<section class="relative w-full overflow-hidden bg-neutral-900">
+    <div class="relative aspect-[21/9] min-h-[220px] max-h-[520px] w-full md:aspect-[3/1]">
+        <img
+            src="{{ $heroImage }}"
+            alt="Motosworld"
+            class="absolute inset-0 h-full w-full object-cover"
+            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20"></div>
+    </div>
+</section>
+
+{{-- Taller autorizado + banner --}}
+<section class="bg-white">
+    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
+        <h2 class="text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
+            Taller y distribuidor autorizado
+        </h2>
+    </div>
+
+    <div class="relative w-full overflow-hidden bg-neutral-200">
+        <div class="relative aspect-[21/8] min-h-[180px] max-h-[420px] w-full">
+            <img
+                src="{{ $tallerImage }}"
+                alt="Taller y distribuidor autorizado Motosworld"
+                class="absolute inset-0 h-full w-full object-cover"
+                onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-300');"
+            >
         </div>
-    </section>
-</div>
+    </div>
+</section>
+
+{{-- Tenemos todo lo que necesitas --}}
+<section class="bg-white border-t border-neutral-100">
+    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
+        <h2 class="mb-8 md:mb-10 text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
+            Tenemos todo lo que necesitas
+        </h2>
+
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
+            @foreach ($needLinks as $link)
+                <a
+                    href="{{ $link['href'] }}"
+                    class="group relative block aspect-[3/4] overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                >
+                    <img
+                        src="{{ $link['image'] }}"
+                        alt="{{ $link['label'] }}"
+                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        onerror="this.classList.add('opacity-0');"
+                    >
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+                    <span class="absolute inset-x-0 bottom-0 p-3 md:p-4 text-center text-xs md:text-sm font-bold uppercase tracking-wider text-white">
+                        {{ $link['label'] }}
+                    </span>
+                </a>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- Productos populares --}}
+<section class="bg-neutral-50 border-t border-neutral-100">
+    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
+        <h2 class="mb-8 md:mb-10 text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
+            Productos populares
+        </h2>
+
+        @if ($popularProducts->isEmpty())
+            <p class="text-center text-sm text-neutral-500">Pronto verás aquí los productos más vendidos.</p>
+        @else
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach ($popularProducts as $product)
+                    @php
+                        $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motosworld';
+                        $description = \Illuminate\Support\Str::limit(
+                            trim((string) ($product->description ?: $product->name)),
+                            90
+                        );
+                        $price = (float) ($product->effective_price ?? $product->price_amount);
+                        $image = $product->image ?: asset('images/home/product-placeholder.png');
+                    @endphp
+
+                    <a
+                        href="{{ route('shop.product.show', $product) }}"
+                        class="group flex flex-col overflow-hidden border border-neutral-200 bg-white transition-shadow hover:shadow-md"
+                    >
+                        <div class="relative aspect-square overflow-hidden bg-neutral-100">
+                            <img
+                                src="{{ $image }}"
+                                alt="{{ $product->name }}"
+                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            >
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-0 border-t border-neutral-200 min-h-[5.5rem]">
+                            <div class="flex flex-col justify-center gap-1 px-3 py-3 md:px-4">
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                    {{ $brand }}
+                                </p>
+                                <p class="text-xs md:text-sm font-semibold text-neutral-900 leading-snug line-clamp-3">
+                                    {{ $description }}
+                                </p>
+                            </div>
+                            <div class="flex items-center justify-center bg-orange-600 px-3 py-3 text-center">
+                                <span class="text-sm md:text-base font-black text-white tracking-tight">
+                                    S/ {{ number_format($price, 2) }}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+</section>
+
+{{-- Mapa a todo el ancho --}}
+<section class="w-full bg-neutral-200" aria-label="Ubicación Motosworld">
+    <div class="relative w-full aspect-[21/9] min-h-[280px] max-h-[480px]">
+        <iframe
+            title="Mapa Motosworld"
+            src="{{ $mapEmbedUrl }}"
+            class="absolute inset-0 h-full w-full border-0"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen
+        ></iframe>
+    </div>
+</section>
 @endsection

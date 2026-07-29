@@ -20,34 +20,19 @@
                 <nav>
                     <ul class="flex items-center gap-3">
                         <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">HOME</a></li>
-                        <x-dropdown title="SERVICIO">
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
-                                SERVICIO 1
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
-                                SERVICIO 2
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
-                                SERVICIO 3
-                            </a>
-                        </x-dropdown>
-                        <x-dropdown title="TIENDA">
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
-                                TIENDA 1
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
-                                TIENDA 2
-                            </a>
-                            <a href="#" class="block px-4 py-2 hover:bg-gray-200">
-                                TIENDA 3
-                            </a>
-                        </x-dropdown>
+                        <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">SERVICIOS</a></li>
+                        <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}"  class="px-3 py-2 text-white hover:text-orange-500">TIENDA</a></li>
                         <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">NOSOTROS</a></li>
                         <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">BLOG</a></li>
                         <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">CONTÁCTANOS</a></li> 
                     </ul>
                 </nav>
-                <x-search name="search" placeholder="Buscar productos..." value="{{ request('search') }}" /> 
+                <x-search
+                    name="search"
+                    placeholder="Producto, marca o categoría…"
+                    value="{{ request('search') }}"
+                    :action="route('shop.catalog')"
+                />
                 <div class="flex items-center gap-4">
                     <a href="{{ route('shop.cart.index') }}" data-cart-icon class="relative inline-flex items-center justify-center" title="Ver carrito" aria-label="Ver carrito">
                         <svg width="25" height="23" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg">
