@@ -3,7 +3,10 @@
 
     Imágenes estáticas (copia tus archivos con estos nombres exactos):
     - public/images/home/banner-hero.png
-    - public/images/home/banner-taller.png
+    - public/images/home/taller-1.png
+    - public/images/home/taller-2.png
+    - public/images/home/taller-3.png
+    - public/images/home/taller-4.png
     - public/images/home/need-motos.png
     - public/images/home/need-baterias.png
     - public/images/home/need-accesorios.png
@@ -21,24 +24,26 @@
 @section('content')
 @php
     $heroImage = asset('images/home/banner-hero.png');
-    $tallerImage = asset('images/home/banner-taller.png');
+    $tallerImages = [
+        asset('images/home/taller-1.png'),
+        asset('images/home/taller-2.png'),
+        asset('images/home/taller-3.png'),
+        asset('images/home/taller-4.png'),
+    ];
     $mapEmbedUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3901.965!2d-77.0428!3d-12.0464!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDAyJzQ3LjAiUyA3N8KwMDInMzQuMSJX!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe';
 @endphp
 
-{{-- Banner principal --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="relative aspect-[21/9] min-h-[220px] max-h-[520px] w-full md:aspect-[3/1]">
-        <img
-            src="{{ $heroImage }}"
-            alt="Motosworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20"></div>
-    </div>
+{{-- Banner principal: exactamente el ancho del viewport, sin desborde horizontal --}}
+<section class="w-full max-w-[100%] overflow-hidden bg-neutral-900">
+    <img
+        src="{{ $heroImage }}"
+        alt="Motosworld"
+        class="block h-auto w-full max-w-full object-contain"
+        onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
+    >
 </section>
 
-{{-- Taller autorizado + banner --}}
+{{-- Taller autorizado: 4 PNG verticales pegadas = 100% del ancho, carrusel infinito --}}
 <section class="bg-white">
     <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
         <h2 class="text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
@@ -46,17 +51,69 @@
         </h2>
     </div>
 
-    <div class="relative w-full overflow-hidden bg-neutral-200">
-        <div class="relative aspect-[21/8] min-h-[180px] max-h-[420px] w-full">
-            <img
-                src="{{ $tallerImage }}"
-                alt="Taller y distribuidor autorizado Motosworld"
-                class="absolute inset-0 h-full w-full object-cover"
-                onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-300');"
-            >
+    <div class="w-full max-w-[100%] overflow-hidden bg-neutral-100" aria-label="Marcas y taller autorizado">
+        <div class="taller-marquee flex">
+            @foreach ([1, 2] as $loopCopy)
+                <div class="taller-marquee-set flex w-full shrink-0 gap-0">
+                    @foreach ($tallerImages as $index => $image)
+                        <div class="taller-marquee-item relative aspect-[3/4] w-1/4 shrink-0 overflow-hidden bg-neutral-200">
+                            <img
+                                src="{{ $image }}"
+                                alt="Taller y distribuidor autorizado {{ $index + 1 }}"
+                                class="h-full w-full object-cover"
+                                loading="lazy"
+                                onerror="this.classList.add('opacity-0');"
+                            >
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
     </div>
 </section>
+
+<style>
+    @keyframes taller-marquee-scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+    }
+
+    .taller-marquee {
+        width: 200%;
+        animation: taller-marquee-scroll 48s linear infinite;
+        will-change: transform;
+    }
+
+    .taller-marquee-set {
+        width: 50%;
+    }
+
+    .taller-marquee:hover {
+        animation-play-state: paused;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .taller-marquee {
+            width: 100%;
+            animation: none;
+        }
+
+        .taller-marquee-set:nth-child(2) {
+            display: none;
+        }
+
+        .taller-marquee-set {
+            width: 100%;
+            overflow-x: auto;
+        }
+    }
+
+    @media (max-width: 639px) {
+        .taller-marquee {
+            animation-duration: 36s;
+        }
+    }
+</style>
 
 {{-- Tenemos todo lo que necesitas --}}
 <section class="bg-white border-t border-neutral-100">
@@ -69,18 +126,15 @@
             @foreach ($needLinks as $link)
                 <a
                     href="{{ $link['href'] }}"
-                    class="group relative block aspect-[3/4] overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                    class="group relative block overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                 >
                     <img
                         src="{{ $link['image'] }}"
                         alt="{{ $link['label'] }}"
-                        class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        class="block h-auto w-full transition-transform duration-500 ease-out group-hover:scale-105"
                         onerror="this.classList.add('opacity-0');"
                     >
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
-                    <span class="absolute inset-x-0 bottom-0 p-3 md:p-4 text-center text-xs md:text-sm font-bold uppercase tracking-wider text-white">
-                        {{ $link['label'] }}
-                    </span>
+                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
                 </a>
             @endforeach
         </div>
@@ -121,17 +175,17 @@
                             >
                         </div>
 
-                        <div class="grid grid-cols-2 gap-0 border-t border-neutral-200 min-h-[5.5rem]">
+                        <div class="grid grid-cols-2 mt-2 gap-0 border-t border-neutral-200 min-h-[5.5rem]">
                             <div class="flex flex-col justify-center gap-1 px-3 py-3 md:px-4">
-                                <p class="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                <p class="text-sm font-bold uppercase tracking-wider text-neutral-500">
                                     {{ $brand }}
                                 </p>
-                                <p class="text-xs md:text-sm font-semibold text-neutral-900 leading-snug line-clamp-3">
+                                <p class="text-xs font-semibold text-neutral-900 leading-snug line-clamp-3">
                                     {{ $description }}
                                 </p>
                             </div>
-                            <div class="flex items-center justify-center bg-orange-600 px-3 py-3 text-center">
-                                <span class="text-sm md:text-base font-black text-white tracking-tight">
+                            <div class="flex items-center justify-center bg-primary px-3 py-3 text-center">
+                                <span class="text-xl font-black text-white tracking-tight">
                                     S/ {{ number_format($price, 2) }}
                                 </span>
                             </div>

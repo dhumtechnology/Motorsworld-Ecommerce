@@ -5,6 +5,7 @@ use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Shop\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,6 +22,22 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
 
 Route::get('/producto/{product}', [ProductController::class, 'show'])->name('product.show');
+
+/*
+|--------------------------------------------------------------------------
+| Servicios / reservas de taller
+|--------------------------------------------------------------------------
+|
+| GET  /servicios              shop.services.index
+| POST /servicios/reservas     shop.services.store
+| GET  /servicios/horarios     shop.services.slots
+|
+*/
+Route::prefix('servicios')->name('services.')->group(function () {
+    Route::get('/', [ServiceController::class, 'index'])->name('index');
+    Route::post('/reservas', [ServiceController::class, 'store'])->name('store');
+    Route::get('/horarios', [ServiceController::class, 'availableSlots'])->name('slots');
+});
 
 /*
 |--------------------------------------------------------------------------

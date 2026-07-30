@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\Appointments\AppointmentStatus;
 use App\Models\Appointments\Appointment;
+use App\Models\Appointments\ServicePackage;
 use App\Models\Appointments\ServiceType;
 use App\Models\Auth\User;
 use App\Models\Products\VehicleModel;
@@ -17,6 +18,7 @@ class AppointmentSeeder extends Seeder
     public function run(): void
     {
         $serviceTypes = $this->seedServiceTypes();
+        $this->seedServicePackages($serviceTypes);
         $this->seedAppointments($serviceTypes);
     }
 
@@ -46,6 +48,70 @@ class AppointmentSeeder extends Seeder
         }
 
         return $types;
+    }
+
+    /**
+     * @param  array<string, ServiceType>  $serviceTypes
+     */
+    private function seedServicePackages(array $serviceTypes): void
+    {
+        $packages = [
+            'Mantenimiento preventivo' => [
+                ['name' => 'Básico', 'price' => 89.90, 'description' => 'Inspección general y ajustes'],
+                ['name' => 'Completo', 'price' => 149.90, 'description' => 'Inspección + fluidos + frenos'],
+            ],
+            'Cambio de aceite' => [
+                ['name' => 'Aceite mineral', 'price' => 59.90, 'description' => 'Cambio de aceite mineral + filtro'],
+                ['name' => 'Aceite sintético', 'price' => 89.90, 'description' => 'Cambio de aceite sintético + filtro'],
+            ],
+            'Revisión de frenos' => [
+                ['name' => 'Inspección', 'price' => 49.90, 'description' => 'Revisión de pastillas y discos'],
+                ['name' => 'Servicio completo', 'price' => 119.90, 'description' => 'Cambio de pastillas + purga'],
+            ],
+            'Alineamiento y balanceo' => [
+                ['name' => 'Balanceo', 'price' => 39.90, 'description' => 'Balanceo de ruedas'],
+                ['name' => 'Alineamiento + balanceo', 'price' => 79.90, 'description' => 'Paquete completo'],
+            ],
+            'Diagnóstico electrónico' => [
+                ['name' => 'Escaneo básico', 'price' => 69.90, 'description' => 'Lectura de códigos'],
+                ['name' => 'Diagnóstico avanzado', 'price' => 129.90, 'description' => 'Escaneo + reporte técnico'],
+            ],
+            'Cambio de batería' => [
+                ['name' => 'Instalación', 'price' => 29.90, 'description' => 'Instalación de batería (batería aparte)'],
+                ['name' => 'Instalación + prueba', 'price' => 49.90, 'description' => 'Instalación y prueba del sistema eléctrico'],
+            ],
+            'Servicio de cadena' => [
+                ['name' => 'Limpieza y lubricación', 'price' => 34.90, 'description' => 'Limpieza + grasa'],
+                ['name' => 'Ajuste completo', 'price' => 54.90, 'description' => 'Limpieza, lubricación y tensión'],
+            ],
+            'Lavado y detailing' => [
+                ['name' => 'Lavado express', 'price' => 24.90, 'description' => 'Lavado exterior'],
+                ['name' => 'Detailing premium', 'price' => 79.90, 'description' => 'Lavado + detailing completo'],
+            ],
+        ];
+
+        foreach ($packages as $typeName => $items) {
+            $type = $serviceTypes[$typeName] ?? null;
+            if ($type === null) {
+                continue;
+            }
+
+            foreach ($items as $item) {
+                ServicePackage::query()->updateOrCreate(
+                    [
+                        'service_type_id' => $type->id,
+                        'name' => $item['name'],
+                    ],
+                    [
+                        'description' => $item['description'],
+                        'price' => $item['price'],
+                        'currency' => 'PEN',
+                        'duration_minutes' => 60,
+                        'is_active' => true,
+                    ],
+                );
+            }
+        }
     }
 
     /**

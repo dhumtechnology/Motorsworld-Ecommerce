@@ -27,6 +27,8 @@ class CatalogIndexRequest extends FormRequest
             'brands.*' => ['integer', 'min:1', 'exists:brands,id'],
             'models' => ['nullable', 'array'],
             'models.*' => ['integer', 'min:1', 'exists:models,id'],
+            'price_min' => ['nullable', 'numeric', 'min:0'],
+            'price_max' => ['nullable', 'numeric', 'min:0'],
             'search' => ['nullable', 'string', 'max:255'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
@@ -45,6 +47,8 @@ class CatalogIndexRequest extends FormRequest
             'brands.*' => 'marca',
             'models' => 'modelos',
             'models.*' => 'modelo',
+            'price_min' => 'precio mínimo',
+            'price_max' => 'precio máximo',
             'search' => 'búsqueda',
             'page' => 'página',
         ];
@@ -56,19 +60,27 @@ class CatalogIndexRequest extends FormRequest
             $brandIds = $this->brandIds();
             $modelIds = $this->modelIds();
 
-            if ($brandIds === [] || $modelIds === []) {
-                return;
+            if ($brandIds !== [] && $modelIds !== []) {
+                $invalidCount = VehicleModel::query()
+                    ->whereIn('id', $modelIds)
+                    ->whereNotIn('brand_id', $brandIds)
+                    ->count();
+
+                if ($invalidCount > 0) {
+                    $validator->errors()->add(
+                        'models',
+                        'Uno o más modelos seleccionados no pertenecen a las marcas indicadas.',
+                    );
+                }
             }
 
-            $invalidCount = VehicleModel::query()
-                ->whereIn('id', $modelIds)
-                ->whereNotIn('brand_id', $brandIds)
-                ->count();
+            $priceMin = $this->priceMin();
+            $priceMax = $this->priceMax();
 
-            if ($invalidCount > 0) {
+            if ($priceMin !== null && $priceMax !== null && $priceMin > $priceMax) {
                 $validator->errors()->add(
-                    'models',
-                    'Uno o más modelos seleccionados no pertenecen a las marcas indicadas.',
+                    'price_min',
+                    'El precio mínimo no puede ser mayor que el precio máximo.',
                 );
             }
         });
@@ -98,6 +110,14 @@ class CatalogIndexRequest extends FormRequest
             $search = trim((string) $this->input('search'));
 
             $normalized['search'] = $search !== '' ? $search : null;
+        }
+
+        if ($this->filled('price_min')) {
+            $normalized['price_min'] = $this->input('price_min');
+        }
+
+        if ($this->filled('price_max')) {
+            $normalized['price_max'] = $this->input('price_max');
         }
 
         $this->merge($normalized);
@@ -139,6 +159,24 @@ class CatalogIndexRequest extends FormRequest
         $search = trim((string) $this->input('search', ''));
 
         return $search !== '' ? $search : null;
+    }
+
+    public function priceMin(): ?float
+    {
+        if (! $this->filled('price_min')) {
+            return null;
+        }
+
+        return round((float) $this->input('price_min'), 2);
+    }
+
+    public function priceMax(): ?float
+    {
+        if (! $this->filled('price_max')) {
+            return null;
+        }
+
+        return round((float) $this->input('price_max'), 2);
     }
 
     /**

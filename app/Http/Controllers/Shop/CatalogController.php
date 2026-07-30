@@ -59,14 +59,17 @@ class CatalogController extends Controller
                 'categories' => $this->categoryOptions($section),
                 'brands' => $this->brandOptions($section),
                 'models' => $this->modelOptions($section, $request->brandIds()),
+                'price' => $this->priceBounds($section),
             ];
 
-            $featuredProducts = $this->featuredProducts($section);
+            $popularProducts = $this->popularNonMotoProducts();
             $cartQuantities = $this->cartQuantitiesByProduct($request);
+
+            $priceBounds = $filterOptions['price'];
 
             return view('shop.catalog.index', [
                 'products' => $products,
-                'featuredProducts' => $featuredProducts,
+                'popularProducts' => $popularProducts,
                 'cartQuantities' => $cartQuantities,
                 'section' => $section,
                 'filters' => [
@@ -74,6 +77,8 @@ class CatalogController extends Controller
                     'brands' => $request->brandIds(),
                     'models' => $request->modelIds(),
                     'search' => $request->searchTerm(),
+                    'price_min' => $request->priceMin() ?? $priceBounds['min'],
+                    'price_max' => $request->priceMax() ?? $priceBounds['max'],
                 ],
                 'filterOptions' => $filterOptions,
             ]);
@@ -116,6 +121,8 @@ class CatalogController extends Controller
             'category_ids' => $request->categoryIds(),
             'brand_ids' => $request->brandIds(),
             'model_ids' => $request->modelIds(),
+            'price_min' => $request->priceMin(),
+            'price_max' => $request->priceMax(),
             'search' => $request->searchTerm(),
             'page' => (int) $request->input('page', 1),
             'ip' => $request->ip(),
@@ -126,6 +133,34 @@ class CatalogController extends Controller
     private function withActiveOfferPricing(Product $product): Product
     {
         return app(ProductOfferPresenter::class)->apply($product);
+    }
+
+    /**
+     * Top productos por ventas excluyendo MOTOS (carrusel del catálogo).
+     *
+     * @return Collection<int, Product>
+     */
+    private function popularNonMotoProducts(): Collection
+    {
+        $products = $this->featuredProducts('accesorios');
+
+        if ($products->isNotEmpty()) {
+            return $products;
+        }
+
+        $motosCategoryId = $this->motosCategoryId();
+
+        return Product::query()
+            ->active()
+            ->when(
+                $motosCategoryId !== null,
+                fn (Builder $q) => $q->where('category_id', '!=', $motosCategoryId),
+            )
+            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
+            ->latest('id')
+            ->limit(self::FEATURED_LIMIT)
+            ->get()
+            ->map(fn (Product $product) => $this->withActiveOfferPricing($product));
     }
 
     /**
@@ -255,6 +290,17 @@ class CatalogController extends Controller
             $query->whereIn('model_id', $modelIds);
         }
 
+        $priceMin = $request->priceMin();
+        $priceMax = $request->priceMax();
+
+        if ($priceMin !== null) {
+            $query->where('price_amount', '>=', $priceMin);
+        }
+
+        if ($priceMax !== null) {
+            $query->where('price_amount', '<=', $priceMax);
+        }
+
         if ($search = $request->searchTerm()) {
             $like = '%'.$search.'%';
 
@@ -292,6 +338,41 @@ class CatalogController extends Controller
         return Category::query()
             ->whereRaw('UPPER(name) = ?', [self::MOTOS_CATEGORY])
             ->value('id');
+    }
+
+    /**
+     * @return array{min: float, max: float}
+     */
+    private function priceBounds(string $section): array
+    {
+        return QueryResultCache::remember(
+            "catalog.filter_options.price.{$section}",
+            function () use ($section): array {
+                $query = Product::query()->active();
+                $this->applySectionFilter($query, $section, $this->motosCategoryId());
+
+                $row = $query
+                    ->toBase()
+                    ->selectRaw('MIN(price_amount) as min_price, MAX(price_amount) as max_price')
+                    ->first();
+
+                $minValue = $row?->min_price !== null ? (float) $row->min_price : 0.0;
+                $maxValue = $row?->max_price !== null ? (float) $row->max_price : 0.0;
+
+                if ($maxValue < $minValue) {
+                    $maxValue = $minValue;
+                }
+
+                if ($maxValue === $minValue) {
+                    $maxValue = $minValue + 1;
+                }
+
+                return [
+                    'min' => (float) floor($minValue),
+                    'max' => (float) ceil($maxValue),
+                ];
+            },
+        );
     }
 
     /**

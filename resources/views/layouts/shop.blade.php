@@ -10,7 +10,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 </head>
-<body class="antialiased">
+<body class="antialiased overflow-x-hidden">
     <header class="border-b border-gray-200">
         <div class="mx-auto px-10 py-4 flex max-w-full items-center justify-between bg-black">
             <div class="logo">
@@ -20,7 +20,7 @@
                 <nav>
                     <ul class="flex items-center gap-3">
                         <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">HOME</a></li>
-                        <li><a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">SERVICIOS</a></li>
+                        <li><a href="{{ route('shop.services.index') }}" class="px-3 py-2 text-white hover:text-orange-500">SERVICIOS</a></li>
                         <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}"  class="px-3 py-2 text-white hover:text-orange-500">TIENDA</a></li>
                         <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">NOSOTROS</a></li>
                         <li><a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">BLOG</a></li>

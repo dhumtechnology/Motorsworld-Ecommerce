@@ -24,4 +24,12 @@ class ServiceType extends Model
     {
         return $this->hasMany(Service::class);
     }
+
+    /**
+     * @return HasMany<ServicePackage, $this>
+     */
+    public function packages(): HasMany
+    {
+        return $this->hasMany(ServicePackage::class);
+    }
 }
