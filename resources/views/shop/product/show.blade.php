@@ -237,17 +237,17 @@
                 $initialImage = $galleryImages->first()?->path ?? 'https://via.placeholder.com/600?text=MotoWorld';
             @endphp
 
-            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 h-fit bg-red-500">
+            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 h-fit">
                 @if ($galleryImages->isNotEmpty())
                     {{-- Contenedor de miniaturas laterales --}}
-                    <div class="flex flex-row sm:flex-col gap-3 shrink-0 w-full sm:w-36 overflow-x-auto sm:overflow-y-auto sm:max-h-[480px] py-1">
+                    <div class="flex flex-row px-4 sm:flex-col gap-3 py-1">
                         @foreach ($galleryImages as $index => $image)
                             <button
                                 type="button"
                                 data-gallery-thumb
                                 data-image="{{ $image->path }}"
                                 {{-- QUITAMOS p-2 y CORREGIMOS aspect-square --}}
-                                class="gallery-thumb w-20 h-20 sm:w-36 sm:h-32 aspect-square bg-[#1e1e1e] rounded-sm overflow-hidden cursor-pointer transition-all duration-150 shrink-0 {{ $index === 0 ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500' }}"
+                                class="gallery-thumb w-20 h-20 sm:w-36 sm:h-32 aspect-square rounded-sm overflow-hidden cursor-pointer transition-all duration-150 shrink-0 {{ $index === 0 ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500' }}"
                                 aria-label="Ver imagen {{ $index + 1 }}"
                             >
                                 {{-- w-full h-full y object-cover para rellenar TODO el botón --}}
@@ -265,26 +265,21 @@
 
                 {{-- Contenedor de la Imagen Principal Grande --}}
                 {{-- CORREGIMOS aspect-square y aseguramos un alto robusto en pantallas grandes --}}
-                <div class="relative flex-1 w-full aspect-square min-h-[350px] lg:min-h-[480px] rounded-sm overflow-hidden flex items-center justify-center">
-                    @if ($product->is_on_sale)
-                        <span class="absolute top-4 left-4 bg-[#f15a24] text-white font-black text-[11px] tracking-wider uppercase px-2.5 py-1 rounded-sm shadow-sm z-10">
-                            Oferta {{ rtrim(rtrim(number_format((float) ($product->discount_percent ?? 0), 2, '.', ''), '0'), '.') }}%
-                        </span>
-                    @endif
+                <div class="flex justify-center w-80 h-80 sm:h-96 lg:h-[480px] rounded-sm overflow-hidden w-full">
                     
                     {{-- CAMBIAMOS A w-full h-full object-cover para que tome todo el tamaño disponible --}}
                     <img
                         id="product-main-image"
                         src="{{ $initialImage }}"
-                        class="w-full h-full object-cover transition-all duration-200"
+                        class=" h-full object-cover transition-all duration-200"
                         alt="{{ $product->name }}"
                     >
                 </div>
             </div>
 
             <!-- DATOS DEL PRODUCTO -->
-            <div class="lg:col-span-4 flex flex-col justify-start font-title">
-                <h3 class="text-3xl tracking-wide font-bold font-title text-black uppercase leading-tight antialiased">
+            <div class="lg:col-span-4 flex flex-col justify-between py-6 text-black font-title">
+                <h3 class="text-3xl tracking-wide font-bold font-title uppercase leading-tight antialiased">
                     {{ $product->name }}
                 </h3>
                 
@@ -294,29 +289,29 @@
                     </h5>
                 @endif
 
-                <div class="mt-6 space-y-1 text-sm text-neutral-400 font-medium">
-                    <p><span class="text-neutral-500 font-bold">Categoría:</span> {{ $product->category->name }}</p>
-                    <p><span class="text-neutral-500 font-bold">SKU:</span> {{ $product->sku }}</p>
+                <div class="flex flex-col justify-between space-y-2 text-black font-title">
+                    <p><span class="font-bold">Categoría:</span> {{ $product->category->name }}</p>
+                    <p><span class="font-bold">SKU:</span> {{ $product->sku }}</p>
                     @if($product->vehicleModel)
-                        <p><span class="text-neutral-500 font-bold">Modelo:</span> {{ $product->vehicleModel->name }}</p>
+                        <p><span class="font-bold">Modelo:</span> {{ $product->vehicleModel->name }}</p>
                     @endif
                     <p>
-                        <span class="text-neutral-500 font-bold">Disponibilidad:</span> 
+                        <span class="font-bold">Disponibilidad:</span> 
                         @if($product->hasAvailableStock())
-                            <span class="text-emerald-500 font-bold">En Stock ({{ $product->inventory->available_stock }} u.)</span>
+                            <span class="font-bold">En Stock ({{ $product->inventory->available_stock }} u.)</span>
                         @else
-                            <span class="text-rose-500 font-bold">Agotado</span>
+                            <span class="font-bold">Agotado</span>
                         @endif
                     </p>
                 </div>
 
                 {{-- Bloque de precios inteligente --}}
                 <div class="my-6 flex items-baseline gap-4">
-                    <span class="text-3xl font-black tracking-tight text-white">
+                    <span class="text-3xl font-black tracking-tight">
                         ${{ number_format($product->effective_price, 0, '.', '') }}
                     </span>
                     @if($product->is_on_sale)
-                        <span class="text-base font-bold text-neutral-500 line-through">
+                        <span class="font-bold line-through">
                             ${{ number_format($product->list_price, 0, '.', '') }}
                         </span>
                     @endif
@@ -340,7 +335,7 @@
                                 <button
                                     type="button"
                                     data-cart-action="store"
-                                    class="w-full sm:w-auto px-8 py-3 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase"
+                                    class="w-full sm:w-auto px-8 py-3 text-white font-title bold tracking-widest bg-primary rounded hover:bg-black cursor-pointer transition-colors uppercase"
                                 >
                                     Agregar al carrito
                                 </button>
@@ -375,14 +370,14 @@
                                     +
                                 </button>
                             </div>
-                            <p class="text-xs text-neutral-500">
+                            <p class="text-xs">
                                 En tu carrito.
-                                <a href="{{ route('shop.cart.index') }}" class="text-orange-500 hover:text-orange-400 font-bold">Ver carrito →</a>
+                                <a href="{{ route('shop.cart.index') }}" class="hover:text-orange-400 font-bold">Ver carrito →</a>
                             </p>
                         </div>
                     @else
                         <button type="button" disabled
-                                class="w-full sm:w-auto px-8 py-3 bg-neutral-700 text-neutral-400 font-extrabold text-xs tracking-widest rounded uppercase cursor-not-allowed">
+                                class="w-full sm:w-auto px-8 py-3 bg-neutral-700 font-extrabold text-white text-xs tracking-widest rounded uppercase cursor-not-allowed">
                             Agotado
                         </button>
                     @endif
@@ -393,41 +388,41 @@
 
         <!-- Informacion adicional -->
         
-        <div class="w-full px-10 py-5 text-white font-sans mt-12 select-none" x-data="{ currentTab: 'description' }">
+        <div class="w-full px-10 py-5 text-black font-title mt-12 select-none" x-data="{ currentTab: 'description' }">
     
             {{-- Cabecera de pestañas interactiva --}}
-            <div class="flex flex-wrap items-center gap-x-8 border-b border-neutral-800">
+            <div class="flex flex-wrap items-center gap-x-8">
                 <button type="button" 
                         @click="currentTab = 'description'"
-                        :class="currentTab === 'description' ? 'text-white border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-white'"
+                        :class="currentTab === 'description' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Descripción
                 </button>
 
                 <button type="button" 
                         @click="currentTab = 'info'"
-                        :class="currentTab === 'info' ? 'text-white border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-white'"
+                        :class="currentTab === 'info' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Información Adicional
                 </button>
 
                 <button type="button" 
                         @click="currentTab = 'reviews'"
-                        :class="currentTab === 'reviews' ? 'text-white border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-white'"
+                        :class="currentTab === 'reviews' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Reviews ({{ $reviewSummary['count'] }})
                 </button>
             </div>
 
             {{-- Contenidos dinámicos de pestañas --}}
-            <div class="mt-8 text-neutral-300 text-sm leading-relaxed max-w-5xl">
+            <div class="mt-8 text-black text-sm leading-relaxed max-w-5xl">
                 
                 {{-- Tab: Descripción --}}
                 <div x-show="currentTab === 'description'" class="space-y-4">
                     @if($product->description)
                         <p>{!! nl2br(e($product->description)) !!}</p>
                     @else
-                        <p class="text-neutral-500 italic">No hay descripción disponible para este artículo.</p>
+                        <p class="text-black italic">No hay descripción disponible para este artículo.</p>
                     @endif
                 </div>
 
@@ -436,7 +431,7 @@
                     @if($product->additional_information)
                         <p>{!! nl2br(e($product->additional_information)) !!}</p>
                     @else
-                        <p class="text-neutral-500 italic">No hay especificaciones adicionales registradas.</p>
+                        <p class="text-black italic">No hay especificaciones adicionales registradas.</p>
                     @endif
                 </div>
 
@@ -449,7 +444,7 @@
                                     {{ $review->user->customerProfile?->first_name ?? 'Usuario' }} 
                                     {{ $review->user->customerProfile?->last_name ?? 'MotoWorld' }}
                                 </span>
-                                <span class="text-xs font-bold text-neutral-500">
+                                <span class="text-xs font-bold text-black">
                                     {{ $review->created_at->format('d/m/Y') }}
                                 </span>
                             </div>
@@ -458,10 +453,10 @@
                                 @for ($i = 0; $i < $review->stars; $i++) ★ @endfor
                                 @for ($i = $review->stars; $i < 5; $i++) ☆ @endfor
                             </div>
-                            <p class="text-neutral-400">{{ $review->comment }}</p>
+                            <p class="text-black">{{ $review->comment }}</p>
                         </div>
                     @empty
-                        <p class="text-neutral-500 italic">Este producto aún no cuenta con reseñas de clientes.</p>
+                        <p class="text-black italic">Este producto aún no cuenta con reseñas de clientes.</p>
                     @endforelse
                 </div>
 

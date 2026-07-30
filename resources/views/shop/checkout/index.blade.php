@@ -3,7 +3,7 @@
 @section('title', 'Checkout — '.config('app.name'))
 
 @section('content')
-<div class="mx-auto max-w-6xl px-4 py-10 text-white">
+<div class="mx-auto max-w-6xl px-4 py-10 text-black">
     <h1 class="text-3xl font-black uppercase tracking-wide mb-8">Checkout</h1>
 
     @if ($errors->any())
@@ -20,79 +20,41 @@
     @endif
 
     <div class="grid gap-8 lg:grid-cols-12">
-        <div class="lg:col-span-7 space-y-4">
-            <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-500">Tu carrito</h2>
-
-            <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] overflow-hidden divide-y divide-neutral-800">
-                @foreach ($lines as $line)
-                    <div class="flex gap-4 p-4 items-center">
-                        @php
-                            $img = $line['product']->catalogImageUrl();
-                        @endphp
-                        @if ($img)
-                            <img src="{{ $img }}" alt="" class="h-16 w-16 rounded object-cover border border-neutral-700">
-                        @else
-                            <div class="h-16 w-16 rounded bg-[#252525] border border-neutral-700"></div>
-                        @endif
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold truncate">{{ $line['product']->name }}</p>
-                            <p class="text-xs text-neutral-500">{{ $line['product']->sku }} · Cant. {{ $line['quantity'] }}</p>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <p class="font-bold text-orange-500">
-                                S/ {{ number_format($line['line_total'], 2) }}
-                            </p>
-                            @if ($line['is_on_sale'])
-                                <p class="text-xs text-neutral-500 line-through">
-                                    S/ {{ number_format($line['list_unit_price'] * $line['quantity'], 2) }}
-                                </p>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 flex justify-between items-center">
-                <span class="text-neutral-400 uppercase text-xs font-bold tracking-widest">Total</span>
-                <span class="text-2xl font-black text-white">S/ {{ number_format($total, 2) }}</span>
-            </div>
-        </div>
-
-        <div class="lg:col-span-5">
-            <form id="checkout-form" method="POST" action="{{ route('shop.checkout.pay') }}" class="rounded-lg border border-neutral-800 bg-[#1e1e1e] p-5 space-y-5">
+        <div class="lg:col-span-7">
+            <form id="checkout-form" method="POST" action="{{ route('shop.checkout.pay') }}" class="rounded-lg border border-neutral-800 p-5 space-y-5">
                 @csrf
                 <input type="hidden" name="culqi_token" id="culqi_token" value="">
 
                 <div>
-                    <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-500 mb-3">Datos del comprador</h2>
+                    <h2 class="text-sm font-bold uppercase tracking-widest text-black mb-3">Datos del comprador</h2>
                     <div class="grid gap-3 sm:grid-cols-2">
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="first_name">Nombre</label>
+                            <label class="block text-xs text-black mb-1" for="first_name">Nombre</label>
                             <input id="first_name" name="first_name" value="{{ old('first_name', $profile?->first_name) }}"
                                    class="w-full rounded border border-neutral-700 bg-[#252525] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="last_name">Apellido</label>
+                            <label class="block text-xs text-black mb-1" for="last_name">Apellido</label>
                             <input id="last_name" name="last_name" value="{{ old('last_name', $profile?->last_name) }}"
                                    class="w-full rounded border border-neutral-700 bg-[#252525] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="block text-xs text-neutral-500 mb-1" for="phone">Teléfono (requerido Plin/PagoEfectivo)</label>
+                            <label class="block text-xs text-black mb-1" for="phone">Teléfono (requerido Plin/PagoEfectivo)</label>
                             <input id="phone" name="phone" value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
                                    class="w-full rounded border border-neutral-700 bg-[#252525] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="block text-xs text-neutral-500 mb-1" for="address_line1">Dirección</label>
+                            <label class="block text-xs text-black mb-1" for="address_line1">Dirección</label>
                             <input id="address_line1" name="address_line1" value="{{ old('address_line1') }}"
                                    class="w-full rounded border border-neutral-700 bg-[#252525] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="address_city">Ciudad</label>
+                            <label class="block text-xs text-black mb-1" for="address_city">Ciudad</label>
                             <input id="address_city" name="address_city" value="{{ old('address_city', 'Lima') }}"
                                    class="w-full rounded border border-neutral-700 bg-[#252525] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="postal_code">C.P.</label>
+                            <label class="block text-xs text-black mb-1" for="postal_code">C.P.</label>
                             <input id="postal_code" name="postal_code" value="{{ old('postal_code', '15001') }}"
                                    class="w-full rounded border border-neutral-700 bg-[#252525] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
@@ -100,7 +62,7 @@
                 </div>
 
                 <div>
-                    <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-500 mb-3">Método de pago</h2>
+                    <h2 class="text-sm font-bold uppercase tracking-widest text-black mb-3">Método de pago</h2>
                     <div class="space-y-2">
                         @foreach ([
                             'card' => 'Tarjeta de crédito/débito',
@@ -118,55 +80,93 @@
 
                 <div id="card-fields" class="space-y-3 rounded border border-neutral-700 p-4 bg-[#252525]">
                     <div>
-                        <label class="block text-xs text-neutral-500 mb-1" for="card_email">Email del cargo</label>
+                        <label class="block text-xs text-black mb-1" for="card_email">Email del cargo</label>
                         <input id="card_email" type="email" value="{{ auth()->user()->email }}"
-                               class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                               class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs text-neutral-500 mb-1" for="card_number">Número de tarjeta</label>
+                        <label class="block text-xs text-black mb-1" for="card_number">Número de tarjeta</label>
                         <input id="card_number" inputmode="numeric" placeholder="4111111111111111" autocomplete="cc-number"
-                               class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                               class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                     </div>
                     <div class="grid grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="card_exp_month">Mes</label>
+                            <label class="block text-xs text-black mb-1" for="card_exp_month">Mes</label>
                             <input id="card_exp_month" placeholder="09" maxlength="2"
-                                   class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                                   class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="card_exp_year">Año</label>
+                            <label class="block text-xs text-black mb-1" for="card_exp_year">Año</label>
                             <input id="card_exp_year" placeholder="2030" maxlength="4"
-                                   class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                                   class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs text-neutral-500 mb-1" for="card_cvv">CVV</label>
+                            <label class="block text-xs text-black mb-1" for="card_cvv">CVV</label>
                             <input id="card_cvv" placeholder="123" maxlength="4" autocomplete="cc-csc"
-                                   class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                                   class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                         </div>
                     </div>
                 </div>
 
                 <div id="yape-fields" class="hidden space-y-3 rounded border border-neutral-700 p-4 bg-[#252525]">
                     <div>
-                        <label class="block text-xs text-neutral-500 mb-1" for="yape_phone">Celular Yape</label>
+                        <label class="block text-xs text-black mb-1" for="yape_phone">Celular Yape</label>
                         <input id="yape_phone" placeholder="900000001"
-                               class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                               class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs text-neutral-500 mb-1" for="yape_otp">OTP</label>
+                        <label class="block text-xs text-black mb-1" for="yape_otp">OTP</label>
                         <input id="yape_otp" placeholder="123456" maxlength="6"
-                               class="w-full rounded border border-neutral-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
+                               class="w-full rounded border border-neutral-700 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none">
                     </div>
                 </div>
 
                 <p id="payment-error" class="hidden text-sm text-red-400"></p>
 
                 <button type="submit" id="pay-button"
-                        class="w-full rounded bg-orange-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-orange-500 transition-colors disabled:opacity-50">
+                        class="w-full rounded bg-orange-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-black hover:bg-orange-500 transition-colors disabled:opacity-50">
                     Pagar S/ {{ number_format($total, 2) }}
                 </button>
             </form>
         </div>
+        <div class="lg:col-span-5 space-y-4">
+            <h2 class="text-sm font-bold uppercase tracking-widest text-black">Tu carrito</h2>
+
+            <div class="rounded-lg overflow-hidden divide-y divide-neutral-800">
+                @foreach ($lines as $line)
+                    <div class="flex gap-4 p-4 items-center">
+                        @php
+                            $img = $line['product']->catalogImageUrl();
+                        @endphp
+                        @if ($img)
+                            <img src="{{ $img }}" alt="" class="h-16 w-16 rounded object-cover">
+                        @else
+                            <div class="h-16 w-16 rounded bg-[#252525] border border-neutral-700"></div>
+                        @endif
+                        <div class="flex-1 font-secondary min-w-0">
+                            <p class="font-bold truncate">{{ $line['product']->name }}</p>
+                            <p class="text-xs text-black"> Cantindad:  {{ $line['quantity'] }}</p>
+                        </div>
+                        <div class="text-right shrink-0 font-secondary text-orange-500">
+                            <p class="font-bold">
+                                S/ {{ number_format($line['line_total'], 2) }}
+                            </p>
+                            @if ($line['is_on_sale'])
+                                <p class="text-xs text-black line-through">
+                                    S/ {{ number_format($line['list_unit_price'] * $line['quantity'], 2) }}
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="rounded-lg font-title p-5 flex gap-6 items-center">
+                <span class="uppercase sm:font-bold tracking-widest">Total</span>
+                <span class="text-xl">S/ {{ number_format($total, 2) }}</span>
+            </div>
+        </div>
+
     </div>
 </div>
 
