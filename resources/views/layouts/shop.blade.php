@@ -157,21 +157,23 @@
 
             <div class="flex flex-col gap-3 md:col-span-3">
                 <h3 class="text-white font-extrabold tracking-wider uppercase text-sm font-sans">
-                    SUBSCÍBETE
+                    ¿Quejas o reclamos?
                 </h3>
-                
-                <form action="#" method="POST" class="flex flex-col gap-3">
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-gray-400 text-[10px] font-bold tracking-widest">TU E-MAIL</label>
-                        <input type="email" name="email" placeholder="Ingresa tu E-mail" 
-                            class="w-full px-3 py-2 bg-[#2a2a2a] text-gray-300 rounded border border-neutral-700 placeholder-neutral-500 focus:outline-none focus:border-orange-600 transition-colors text-xs">
-                    </div>
-                    
-                    <button type="submit" 
-                        class="w-full py-2.5 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase">
-                        SUBSCÍBETE
-                    </button>
-                </form>
+
+                <a
+                    href="{{ route('shop.contact') }}"
+                    class="inline-block w-fit"
+                    title="Libro de reclamaciones"
+                    aria-label="Libro de reclamaciones"
+                >
+                    <img
+                        src="{{ asset('images/libro-reclamaciones.svg') }}"
+                        alt="Libro de reclamaciones"
+                        class="h-24 w-auto transition-transform hover:scale-105"
+                        width="96"
+                        height="112"
+                    >
+                </a>
             </div>
 
         </div>

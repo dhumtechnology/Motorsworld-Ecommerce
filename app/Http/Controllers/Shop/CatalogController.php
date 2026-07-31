@@ -71,8 +71,8 @@ class CatalogController extends Controller
 
             $filterOptions = [
                 'categories' => $this->categoryOptions($section),
-                'brands' => $this->brandOptions($section),
-                'models' => $this->modelOptions($section, $request->brandIds()),
+                'brands' => $this->brandOptions(),
+                'models' => $this->modelOptions($request->brandIds()),
                 'price' => $this->priceBounds($section),
             ];
 
@@ -394,12 +394,11 @@ class CatalogController extends Controller
     private function categoryOptions(string $section)
     {
         return QueryResultCache::rememberRows(
-            "catalog.filter_options.categories.{$section}",
+            "catalog.filter_options.categories.all.{$section}",
             function () use ($section) {
                 $motosCategoryId = $this->motosCategoryId();
 
                 return Category::query()
-                    ->whereHas('products', fn (Builder $q) => $q->where('status', ProductStatus::Active))
                     ->when(
                         $section === 'motos',
                         fn (Builder $q) => $motosCategoryId
@@ -418,15 +417,11 @@ class CatalogController extends Controller
     /**
      * @return \Illuminate\Support\Collection<int, object>
      */
-    private function brandOptions(string $section)
+    private function brandOptions()
     {
         return QueryResultCache::rememberRows(
-            "catalog.filter_options.brands.{$section}",
+            'catalog.filter_options.brands.all',
             fn () => Brand::query()
-                ->whereHas('vehicleModels.products', function (Builder $q) use ($section) {
-                    $q->where('status', ProductStatus::Active);
-                    $this->applySectionFilterOnProductQuery($q, $section);
-                })
                 ->orderBy('name')
                 ->get(['id', 'name']),
         );
@@ -436,42 +431,20 @@ class CatalogController extends Controller
      * @param  list<int>  $brandIds
      * @return \Illuminate\Support\Collection<int, object>
      */
-    private function modelOptions(string $section, array $brandIds)
+    private function modelOptions(array $brandIds)
     {
         $brandKey = $brandIds === [] ? 'all' : implode(',', $brandIds);
 
         return QueryResultCache::rememberRows(
-            "catalog.filter_options.models.{$section}.{$brandKey}",
+            "catalog.filter_options.models.all.{$brandKey}",
             fn () => VehicleModel::query()
                 ->when(
                     $brandIds !== [],
                     fn (Builder $q) => $q->whereIn('brand_id', $brandIds),
                 )
-                ->whereHas('products', function (Builder $q) use ($section) {
-                    $q->where('status', ProductStatus::Active);
-                    $this->applySectionFilterOnProductQuery($q, $section);
-                })
                 ->with('brand:id,name')
                 ->orderBy('name')
                 ->get(['id', 'name', 'brand_id']),
         );
-    }
-
-    /**
-     * @param  Builder<Product>  $query
-     */
-    private function applySectionFilterOnProductQuery(Builder $query, string $section): void
-    {
-        $motosCategoryId = $this->motosCategoryId();
-
-        if ($section === 'motos' && $motosCategoryId !== null) {
-            $query->where('category_id', $motosCategoryId);
-
-            return;
-        }
-
-        if ($section === 'accesorios' && $motosCategoryId !== null) {
-            $query->where('category_id', '!=', $motosCategoryId);
-        }
     }
 }

@@ -15,13 +15,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RoleAndPermissionSeeder::class,
-            UserSeeder::class,
-            CatalogSeeder::class,
-            PaymentMethodSeeder::class,
-            InventoryMovementSeeder::class,
-            OrderSalesSeeder::class,
-            AppointmentSeeder::class,
+            RoleAndPermissionSeeder::class, // roles/permisos necesarios para el admin
+            UserSeeder::class, // solo superusuario (admin@motosworld.test)
+            // CatalogSeeder::class,
+            // PaymentMethodSeeder::class,
+            // InventoryMovementSeeder::class,
+            // OrderSalesSeeder::class,
+            // AppointmentSeeder::class,
         ]);
     }
 }

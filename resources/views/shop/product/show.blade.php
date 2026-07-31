@@ -175,8 +175,8 @@
     Título:     {{ $product->name }}
     Categoría:  {{ $product->category->name }}
     SKU:        {{ $product->sku }}
-    Precio:     ${{ number_format($product->effective_price, 0, '.', '') }}
-    Tachado:    @if($product->is_on_sale) ${{ number_format($product->list_price, 0, '.', '') }} @endif
+    Precio:     S/ {{ number_format($product->effective_price, 2) }}
+    Tachado:    @if($product->is_on_sale) S/ {{ number_format($product->list_price, 2) }} @endif
     Descripción: {!! nl2br(e($product->description)) !!}
     Info extra:  {!! nl2br(e($product->additional_information)) !!}
 --}}
@@ -275,11 +275,11 @@
                 {{-- Bloque de precios inteligente --}}
                 <div class="my-6 flex items-baseline gap-4">
                     <span class="text-3xl font-black tracking-tight">
-                        ${{ number_format($product->effective_price, 0, '.', '') }}
+                        S/ {{ number_format((float) $product->effective_price, 2) }}
                     </span>
                     @if($product->is_on_sale)
                         <span class="font-bold line-through">
-                            ${{ number_format($product->list_price, 0, '.', '') }}
+                            S/ {{ number_format((float) $product->list_price, 2) }}
                         </span>
                     @endif
                 </div>
