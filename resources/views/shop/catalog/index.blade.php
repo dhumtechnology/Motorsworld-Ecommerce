@@ -93,31 +93,29 @@
             </div>
 
             <div class="lg:col-span-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-max">
-                    @forelse ($products as $product)
-                        <x-card
-                            :title="$product->name ?? $product->sku"
-                            :category="$product->category?->name ?? 'Producto'"
-                            :price="$product->effective_price"
-                            :oldPrice="$product->is_on_sale ? $product->list_price : null"
-                            :image="$product->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
-                            :isSale="$product->is_on_sale"
-                            :discountPercent="$product->discount_percent"
-                            :href="route('shop.product.show', $product)"
-                            :cartQty="$cartQuantities[$product->id] ?? 0"
-                        />
-                    @empty
-                        <div class="col-span-1 md:col-span-2 lg:col-span-4 text-center py-2 text-gray-400">
-                            <p class="mt-2 text-sm">No se encontraron productos disponibles en este momento.</p>
-                        </div>
-                    @endforelse
+                <div
+                    id="catalog-product-grid"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-max"
+                >
+                    @include('shop.catalog._product-cards', [
+                        'products' => $products,
+                        'cartQuantities' => $cartQuantities,
+                    ])
                 </div>
 
-                @if ($products->hasPages())
-                    <div>
-                        {{ $products->links('vendor.pagination.tailwind') }}
+                <div
+                    id="catalog-infinite-sentinel"
+                    class="mt-8 flex min-h-16 w-full flex-col items-center justify-center gap-2"
+                    data-has-more="{{ $products->hasMorePages() ? '1' : '0' }}"
+                    data-next-page="{{ $products->hasMorePages() ? $products->currentPage() + 1 : '' }}"
+                >
+                    <div id="catalog-infinite-status" class="hidden py-2 text-center text-sm text-neutral-500" role="status">
+                        Cargando más productos…
                     </div>
-                @endif
+                    <div id="catalog-infinite-end" class="{{ $products->hasMorePages() ? 'hidden' : '' }} py-2 text-center text-xs uppercase tracking-wider text-neutral-400">
+                        No hay más productos
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -159,7 +157,7 @@
                         @foreach ($popularProducts->take(10) as $popularProduct)
                             <div class="popular-slide w-full sm:w-1/2 lg:w-1/4 shrink-0 px-2 md:px-4 flex justify-center">
                                 <x-card
-                                    class="max-w-[240px] w-full bg-white/95"
+                                    class="max-w-[240px] w-full"
                                     :title="$popularProduct->name ?? $popularProduct->sku"
                                     :category="$popularProduct->category?->name ?? 'Producto'"
                                     :price="$popularProduct->effective_price"
@@ -274,4 +272,113 @@
             })();
         </script>
     @endif
+
+    <script>
+        (function () {
+            const grid = document.getElementById('catalog-product-grid');
+            const sentinel = document.getElementById('catalog-infinite-sentinel');
+            const status = document.getElementById('catalog-infinite-status');
+            const endMsg = document.getElementById('catalog-infinite-end');
+            if (!grid || !sentinel) return;
+
+            let loading = false;
+            let hasMore = sentinel.getAttribute('data-has-more') === '1';
+            let nextPage = parseInt(sentinel.getAttribute('data-next-page') || '', 10) || null;
+            let observer = null;
+
+            function buildUrl(page) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', String(page));
+                url.searchParams.set('infinite', '1');
+                return url.toString();
+            }
+
+            function setFinished() {
+                hasMore = false;
+                nextPage = null;
+                sentinel.setAttribute('data-has-more', '0');
+                sentinel.setAttribute('data-next-page', '');
+                if (status) status.classList.add('hidden');
+                if (endMsg) endMsg.classList.remove('hidden');
+                if (observer) observer.disconnect();
+                window.removeEventListener('scroll', onScroll);
+            }
+
+            async function loadMore() {
+                if (loading || !hasMore || !nextPage) return;
+                loading = true;
+                if (status) status.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(buildUrl(nextPage), {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!response.ok || !contentType.includes('application/json')) {
+                        throw new Error('Respuesta inválida al cargar productos');
+                    }
+
+                    const data = await response.json();
+                    if (data.html && String(data.html).trim() !== '') {
+                        grid.insertAdjacentHTML('beforeend', data.html);
+                    }
+
+                    if (data.has_more && data.next_page) {
+                        hasMore = true;
+                        nextPage = Number(data.next_page);
+                        sentinel.setAttribute('data-has-more', '1');
+                        sentinel.setAttribute('data-next-page', String(nextPage));
+                    } else {
+                        setFinished();
+                    }
+                } catch (e) {
+                    console.error('[catalog infinite]', e);
+                    if (status) {
+                        status.textContent = 'No se pudieron cargar más productos.';
+                        status.classList.remove('hidden');
+                    }
+                    setFinished();
+                } finally {
+                    loading = false;
+                    if (hasMore && status) status.classList.add('hidden');
+                }
+            }
+
+            function nearBottom() {
+                const rect = sentinel.getBoundingClientRect();
+                return rect.top <= (window.innerHeight + 400);
+            }
+
+            function onScroll() {
+                if (nearBottom()) loadMore();
+            }
+
+            if (!hasMore) {
+                if (endMsg) endMsg.classList.remove('hidden');
+                return;
+            }
+
+            if ('IntersectionObserver' in window) {
+                observer = new IntersectionObserver((entries) => {
+                    if (entries.some((entry) => entry.isIntersecting)) {
+                        loadMore();
+                    }
+                }, {
+                    root: null,
+                    rootMargin: '400px 0px',
+                    threshold: 0,
+                });
+                observer.observe(sentinel);
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            // Por si el sentinel ya está visible al cargar
+            onScroll();
+        })();
+    </script>
 @endsection

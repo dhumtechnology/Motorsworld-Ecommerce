@@ -16,6 +16,7 @@ use App\Services\Products\ProductOfferPresenter;
 use App\Support\QueryResultCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -34,7 +35,7 @@ class CatalogController extends Controller
 
     private bool $motosCategoryIdResolved = false;
 
-    public function index(CatalogIndexRequest $request): View
+    public function index(CatalogIndexRequest $request): View|JsonResponse
     {
         $context = $this->requestContext($request);
 
@@ -55,6 +56,19 @@ class CatalogController extends Controller
 
             $products->through(fn (Product $product) => $this->withActiveOfferPricing($product));
 
+            $cartQuantities = $this->cartQuantitiesByProduct($request);
+
+            if ($request->boolean('infinite')) {
+                return response()->json([
+                    'html' => view('shop.catalog._product-cards', [
+                        'products' => $products,
+                        'cartQuantities' => $cartQuantities,
+                    ])->render(),
+                    'has_more' => $products->hasMorePages(),
+                    'next_page' => $products->hasMorePages() ? $products->currentPage() + 1 : null,
+                ]);
+            }
+
             $filterOptions = [
                 'categories' => $this->categoryOptions($section),
                 'brands' => $this->brandOptions($section),
@@ -63,7 +77,6 @@ class CatalogController extends Controller
             ];
 
             $popularProducts = $this->popularNonMotoProducts();
-            $cartQuantities = $this->cartQuantitiesByProduct($request);
 
             $priceBounds = $filterOptions['price'];
 

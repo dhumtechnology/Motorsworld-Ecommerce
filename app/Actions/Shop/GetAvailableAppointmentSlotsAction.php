@@ -16,13 +16,18 @@ class GetAvailableAppointmentSlotsAction
 
     /**
      * Horarios disponibles (inicio de cita) entre 08:00 y 17:00,
-     * de modo que el servicio quepa dentro de la jornada hasta las 18:00.
+     * de lunes a viernes, de modo que el servicio quepa hasta las 18:00.
      *
      * @return list<string> horas en formato H:i
      */
     public function execute(CarbonInterface|string $date): array
     {
         $day = Carbon::parse($date)->startOfDay();
+
+        // Citas solo de lunes a viernes
+        if ($day->isWeekend()) {
+            return [];
+        }
 
         if ($day->isPast() && ! $day->isToday()) {
             return [];

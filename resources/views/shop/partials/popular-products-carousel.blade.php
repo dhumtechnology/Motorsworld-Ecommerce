@@ -4,10 +4,10 @@
 --}}
 @if (($popularProducts ?? collect())->isNotEmpty())
     @php $carouselId = 'popular-'.uniqid(); @endphp
-    <section class="w-full bg-primary select-none font-title" id="{{ $carouselId }}">
+    <section class="w-full bg-white border-t border-neutral-100 select-none font-title" id="{{ $carouselId }}">
         <div class="mx-auto max-w-[95%] px-4 md:px-8 py-12 md:py-14">
             <div class="mb-8 flex items-center justify-between gap-4">
-                <h3 class="text-xl md:text-2xl font-black uppercase tracking-widest text-black">
+                <h3 class="text-xl md:text-2xl font-black uppercase tracking-widest text-neutral-900">
                     Productos populares
                 </h3>
 
@@ -15,7 +15,7 @@
                     <button
                         type="button"
                         data-popular-prev
-                        class="w-9 h-9 flex items-center justify-center rounded-sm border-2 border-black bg-transparent text-black hover:bg-black hover:text-primary transition cursor-pointer"
+                        class="w-9 h-9 flex items-center justify-center rounded-sm border-2 border-neutral-900 bg-transparent text-neutral-900 hover:bg-neutral-900 hover:text-white transition cursor-pointer"
                         aria-label="Anterior"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -25,7 +25,7 @@
                     <button
                         type="button"
                         data-popular-next
-                        class="w-9 h-9 flex items-center justify-center rounded-sm border-2 border-black bg-transparent text-black hover:bg-black hover:text-primary transition cursor-pointer"
+                        class="w-9 h-9 flex items-center justify-center rounded-sm border-2 border-neutral-900 bg-transparent text-neutral-900 hover:bg-neutral-900 hover:text-white transition cursor-pointer"
                         aria-label="Siguiente"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

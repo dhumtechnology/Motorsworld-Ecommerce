@@ -5,6 +5,7 @@ namespace App\Http\Requests\Shop;
 use App\Actions\Shop\GetAvailableAppointmentSlotsAction;
 use App\Models\Appointments\ServicePackage;
 use App\Models\Products\VehicleModel;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -91,6 +92,14 @@ class StoreShopAppointmentRequest extends FormRequest
 
             $date = (string) $this->input('appointment_date');
             $time = (string) $this->input('appointment_time');
+            $day = Carbon::parse($date);
+
+            if ($day->isWeekend()) {
+                $validator->errors()->add('appointment_date', 'Las citas solo están disponibles de lunes a viernes.');
+
+                return;
+            }
+
             $slots = app(GetAvailableAppointmentSlotsAction::class)->execute($date);
 
             if (! in_array($time, $slots, true)) {

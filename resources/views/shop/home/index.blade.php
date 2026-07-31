@@ -142,7 +142,7 @@
 </section>
 
 {{-- Productos populares --}}
-<section class="bg-neutral-50 border-t border-neutral-100">
+<section class="bg-white border-t border-neutral-100">
     <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
         <h2 class="mb-8 md:mb-10 text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
             Productos populares

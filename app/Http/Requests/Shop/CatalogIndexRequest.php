@@ -31,6 +31,7 @@ class CatalogIndexRequest extends FormRequest
             'price_max' => ['nullable', 'numeric', 'min:0'],
             'search' => ['nullable', 'string', 'max:255'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'infinite' => ['nullable', 'boolean'],
         ];
     }
 

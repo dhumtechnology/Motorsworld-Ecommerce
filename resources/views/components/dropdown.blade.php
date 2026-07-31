@@ -1,8 +1,13 @@
+@props([
+    'title' => 'Menú',
+])
+
 <li
     x-data="{ open: false }"
     class="relative "
 >
     <button
+        type="button"
         @click="open = !open"
         @click.away="open = false"
         class="flex items-center gap-2 px-3 py-2 text-white hover:text-orange-500 cursor-pointer transition"
