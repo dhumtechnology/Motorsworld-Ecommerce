@@ -46,7 +46,7 @@
                             <a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">BLOG</a>
                         </li>
                         <li>
-                            <a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">CONTÁCTANOS</a>
+                            <a href="{{ route('shop.contact') }}" class="px-3 py-2 text-white hover:text-orange-500">CONTÁCTANOS</a>
                         </li>
                     </ul>
                 </nav>
@@ -115,7 +115,7 @@
                         </clipPath>
                         </defs>
                     </svg>
-                    <span class="tracking-wider">+51 920-883-723</span>
+                    <span class="tracking-wider">+51 {{ config('shop.contact.mobile') }}</span>
                 </div>
             </div>    
 
@@ -126,7 +126,7 @@
                         'NOSOTROS' => route('shop.about'),
                         'NUESTRO TRABAJO' => '#',
                         'POLÍTICAS DE CALIDAD' => route('shop.about').'#politicas-de-calidad',
-                        'CONTÁCTANOS' => '#'
+                        'CONTÁCTANOS' => route('shop.contact'),
                     ]" 
                 />
             </div>

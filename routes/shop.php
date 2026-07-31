@@ -4,6 +4,7 @@ use App\Http\Controllers\Shop\AboutController;
 use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
+use App\Http\Controllers\Shop\ContactController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\ProductController;
 use App\Http\Controllers\Shop\ServiceController;
@@ -21,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/nosotros', [AboutController::class, 'index'])->name('about');
+
+Route::get('/contacto', [ContactController::class, 'index'])->name('contact');
+Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
 
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
 

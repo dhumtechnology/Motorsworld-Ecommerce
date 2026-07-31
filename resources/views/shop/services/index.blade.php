@@ -352,7 +352,7 @@
             src="{{ $mapEmbedUrl }}"
             class="absolute inset-0 h-full w-full border-0"
             loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
+            referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen
         ></iframe>
     </div>
