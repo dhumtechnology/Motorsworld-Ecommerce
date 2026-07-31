@@ -96,7 +96,7 @@
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="{{ $misionImage }}"
+                        src="images/about/mision-motoworld.png"
                         alt="Misión Motosworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
@@ -118,7 +118,7 @@
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="{{ $visionImage }}"
+                        src="images/about/vision.png"
                         alt="Visión Motosworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
