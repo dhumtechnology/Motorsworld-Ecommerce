@@ -7,7 +7,6 @@ use App\Models\Appointments\Appointment;
 use App\Models\Auth\Concerns\HasApiTokens;
 use App\Models\Auth\Concerns\HasRoles;
 use App\Models\Cart\Cart;
-use App\Models\Comments\Comment;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use Database\Factories\UserFactory;
@@ -101,14 +100,6 @@ class User extends Authenticatable
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
-    }
-
-    /**
-     * @return HasMany<Comment, $this>
-     */
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class);
     }
 
     public function isActive(): bool

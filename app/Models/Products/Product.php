@@ -4,7 +4,6 @@ namespace App\Models\Products;
 
 use App\Enums\Products\ProductStatus;
 use App\Models\Cart\CartItem;
-use App\Models\Comments\Comment;
 use App\Models\Orders\OrderItem;
 use App\Services\Orders\ProductPricing;
 use App\Services\Orders\ProductPricingService;
@@ -82,14 +81,6 @@ class Product extends Model
         $path = $this->primaryImage()->value('path');
 
         return $path ?? $this->attributes['image'] ?? null;
-    }
-
-    /**
-     * @return HasMany<Comment, $this>
-     */
-    public function reviews(): HasMany
-    {
-        return $this->hasMany(Comment::class)->latest('created_at');
     }
 
     /**

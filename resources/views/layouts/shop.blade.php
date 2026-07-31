@@ -43,7 +43,7 @@
                             <a href="{{ route('shop.about') }}" class="px-3 py-2 text-white hover:text-orange-500">NOSOTROS</a>
                         </li>
                         <li>
-                            <a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="px-3 py-2 text-white hover:text-orange-500">BLOG</a>
+                            <a href="{{ route('shop.blog.index') }}" class="px-3 py-2 text-white hover:text-orange-500">BLOG</a>
                         </li>
                         <li>
                             <a href="{{ route('shop.contact') }}" class="px-3 py-2 text-white hover:text-orange-500">CONTÁCTANOS</a>

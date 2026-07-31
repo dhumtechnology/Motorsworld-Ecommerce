@@ -9,6 +9,7 @@
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
+    @stack('styles')
 </head>
 <body class="admin-shell antialiased" style="--color-surface: #ffffff; background: #ffffff;">
     <div class="flex min-h-screen">

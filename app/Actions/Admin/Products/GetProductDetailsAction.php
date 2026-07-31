@@ -73,11 +73,6 @@ class GetProductDetailsAction
             ->selectRaw('COUNT(DISTINCT order_id) as orders_count')
             ->first();
 
-        $reviewStats = $product->reviews()
-            ->selectRaw('COUNT(*) as reviews_count')
-            ->selectRaw('COALESCE(AVG(stars), 0) as avg_stars')
-            ->first();
-
         $lastMovementAt = InventoryMovement::query()
             ->where('product_id', $product->id)
             ->max('created_at');
@@ -103,8 +98,6 @@ class GetProductDetailsAction
                 'revenue' => (float) ($sales->revenue ?? 0),
                 'orders_count' => (int) ($sales->orders_count ?? 0),
                 'line_count' => (int) ($sales->line_count ?? 0),
-                'reviews_count' => (int) ($reviewStats->reviews_count ?? 0),
-                'avg_stars' => round((float) ($reviewStats->avg_stars ?? 0), 1),
                 'cart_count' => $product->cartItems()->count(),
                 'images_count' => $product->images->count(),
                 'last_movement_at' => $lastMovementAt,
