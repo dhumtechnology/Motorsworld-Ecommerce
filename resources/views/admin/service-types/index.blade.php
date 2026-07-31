@@ -55,7 +55,7 @@
                         <th class="px-5 py-3 font-bold w-12">
                             <input type="checkbox" id="select-all-items" class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary" @disabled($serviceTypes->isEmpty())>
                         </th>
-                        <th class="px-5 py-3 font-bold">Nombre</th>
+                        <th class="px-5 py-3 font-bold">Servicio</th>
                         <th class="px-5 py-3 font-bold">Reservas</th>
                         <th class="px-5 py-3 font-bold text-right">Acciones</th>
                     </tr>
@@ -66,7 +66,21 @@
                             <td class="px-5 py-3">
                                 <input type="checkbox" value="{{ $serviceType->id }}" data-row-checkbox class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary">
                             </td>
-                            <td class="px-5 py-3 font-semibold text-text">{{ $serviceType->name }}</td>
+                            <td class="px-5 py-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    @if ($serviceType->image)
+                                        <img src="{{ $serviceType->image }}" alt="" class="h-10 w-10 rounded object-cover border border-border shrink-0">
+                                    @else
+                                        <div class="h-10 w-10 rounded border border-border bg-secondary shrink-0"></div>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-text truncate">{{ $serviceType->name }}</p>
+                                        @if ($serviceType->description)
+                                            <p class="text-xs text-muted mt-0.5 line-clamp-1">{{ $serviceType->description }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center rounded border border-border bg-secondary px-2 py-0.5 text-xs font-bold text-text-soft">{{ $serviceType->appointments_count }}</span>
                             </td>

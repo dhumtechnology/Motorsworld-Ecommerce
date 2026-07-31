@@ -90,6 +90,12 @@
                     'active' => request()->routeIs('admin.service-types.*'),
                     'enabled' => true,
                 ],
+                [
+                    'label' => 'Paquetes de servicio',
+                    'route' => 'admin.service-packages.index',
+                    'active' => request()->routeIs('admin.service-packages.*'),
+                    'enabled' => true,
+                ],
             ],
         ],
         [

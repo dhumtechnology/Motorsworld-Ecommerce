@@ -28,22 +28,25 @@ class AppointmentSeeder extends Seeder
     private function seedServiceTypes(): array
     {
         $definitions = [
-            'Mantenimiento preventivo',
-            'Cambio de aceite',
-            'Revisión de frenos',
-            'Alineamiento y balanceo',
-            'Diagnóstico electrónico',
-            'Cambio de batería',
-            'Servicio de cadena',
-            'Lavado y detailing',
+            'Mantenimiento preventivo' => 'Revisión periódica para mantener tu moto en óptimas condiciones.',
+            'Cambio de aceite' => 'Cambio de aceite y filtro con productos de calidad.',
+            'Revisión de frenos' => 'Inspección y servicio del sistema de frenos.',
+            'Alineamiento y balanceo' => 'Ajuste de dirección y balanceo de ruedas.',
+            'Diagnóstico electrónico' => 'Escaneo y análisis de fallas del sistema electrónico.',
+            'Cambio de batería' => 'Instalación y prueba de batería para tu moto.',
+            'Servicio de cadena' => 'Limpieza, lubricación y ajuste de cadena.',
+            'Lavado y detailing' => 'Lavado exterior y detailing para dejar tu moto impecable.',
         ];
 
         $types = [];
 
-        foreach ($definitions as $name) {
+        foreach ($definitions as $name => $description) {
             $types[$name] = ServiceType::query()->updateOrCreate(
                 ['name' => $name],
-                ['image' => null],
+                [
+                    'description' => $description,
+                    'image' => null,
+                ],
             );
         }
 

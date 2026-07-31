@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductOfferController;
+use App\Http\Controllers\Admin\ServicePackageController;
 use App\Http\Controllers\Admin\ServiceTypeController;
 use App\Http\Controllers\Admin\VehicleModelController;
 use Illuminate\Support\Facades\Route;
@@ -111,6 +112,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/servicios/{serviceType}', [ServiceTypeController::class, 'update'])->name('service-types.update');
     Route::delete('/servicios/{serviceType}', [ServiceTypeController::class, 'destroy'])->name('service-types.destroy');
     Route::delete('/servicios', [ServiceTypeController::class, 'bulkDestroy'])->name('service-types.bulk-destroy');
+
+    Route::get('/paquetes-de-servicio', [ServicePackageController::class, 'index'])->name('service-packages.index');
+    Route::get('/paquetes-de-servicio/crear', [ServicePackageController::class, 'create'])->name('service-packages.create');
+    Route::post('/paquetes-de-servicio', [ServicePackageController::class, 'store'])->name('service-packages.store');
+    Route::get('/paquetes-de-servicio/{servicePackage}/editar', [ServicePackageController::class, 'edit'])->name('service-packages.edit');
+    Route::put('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'update'])->name('service-packages.update');
+    Route::delete('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'destroy'])->name('service-packages.destroy');
+    Route::delete('/paquetes-de-servicio', [ServicePackageController::class, 'bulkDestroy'])->name('service-packages.bulk-destroy');
 
     Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventario/crear', [InventoryController::class, 'create'])->name('inventory.create');

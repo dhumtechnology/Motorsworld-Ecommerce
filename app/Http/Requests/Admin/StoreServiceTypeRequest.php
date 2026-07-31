@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class StoreServiceTypeRequest extends FormRequest
 {
@@ -18,6 +19,8 @@ class StoreServiceTypeRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:service_types,name'],
+            'description' => ['nullable', 'string', 'max:5000'],
+            'image' => ['nullable', 'image', 'max:5120'],
         ];
     }
 
@@ -29,6 +32,7 @@ class StoreServiceTypeRequest extends FormRequest
         return [
             'name.required' => 'El nombre es obligatorio.',
             'name.unique' => 'Ya existe un servicio con ese nombre.',
+            'image.image' => 'La imagen debe ser un archivo de imagen válido.',
         ];
     }
 
@@ -37,9 +41,19 @@ class StoreServiceTypeRequest extends FormRequest
      */
     public function serviceTypeAttributes(): array
     {
+        $description = trim((string) $this->input('description', ''));
+
         return [
             'name' => trim((string) $this->input('name')),
-            'image' => null,
+            'description' => $description !== '' ? $description : null,
         ];
+    }
+
+    public function imageFile(): ?UploadedFile
+    {
+        /** @var UploadedFile|null $file */
+        $file = $this->file('image');
+
+        return $file instanceof UploadedFile ? $file : null;
     }
 }

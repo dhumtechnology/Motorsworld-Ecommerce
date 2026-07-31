@@ -51,7 +51,11 @@ class ServiceTypeController extends Controller
 
     public function store(StoreServiceTypeRequest $request): RedirectResponse
     {
-        $serviceType = $this->upsertServiceType->execute($request->serviceTypeAttributes());
+        $serviceType = $this->upsertServiceType->execute(
+            $request->serviceTypeAttributes(),
+            null,
+            $request->imageFile(),
+        );
 
         return redirect()
             ->route('admin.service-types.index')
@@ -72,6 +76,8 @@ class ServiceTypeController extends Controller
         $serviceType = $this->upsertServiceType->execute(
             $request->serviceTypeAttributes(),
             $serviceType,
+            $request->imageFile(),
+            $request->shouldRemoveImage(),
         );
 
         return redirect()

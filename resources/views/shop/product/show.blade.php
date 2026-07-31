@@ -464,6 +464,8 @@
         </div>
     </div>
 
+    @include('shop.partials.popular-products-carousel')
+
     <script>
         document.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => {
             thumb.addEventListener('click', () => {

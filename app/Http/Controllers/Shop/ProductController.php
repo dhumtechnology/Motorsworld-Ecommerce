@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Shop;
 
+use App\Actions\Shop\GetPopularNonMotoProductsAction;
 use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
@@ -20,6 +21,7 @@ class ProductController extends Controller
         private readonly RelatedProductsResolver $relatedProducts,
         private readonly CartResolver $cartResolver,
         private readonly ProductOfferPresenter $offerPresenter,
+        private readonly GetPopularNonMotoProductsAction $popularProducts,
     ) {}
 
     public function show(Request $request, Product $product): View
@@ -50,6 +52,12 @@ class ProductController extends Controller
             ->where('product_id', $product->id)
             ->value('quantity');
 
+        $cartQuantities = $cart->items()
+            ->get(['product_id', 'quantity'])
+            ->pluck('quantity', 'product_id')
+            ->map(fn ($qty) => (int) $qty)
+            ->all();
+
         return view('shop.product.show', [
             'product' => $product,
             'reviews' => $reviews,
@@ -61,6 +69,8 @@ class ProductController extends Controller
             ],
             'relatedProducts' => $relatedProducts,
             'cartLineQuantity' => $cartLineQuantity,
+            'popularProducts' => $this->popularProducts->execute(10),
+            'cartQuantities' => $cartQuantities,
         ]);
     }
 

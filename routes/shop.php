@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Shop\AboutController;
 use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/nosotros', [AboutController::class, 'index'])->name('about');
 
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
 
