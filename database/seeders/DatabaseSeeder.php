@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             PaymentMethodSeeder::class,
             InventoryMovementSeeder::class,
             OrderSalesSeeder::class,
-            ProductReviewSeeder::class,
             AppointmentSeeder::class,
         ]);
     }

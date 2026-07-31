@@ -190,17 +190,6 @@
 
                 <dl class="space-y-4 text-sm">
                     <div class="flex items-center justify-between gap-3">
-                        <dt class="text-muted">Valoraciones</dt>
-                        <dd class="font-semibold text-text">
-                            @if ($stats['reviews_count'] > 0)
-                                {{ number_format($stats['avg_stars'], 1) }} ★
-                                <span class="text-muted font-normal">({{ $stats['reviews_count'] }})</span>
-                            @else
-                                —
-                            @endif
-                        </dd>
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
                         <dt class="text-muted">En carritos activos</dt>
                         <dd class="font-semibold text-text">{{ $stats['cart_count'] }}</dd>
                     </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Shop\AboutController;
+use App\Http\Controllers\Shop\BlogController;
 use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
@@ -25,6 +26,9 @@ Route::get('/nosotros', [AboutController::class, 'index'])->name('about');
 
 Route::get('/contacto', [ContactController::class, 'index'])->name('contact');
 Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog');
 

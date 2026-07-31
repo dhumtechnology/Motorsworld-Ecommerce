@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\BrandController;
@@ -120,6 +121,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'update'])->name('service-packages.update');
     Route::delete('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'destroy'])->name('service-packages.destroy');
     Route::delete('/paquetes-de-servicio', [ServicePackageController::class, 'bulkDestroy'])->name('service-packages.bulk-destroy');
+
+    Route::get('/blog', [BlogPostController::class, 'index'])->name('blog-posts.index');
+    Route::get('/blog/crear', [BlogPostController::class, 'create'])->name('blog-posts.create');
+    Route::post('/blog', [BlogPostController::class, 'store'])->name('blog-posts.store');
+    Route::get('/blog/{blogPost}/editar', [BlogPostController::class, 'edit'])->name('blog-posts.edit');
+    Route::put('/blog/{blogPost}', [BlogPostController::class, 'update'])->name('blog-posts.update');
+    Route::delete('/blog/{blogPost}', [BlogPostController::class, 'destroy'])->name('blog-posts.destroy');
+    Route::delete('/blog', [BlogPostController::class, 'bulkDestroy'])->name('blog-posts.bulk-destroy');
 
     Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventario/crear', [InventoryController::class, 'create'])->name('inventory.create');

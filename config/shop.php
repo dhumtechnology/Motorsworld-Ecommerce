@@ -9,6 +9,7 @@ return [
         'phone_tel' => '+5116552807',
         'mobile' => '920 883 723',
         'mobile_tel' => '+51920883723',
+        'whatsapp' => '51920883723',
         'email' => 'workshop@motoworld.pe',
         'hours' => [
             'weekdays' => 'Lunes a Viernes 09:00 a 18:30',

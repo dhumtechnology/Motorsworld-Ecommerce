@@ -76,31 +76,31 @@
                         <div>
                             <label for="first_name" class="{{ $label }}">Nombres *</label>
                             <input id="first_name" type="text" name="first_name" required maxlength="100"
-                                value="{{ old('first_name') }}" class="{{ $field }}" placeholder="Tus nombres">
+                                value="{{ old('first_name', $prefill['first_name'] ?? '') }}" class="{{ $field }}" placeholder="Tus nombres">
                         </div>
 
                         <div>
                             <label for="last_name" class="{{ $label }}">Apellidos *</label>
                             <input id="last_name" type="text" name="last_name" required maxlength="100"
-                                value="{{ old('last_name') }}" class="{{ $field }}" placeholder="Tus apellidos">
+                                value="{{ old('last_name', $prefill['last_name'] ?? '') }}" class="{{ $field }}" placeholder="Tus apellidos">
                         </div>
 
                         <div>
                             <label for="document" class="{{ $label }}">DNI *</label>
                             <input id="document" type="text" name="document" required maxlength="20"
-                                value="{{ old('document') }}" class="{{ $field }}" placeholder="Documento de identidad">
+                                value="{{ old('document', $prefill['document'] ?? '') }}" class="{{ $field }}" placeholder="Documento de identidad">
                         </div>
 
                         <div>
                             <label for="phone" class="{{ $label }}">Teléfono *</label>
                             <input id="phone" type="text" name="phone" required maxlength="30"
-                                value="{{ old('phone') }}" class="{{ $field }}" placeholder="Ej. 920 883 723">
+                                value="{{ old('phone', $prefill['phone'] ?? '') }}" class="{{ $field }}" placeholder="Ej. 920 883 723">
                         </div>
 
                         <div class="sm:col-span-2">
                             <label for="email" class="{{ $label }}">Email *</label>
                             <input id="email" type="email" name="email" required maxlength="255"
-                                value="{{ old('email') }}" class="{{ $field }}" placeholder="tu@email.com">
+                                value="{{ old('email', $prefill['email'] ?? '') }}" class="{{ $field }}" placeholder="tu@email.com">
                         </div>
 
                         <div class="sm:col-span-2">

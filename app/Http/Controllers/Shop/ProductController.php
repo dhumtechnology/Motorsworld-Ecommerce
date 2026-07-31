@@ -36,12 +36,9 @@ class ProductController extends Controller
             'inventory',
             'images',
             'activeOffer',
-            'reviews.user.customerProfile',
         ]);
 
         $this->applyCatalogPresentationAttributes($product);
-
-        $reviews = $product->reviews;
 
         $relatedProducts = $this->relatedProducts
             ->resolve($product, self::RELATED_LIMIT)
@@ -60,13 +57,6 @@ class ProductController extends Controller
 
         return view('shop.product.show', [
             'product' => $product,
-            'reviews' => $reviews,
-            'reviewSummary' => [
-                'count' => $reviews->count(),
-                'average_stars' => $reviews->isEmpty()
-                    ? null
-                    : round((float) $reviews->avg('stars'), 1),
-            ],
             'relatedProducts' => $relatedProducts,
             'cartLineQuantity' => $cartLineQuantity,
             'popularProducts' => $this->popularProducts->execute(10),

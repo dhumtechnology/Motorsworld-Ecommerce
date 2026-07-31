@@ -7,8 +7,6 @@
     =============================================================================
 
     - $product         : Product (solo status active; 404 en otros casos)
-    - $reviews         : Collection<int, Comment> — reseñas del producto, más recientes primero
-    - $reviewSummary   : ['count' => int, 'average_stars' => float|null]
     - $relatedProducts : Collection<int, Product> — hasta 8 productos relacionados (ver algoritmo abajo)
     - $cartLineQuantity : int — unidades de este producto ya en el carrito (0 si no está)
 
@@ -87,7 +85,6 @@
     - $product->images                : Collection<int, ProductImage> ordenadas por sort_order
     - $product->activeOffer           : ProductOffer|null (oferta vigente más barata)
       Campos: offer_price_amount, discount_percent, reason, currency, starts_at, ends_at
-    - $product->reviews               : alias de $reviews (misma colección)
 
     Cada ProductImage:
     - id, product_id, path, sort_order, is_primary (bool)
@@ -155,36 +152,6 @@
 
     Fallback si no hay filas en product_images:
     {{ $product->image ?? 'url-placeholder' }}
-
-    =============================================================================
-    RESEÑAS ($reviews / pestaña "Reviews")
-    =============================================================================
-
-    Tabla: comments (product_id enlaza reseña ↔ producto).
-
-    Cada $review (Comment):
-    - $review->id
-    - $review->comment          → texto de la reseña
-    - $review->stars            → int 1–5
-    - $review->created_at       → Carbon
-    - $review->user             : User
-    - $review->user->customerProfile : CustomerProfile|null
-        - first_name, last_name (mostrar nombre del autor)
-        - avatar (opcional)
-
-    Resumen agregado:
-    - $reviewSummary['count']
-    - $reviewSummary['average_stars']   → null si no hay reseñas
-
-    Ejemplo estrellas:
-    @forelse ($reviews as $review)
-        {{ $review->user->customerProfile?->first_name }} {{ $review->user->customerProfile?->last_name }}
-        {{ $review->stars }}/5
-        {{ $review->comment }}
-        {{ $review->created_at->format('d/m/Y') }}
-    @empty
-        Sin reseñas aún.
-    @endforelse
 
     =============================================================================
     HELPERS
@@ -405,13 +372,6 @@
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Información Adicional
                 </button>
-
-                <button type="button" 
-                        @click="currentTab = 'reviews'"
-                        :class="currentTab === 'reviews' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
-                        class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
-                    Reviews ({{ $reviewSummary['count'] }})
-                </button>
             </div>
 
             {{-- Contenidos dinámicos de pestañas --}}
@@ -433,31 +393,6 @@
                     @else
                         <p class="text-black italic">No hay especificaciones adicionales registradas.</p>
                     @endif
-                </div>
-
-                {{-- Tab: Reseñas / Comentarios --}}
-                <div x-show="currentTab === 'reviews'" class="space-y-6" style="display: none;">
-                    @forelse ($reviews as $review)
-                        <div class="border-b border-neutral-900 pb-4">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="font-black text-white text-base">
-                                    {{ $review->user->customerProfile?->first_name ?? 'Usuario' }} 
-                                    {{ $review->user->customerProfile?->last_name ?? 'MotoWorld' }}
-                                </span>
-                                <span class="text-xs font-bold text-black">
-                                    {{ $review->created_at->format('d/m/Y') }}
-                                </span>
-                            </div>
-                            {{-- Estrellas numéricas --}}
-                            <div class="text-[#f15a24] font-black text-xs mb-2 tracking-widest">
-                                @for ($i = 0; $i < $review->stars; $i++) ★ @endfor
-                                @for ($i = $review->stars; $i < 5; $i++) ☆ @endfor
-                            </div>
-                            <p class="text-black">{{ $review->comment }}</p>
-                        </div>
-                    @empty
-                        <p class="text-black italic">Este producto aún no cuenta con reseñas de clientes.</p>
-                    @endforelse
                 </div>
 
             </div>

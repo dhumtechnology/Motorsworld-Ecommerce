@@ -99,6 +99,17 @@
             ],
         ],
         [
+            'label' => 'Gestión de contenido',
+            'items' => [
+                [
+                    'label' => 'Blog',
+                    'route' => 'admin.blog-posts.index',
+                    'active' => request()->routeIs('admin.blog-posts.*'),
+                    'enabled' => true,
+                ],
+            ],
+        ],
+        [
             'label' => 'Gestión de inventario',
             'items' => [
                 [
