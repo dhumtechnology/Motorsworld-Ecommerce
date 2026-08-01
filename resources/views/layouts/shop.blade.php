@@ -72,12 +72,53 @@
                     </a>
                     <div>
                         @auth
-                            <form action="{{ route('logout') }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="text-xs font-bold text-orange-500 hover:text-orange-400 uppercase tracking-wider" title="Cerrar sesión">
-                                    Salir
+                            <div
+                                x-data="{ open: false }"
+                                class="relative"
+                            >
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    @click.away="open = false"
+                                    class="inline-flex items-center justify-center text-white hover:text-orange-500 transition"
+                                    title="Mi cuenta"
+                                    aria-label="Mi cuenta"
+                                    aria-haspopup="true"
+                                    :aria-expanded="open.toString()"
+                                >
+                                    <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M8.125 15.0625H8.73633C9.893 15.5592 11.1613 15.8438 12.5 15.8438C13.8372 15.8438 15.1095 15.5595 16.2637 15.0625H16.875C19.9458 15.0625 22.4375 17.5542 22.4375 20.625V22.6562C22.4375 23.3979 21.8354 24 21.0938 24H3.90625C3.16459 24 2.5625 23.3979 2.5625 22.6562V20.625C2.5625 17.5542 5.05424 15.0625 8.125 15.0625ZM12.5 1C15.3999 1 17.75 3.35014 17.75 6.25C17.75 9.14986 15.3999 11.5 12.5 11.5C9.60014 11.5 7.25 9.14986 7.25 6.25C7.25 3.35014 9.60014 1 12.5 1Z" fill="black" stroke="white" stroke-width="2"/>
+                                    </svg>
                                 </button>
-                            </form>
+
+                                <div
+                                    x-show="open"
+                                    x-transition
+                                    class="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 z-50"
+                                    style="display: none;"
+                                >
+                                    <div class="py-2">
+                                        @if (auth()->user()?->hasRole('Administrador'))
+                                            <a href="{{ route('admin.profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                                Mi perfil
+                                            </a>
+                                            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                                Panel admin
+                                            </a>
+                                        @else
+                                            <a href="{{ route('shop.account.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                                Mi perfil
+                                            </a>
+                                        @endif
+                                        <form action="{{ route('logout') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                                Cerrar sesión
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         @else
                             <a href="{{ route('login') }}" title="Iniciar sesión" class="block">
                                 <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">

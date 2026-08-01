@@ -29,68 +29,71 @@
                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
     </div>
 
-    <div>
-        <label for="password" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-            Contraseña {{ $isEdit ? '(opcional)' : '*' }}
-        </label>
-        <div class="relative">
-            <input id="password" name="password" type="password" @required(! $isEdit)
-                   autocomplete="new-password"
-                   data-password-field
-                   class="w-full rounded border border-border bg-surface px-4 py-2.5 pr-11 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
-            <button
-                type="button"
-                data-toggle-password="password"
-                class="absolute inset-y-0 right-0 flex items-center px-3 text-muted hover:text-text transition-colors"
-                title="Mostrar contraseña"
-                aria-label="Mostrar contraseña"
-            >
-                <svg data-icon-show class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-                <svg data-icon-hide class="h-4 w-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.12 14.12a3 3 0 01-4.24-4.24" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M1 1l22 22" />
-                </svg>
-            </button>
+    @unless ($isEdit)
+        <div>
+            <label for="password" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
+                Contraseña *
+            </label>
+            <div class="relative">
+                <input id="password" name="password" type="password" required
+                       autocomplete="new-password"
+                       data-password-field
+                       class="w-full rounded border border-border bg-surface px-4 py-2.5 pr-11 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                <button
+                    type="button"
+                    data-toggle-password="password"
+                    class="absolute inset-y-0 right-0 flex items-center px-3 text-muted hover:text-text transition-colors"
+                    title="Mostrar contraseña"
+                    aria-label="Mostrar contraseña"
+                >
+                    <svg data-icon-show class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg data-icon-hide class="h-4 w-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.12 14.12a3 3 0 01-4.24-4.24" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M1 1l22 22" />
+                    </svg>
+                </button>
+            </div>
         </div>
-        @if ($isEdit)
-            <p class="mt-1.5 text-xs text-muted">Déjala en blanco para mantener la contraseña actual.</p>
-        @endif
-    </div>
 
-    <div>
-        <label for="password_confirmation" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-            Confirmar contraseña {{ $isEdit ? '' : '*' }}
-        </label>
-        <div class="relative">
-            <input id="password_confirmation" name="password_confirmation" type="password" @required(! $isEdit)
-                   autocomplete="new-password"
-                   data-password-field
-                   class="w-full rounded border border-border bg-surface px-4 py-2.5 pr-11 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
-            <button
-                type="button"
-                data-toggle-password="password_confirmation"
-                class="absolute inset-y-0 right-0 flex items-center px-3 text-muted hover:text-text transition-colors"
-                title="Mostrar contraseña"
-                aria-label="Mostrar contraseña"
-            >
-                <svg data-icon-show class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-                <svg data-icon-hide class="h-4 w-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.12 14.12a3 3 0 01-4.24-4.24" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M1 1l22 22" />
-                </svg>
-            </button>
+        <div>
+            <label for="password_confirmation" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
+                Confirmar contraseña *
+            </label>
+            <div class="relative">
+                <input id="password_confirmation" name="password_confirmation" type="password" required
+                       autocomplete="new-password"
+                       data-password-field
+                       class="w-full rounded border border-border bg-surface px-4 py-2.5 pr-11 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                <button
+                    type="button"
+                    data-toggle-password="password_confirmation"
+                    class="absolute inset-y-0 right-0 flex items-center px-3 text-muted hover:text-text transition-colors"
+                    title="Mostrar contraseña"
+                    aria-label="Mostrar contraseña"
+                >
+                    <svg data-icon-show class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg data-icon-hide class="h-4 w-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.12 14.12a3 3 0 01-4.24-4.24" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M1 1l22 22" />
+                    </svg>
+                </button>
+            </div>
         </div>
-    </div>
+    @else
+        <div class="rounded border border-border bg-secondary/40 px-4 py-3 text-xs text-muted">
+            Por seguridad no se puede ver ni cambiar la contraseña de otros usuarios. Cada administrador la cambia desde <span class="font-semibold text-text">Mi perfil</span>.
+        </div>
+    @endunless
 
     <div>
         <label for="status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado *</label>

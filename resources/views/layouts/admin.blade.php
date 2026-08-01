@@ -31,7 +31,9 @@
                         Ver tienda
                     </a>
                     <span class="text-border-strong hidden sm:inline">|</span>
-                    <span class="text-text-soft hidden md:inline font-medium">{{ auth()->user()?->email }}</span>
+                    <a href="{{ route('admin.profile.show') }}" class="text-text-soft hidden md:inline font-medium hover:text-primary transition-colors">
+                        {{ auth()->user()?->email }}
+                    </a>
                     <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="text-primary hover:text-primary-hover font-bold uppercase text-xs tracking-wider font-secondary">

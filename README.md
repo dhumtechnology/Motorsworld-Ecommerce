@@ -125,14 +125,25 @@ Flujo:
 > docker compose restart node
 > docker compose logs -f node
 > ```
->
-> Compilación única (CI):
->
-> ```bash
-> docker compose run --rm -e ASSET_MODE=once node
-> ```
->
-> No uses el CDN de Tailwind: pisa los estilos del proyecto.
+
+### Imágenes subidas en el admin (productos, marcas, etc.)
+
+Las subidas se guardan en `storage/app/public/` y se sirven en `/storage/...`.
+
+- **No se versionan en Git** (cada entorno tiene sus propios archivos).
+- Nginx las sirve con un `alias` (no depende del symlink `public/storage`, que en Windows + Docker suele fallar).
+- Tras actualizar el repo, recarga nginx: `docker compose up -d nginx` (o `docker compose restart nginx`).
+- Si compartes un dump de BD con compañeros, también debes copiar `storage/app/public/` o las imágenes saldrán rotas.
+
+**Por qué a uno le funcionaba y a otros no (antes del fix):** quien tenía el symlink bien creado veía las fotos; en Windows/Docker el enlace `public/storage` a menudo queda roto y `/storage/...` devolvía 404 en tienda y admin.
+
+Compilación única (CI):
+
+```bash
+docker compose run --rm -e ASSET_MODE=once node
+```
+
+No uses el CDN de Tailwind: pisa los estilos del proyecto.
 
 > **HMR más ágil (opcional):** en el host `npm run dev` + `SKIP_ASSET_BUILD=true` y `docker compose stop node`.  
 > `ASSET_MODE=dev` en Docker también da HMR, pero en Docker Desktop/Windows suele ser **mucho más lento**.

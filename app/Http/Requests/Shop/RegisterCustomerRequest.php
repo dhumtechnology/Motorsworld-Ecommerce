@@ -27,6 +27,22 @@ class RegisterCustomerRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'email' => 'correo electrónico',
+            'password' => 'contraseña',
+            'password_confirmation' => 'confirmación de contraseña',
+            'document' => 'documento',
+            'first_name' => 'nombres',
+            'last_name' => 'apellidos',
+            'phone' => 'teléfono',
+        ];
+    }
+
     public function email(): string
     {
         return $this->string('email')->lower()->value();
