@@ -203,12 +203,12 @@
 
                 <a
                     href="{{ route('shop.contact') }}"
-                    class="inline-block w-fit"
+                    class="inline-block w-fit text-center"
                     title="Libro de reclamaciones"
                     aria-label="Libro de reclamaciones"
                 >
                     <img
-                        src="{{ asset('images/libro-reclamaciones.svg') }}"
+                        src="images/home/libro-de-reclamaciones.png"
                         alt="Libro de reclamaciones"
                         class="h-24 w-auto transition-transform hover:scale-105"
                         width="96"
