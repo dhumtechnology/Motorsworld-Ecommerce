@@ -162,7 +162,7 @@
 
                 <a
                     href="{{ route('shop.contact') }}"
-                    class="inline-block w-fit text-center"
+                    class="inline-block w-fit"
                     title="Libro de reclamaciones"
                     aria-label="Libro de reclamaciones"
                 >
