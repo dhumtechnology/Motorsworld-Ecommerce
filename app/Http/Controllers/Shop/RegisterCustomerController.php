@@ -6,11 +6,17 @@ use App\Actions\Cart\MergeGuestCartAction;
 use App\Actions\Shop\RegisterCustomerAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\RegisterCustomerRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class RegisterCustomerController extends Controller
 {
+    public function create(): View
+    {
+        return view('auth.register');
+    }
+
     public function store(
         RegisterCustomerRequest $request,
         RegisterCustomerAction $registerCustomer,

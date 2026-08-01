@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Shop\AboutController;
+use App\Http\Controllers\Shop\AccountController;
 use App\Http\Controllers\Shop\BlogController;
 use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CartController;
@@ -87,4 +88,15 @@ Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
     Route::post('/pedidos/{order}/simular-pago', [CheckoutController::class, 'simulatePaid'])->name('orders.simulate');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Cuenta del cliente
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->prefix('cuenta')->name('account.')->group(function () {
+    Route::get('/', [AccountController::class, 'show'])->name('show');
+    Route::put('/perfil', [AccountController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/password', [AccountController::class, 'updatePassword'])->name('password.update');
 });

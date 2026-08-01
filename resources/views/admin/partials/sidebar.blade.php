@@ -166,7 +166,15 @@
         @endforeach
     </nav>
 
-    <div class="p-4 border-t border-sidebar-border text-xs text-sidebar-muted font-secondary">
-        Motosworld Admin
+    <div class="p-4 border-t border-sidebar-border space-y-2">
+        <a
+            href="{{ route('admin.profile.show') }}"
+            class="admin-nav-link {{ request()->routeIs('admin.profile.*') ? 'is-active' : '' }}"
+        >
+            Mi perfil
+        </a>
+        <p class="px-4 text-[10px] uppercase tracking-widest text-sidebar-muted font-secondary truncate" title="{{ auth()->user()?->email }}">
+            {{ auth()->user()?->email }}
+        </p>
     </div>
 </aside>

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductOfferController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ServicePackageController;
 use App\Http\Controllers\Admin\ServiceTypeController;
 use App\Http\Controllers\Admin\VehicleModelController;
@@ -32,6 +33,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/perfil', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/perfil/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
     Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
     Route::get('/productos/crear', [ProductController::class, 'create'])->name('products.create');

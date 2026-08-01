@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/public bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
@@ -20,6 +20,10 @@ if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
     echo "Generando APP_KEY..."
     php artisan key:generate --force --ansi
 fi
+
+# Enlace para artisan/filesystem; nginx también sirve /storage vía alias.
+echo "Asegurando enlace public/storage → storage/app/public..."
+php artisan storage:link --force --no-interaction 2>/dev/null || true
 
 # Conexión interna Docker: siempre mysql:3306 (DB_PORT_EXTERNAL solo mapea el host).
 export DB_HOST=mysql

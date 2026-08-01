@@ -82,7 +82,14 @@
                 </button>
             </form>
 
-            <p class="mt-8 text-center text-sm text-neutral-500">
+            <p class="mt-8 text-center text-sm text-neutral-400">
+                ¿No tienes cuenta?
+                <a href="{{ route('register') }}" class="text-orange-500 hover:text-orange-400 font-semibold">
+                    Crear cuenta
+                </a>
+            </p>
+
+            <p class="mt-4 text-center text-sm text-neutral-500">
                 <a href="{{ route('shop.catalog') }}" class="text-orange-500 hover:text-orange-400 font-semibold">
                     ← Volver al catálogo
                 </a>
