@@ -63,10 +63,7 @@ class GetDashboardMetricsAction
                     ->where('created_at', '>=', $monthStart)
                     ->count(),
                 'ordersToFulfill' => Order::query()
-                    ->whereIn('status', [
-                        OrderStatus::Paid,
-                        OrderStatus::Processing,
-                    ])
+                    ->where('status', OrderStatus::Paid)
                     ->count(),
                 'activeProducts' => Product::query()
                     ->where('status', ProductStatus::Active)

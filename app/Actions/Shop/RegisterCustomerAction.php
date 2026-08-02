@@ -3,7 +3,6 @@
 namespace App\Actions\Shop;
 
 use App\Enums\Auth\UserStatus;
-use App\Models\Auth\CustomerProfile;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\DB;
 
@@ -24,8 +23,7 @@ class RegisterCustomerAction
                 'status' => UserStatus::Active,
             ]);
 
-            CustomerProfile::query()->create([
-                'user_id' => $user->id,
+            $user->customerProfile()->create([
                 'document' => $document,
                 'first_name' => $firstName,
                 'last_name' => $lastName,

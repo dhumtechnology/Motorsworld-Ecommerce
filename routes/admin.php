@@ -95,6 +95,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/ordenes', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/ordenes/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::put('/ordenes/{order}/estado', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 
     Route::get('/pagos', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('/pagos/{payment}', [PaymentController::class, 'show'])->name('payments.show');

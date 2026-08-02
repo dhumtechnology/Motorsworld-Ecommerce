@@ -63,10 +63,6 @@
                         <dd class="mt-1 font-semibold text-text">{{ $methodLabel }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted">Proveedor</dt>
-                        <dd class="mt-1 text-text-soft uppercase tracking-wide">{{ $payment->provider ?? '—' }}</dd>
-                    </div>
-                    <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Monto</dt>
                         <dd class="mt-1 text-text font-bold text-lg">
                             {{ number_format(((int) $payment->amount_cents) / 100, 2) }}
@@ -85,38 +81,6 @@
                         <dt class="text-xs uppercase tracking-wider text-muted">Expira</dt>
                         <dd class="mt-1 text-text-soft">{{ $payment->expires_at?->format('d/m/Y H:i') ?? '—' }}</dd>
                     </div>
-                </dl>
-            </div>
-
-            <div class="rounded-lg border border-border bg-surface p-6">
-                <h2 class="text-sm font-title text-text mb-5">Referencias del proveedor</h2>
-                <dl class="grid gap-4 sm:grid-cols-2 text-sm">
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted">Charge ID</dt>
-                        <dd class="mt-1 font-mono text-text-soft break-all">{{ $payment->culqi_charge_id ?? '—' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted">Order ID (Culqi)</dt>
-                        <dd class="mt-1 font-mono text-text-soft break-all">{{ $payment->culqi_order_id ?? '—' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted">Código de pago</dt>
-                        <dd class="mt-1 font-mono text-text-soft">{{ $payment->payment_code ?? '—' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted">Source ID</dt>
-                        <dd class="mt-1 font-mono text-text-soft break-all">{{ $payment->source_id ?? '—' }}</dd>
-                    </div>
-                    @if ($payment->payment_url)
-                        <div class="sm:col-span-2">
-                            <dt class="text-xs uppercase tracking-wider text-muted">URL de pago</dt>
-                            <dd class="mt-1">
-                                <a href="{{ $payment->payment_url }}" target="_blank" rel="noopener" class="text-sky-700 hover:text-sky-800 break-all">
-                                    {{ $payment->payment_url }}
-                                </a>
-                            </dd>
-                        </div>
-                    @endif
                 </dl>
             </div>
         </div>

@@ -82,7 +82,7 @@
             </div>
         </div>
 
-        <a href="{{ route('admin.orders.index', ['status' => 'processing']) }}" class="admin-card admin-kpi group p-5 block hover:border-primary/40 transition-colors">
+        <a href="{{ route('admin.orders.index', ['status' => 'paid']) }}" class="admin-card admin-kpi group p-5 block hover:border-primary/40 transition-colors">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="admin-label mb-0">Pedidos por atender</p>

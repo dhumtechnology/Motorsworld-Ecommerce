@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Orders\UpdateOrderStatusAction;
 use App\Enums\Orders\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\OrderIndexRequest;
+use App\Http\Requests\Admin\UpdateOrderStatusRequest;
 use App\Models\Orders\Order;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 
 class OrderController extends Controller
 {
@@ -72,6 +75,23 @@ class OrderController extends Controller
 
         return view('admin.orders.show', [
             'order' => $order,
+            'statuses' => OrderStatus::cases(),
         ]);
+    }
+
+    public function updateStatus(
+        UpdateOrderStatusRequest $request,
+        Order $order,
+        UpdateOrderStatusAction $updateOrderStatus,
+    ): RedirectResponse {
+        $order = $updateOrderStatus->execute(
+            $order,
+            $request->orderStatus(),
+            $request->note(),
+        );
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('status', "Estado de la orden #{$order->id} actualizado correctamente.");
     }
 }

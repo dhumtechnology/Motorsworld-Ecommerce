@@ -86,6 +86,53 @@
                 </dl>
             </div>
 
+            <div class="rounded-lg border border-border bg-surface p-6">
+                <h2 class="text-sm font-title text-text mb-1">Cambiar estado</h2>
+                <p class="text-xs text-muted mb-4">Actualiza el estado de la orden y deja una nota opcional.</p>
+
+                @if ($errors->any())
+                    <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="space-y-4">
+                    @csrf
+                    @method('PUT')
+
+                    <div>
+                        <label for="status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado *</label>
+                        <select id="status" name="status" required
+                                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                            @foreach ($statuses as $status)
+                                @php
+                                    $optionKey = $status->value;
+                                    $optionLabel = $statusLabels[$optionKey]['label'] ?? $optionKey;
+                                @endphp
+                                <option value="{{ $optionKey }}" @selected(old('status', $statusKey) === $optionKey)>
+                                    {{ $optionLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="note" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Nota (opcional)</label>
+                        <textarea id="note" name="note" rows="3" maxlength="500"
+                                  class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                  placeholder="Ej. Pedido preparado para envío">{{ old('note') }}</textarea>
+                    </div>
+
+                    <button type="submit" class="rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors">
+                        Guardar estado
+                    </button>
+                </form>
+            </div>
+
             <div class="rounded-lg border border-border bg-surface overflow-hidden">
                 <div class="px-5 py-4 border-b border-border">
                     <h2 class="text-sm font-title text-text">Productos</h2>
