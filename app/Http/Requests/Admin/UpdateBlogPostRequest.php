@@ -22,7 +22,7 @@ class UpdateBlogPostRequest extends FormRequest
             'body' => ['required', 'string'],
             'image' => ['nullable', 'image', 'max:5120'],
             'remove_image' => ['nullable', 'boolean'],
-            'is_published' => ['nullable', 'boolean'],
+            'is_published' => ['required', 'boolean'],
         ];
     }
 
@@ -35,6 +35,7 @@ class UpdateBlogPostRequest extends FormRequest
             'title.required' => 'El título es obligatorio.',
             'body.required' => 'El contenido de la publicación es obligatorio.',
             'image.image' => 'La imagen debe ser un archivo de imagen válido.',
+            'is_published.required' => 'Selecciona si la publicación es borrador o publicada.',
         ];
     }
 
@@ -42,6 +43,7 @@ class UpdateBlogPostRequest extends FormRequest
     {
         $this->merge([
             'is_published' => $this->boolean('is_published'),
+            'remove_image' => $this->boolean('remove_image'),
         ]);
     }
 

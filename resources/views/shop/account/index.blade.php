@@ -22,6 +22,7 @@
         ];
         $appointmentStatusLabels = [
             'pending' => 'Pendiente',
+            'accepted' => 'Aceptada',
             'in_progress' => 'En proceso',
             'attended' => 'Atendida',
             'absent' => 'Ausente',
@@ -222,7 +223,14 @@
                                         @endif
                                     </td>
                                     <td class="py-3 pr-4">
-                                        {{ $appointmentStatusLabels[$appointment->status?->value ?? ''] ?? ($appointment->status?->value ?? '—') }}
+                                        <span class="font-semibold">
+                                            {{ $appointmentStatusLabels[$appointment->status?->value ?? ''] ?? ($appointment->status?->value ?? '—') }}
+                                        </span>
+                                        @if ($appointment->status?->value === 'cancelled' && $appointment->cancellation_reason)
+                                            <span class="block text-xs text-neutral-500 mt-1">
+                                                Motivo: {{ $appointment->cancellation_reason }}
+                                            </span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

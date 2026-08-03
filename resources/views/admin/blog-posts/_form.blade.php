@@ -21,6 +21,20 @@
                class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
     </div>
 
+    <div class="relative z-20">
+        <label for="is_published" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado *</label>
+        <select id="is_published" name="is_published" required
+                class="relative z-20 w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+            @php
+                $publishedValue = old('is_published', ($blogPost?->is_published ?? false) ? '1' : '0');
+                $publishedValue = in_array((string) $publishedValue, ['1', 'true'], true) ? '1' : '0';
+            @endphp
+            <option value="0" @selected($publishedValue === '0')>Borrador</option>
+            <option value="1" @selected($publishedValue === '1')>Publicado</option>
+        </select>
+        <p class="mt-1.5 text-xs text-muted">Solo las publicaciones en estado Publicado aparecen en el blog de la tienda.</p>
+    </div>
+
     <div data-blog-image>
         <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imagen de portada</label>
 
@@ -51,19 +65,13 @@
         </div>
     </div>
 
-    <div>
+    <div class="relative z-0">
         <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Contenido *</label>
         <input type="hidden" name="body" id="body" value="{{ old('body', $blogPost?->body) }}">
-        <div id="blog-editor" class="min-h-[280px] rounded border border-border bg-white text-text"></div>
+        <div id="blog-editor-wrap" class="relative z-0 overflow-visible rounded border border-border bg-white">
+            <div id="blog-editor" class="min-h-[280px] text-text"></div>
+        </div>
         <p class="mt-1.5 text-xs text-muted">Usa la barra para negrita, cursiva, tamaño, color y más.</p>
-    </div>
-
-    <div>
-        <label class="inline-flex items-center gap-3 rounded border border-border bg-secondary px-4 py-2.5 w-full cursor-pointer">
-            <input type="checkbox" name="is_published" value="1" class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
-                   @checked(old('is_published', $blogPost?->is_published ?? false))>
-            <span class="text-sm font-semibold text-text">Publicar en el blog de la tienda</span>
-        </label>
     </div>
 </div>
 
@@ -79,9 +87,25 @@
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 <style>
-    .ql-toolbar.ql-snow { border-color: var(--color-border, #e5e7eb); border-radius: 0.5rem 0.5rem 0 0; background: #fafafa; }
-    .ql-container.ql-snow { border-color: var(--color-border, #e5e7eb); border-radius: 0 0 0.5rem 0.5rem; min-height: 280px; font-size: 0.95rem; }
-    .ql-editor { min-height: 260px; }
+    #blog-editor-wrap .ql-toolbar.ql-snow {
+        border: 0;
+        border-bottom: 1px solid var(--color-border, #e5e7eb);
+        border-radius: 0;
+        background: #fafafa;
+        position: relative;
+        z-index: 2;
+    }
+    #blog-editor-wrap .ql-container.ql-snow {
+        border: 0;
+        min-height: 280px;
+        font-size: 0.95rem;
+        position: relative;
+        z-index: 1;
+    }
+    #blog-editor-wrap .ql-editor { min-height: 260px; }
+    #blog-editor-wrap .ql-toolbar .ql-picker-options {
+        z-index: 30;
+    }
 </style>
 @endpush
 

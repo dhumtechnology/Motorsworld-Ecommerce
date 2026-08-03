@@ -19,7 +19,10 @@ class CheckoutPayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
+            'payment_method' => ['required', 'string', Rule::in([
+                PaymentMethod::Card->value,
+                PaymentMethod::Yape->value,
+            ])],
             'culqi_token' => ['nullable', 'string', 'max:64'],
             'first_name' => ['nullable', 'string', 'max:80'],
             'last_name' => ['nullable', 'string', 'max:80'],

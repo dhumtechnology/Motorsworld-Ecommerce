@@ -21,7 +21,7 @@ class StoreBlogPostRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
             'image' => ['nullable', 'image', 'max:5120'],
-            'is_published' => ['nullable', 'boolean'],
+            'is_published' => ['required', 'boolean'],
         ];
     }
 
@@ -34,6 +34,7 @@ class StoreBlogPostRequest extends FormRequest
             'title.required' => 'El título es obligatorio.',
             'body.required' => 'El contenido de la publicación es obligatorio.',
             'image.image' => 'La imagen debe ser un archivo de imagen válido.',
+            'is_published.required' => 'Selecciona si la publicación es borrador o publicada.',
         ];
     }
 

@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'service_type_id',
     'service_package_id',
     'comments',
+    'cancellation_reason',
     'status',
 ])]
 class Appointment extends Model

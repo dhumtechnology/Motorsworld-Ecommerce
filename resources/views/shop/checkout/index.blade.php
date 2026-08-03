@@ -44,7 +44,7 @@
                                    class="{{ $fieldClass }}">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="phone">Teléfono (requerido Plin/PagoEfectivo)</label>
+                            <label class="{{ $labelClass }}" for="phone">Teléfono</label>
                             <input id="phone" name="phone" value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
                                    class="{{ $fieldClass }}">
                         </div>
@@ -72,8 +72,6 @@
                         @foreach ([
                             'card' => 'Tarjeta de crédito/débito',
                             'yape' => 'Yape',
-                            'plin' => 'Plin (QR billeteras)',
-                            'pagoefectivo' => 'PagoEfectivo (CIP)',
                         ] as $value => $label)
                             <label class="flex items-center gap-3 rounded-md border border-neutral-300 bg-white px-3 py-3 cursor-pointer transition-colors hover:border-orange-500 has-[:checked]:border-orange-600 has-[:checked]:bg-orange-50">
                                 <input type="radio" name="payment_method" value="{{ $value }}" class="text-orange-600 focus:ring-orange-600" @checked(old('payment_method', 'card') === $value)>

@@ -67,12 +67,6 @@
                     'active' => request()->routeIs('admin.payments.*'),
                     'enabled' => true,
                 ],
-                [
-                    'label' => 'Medios de pago',
-                    'route' => 'admin.payment-methods.index',
-                    'active' => request()->routeIs('admin.payment-methods.*'),
-                    'enabled' => true,
-                ],
             ],
         ],
         [

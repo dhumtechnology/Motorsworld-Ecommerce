@@ -87,6 +87,7 @@ class GetDashboardMetricsAction
                 ->where('appointment_at', '>=', $now)
                 ->whereIn('status', [
                     AppointmentStatus::Pending,
+                    AppointmentStatus::Accepted,
                     AppointmentStatus::InProgress,
                 ])
                 ->orderBy('appointment_at')
@@ -184,8 +185,9 @@ class GetDashboardMetricsAction
 
         $meta = [
             AppointmentStatus::Pending->value => ['label' => 'Pendiente', 'color' => '#f59e0b'],
+            AppointmentStatus::Accepted->value => ['label' => 'Aceptada', 'color' => '#10b981'],
             AppointmentStatus::InProgress->value => ['label' => 'En curso', 'color' => '#0ea5e9'],
-            AppointmentStatus::Attended->value => ['label' => 'Atendida', 'color' => '#10b981'],
+            AppointmentStatus::Attended->value => ['label' => 'Atendida', 'color' => '#059669'],
             AppointmentStatus::Absent->value => ['label' => 'Ausente', 'color' => '#a3a3a3'],
             AppointmentStatus::Cancelled->value => ['label' => 'Cancelada', 'color' => '#ef4444'],
         ];

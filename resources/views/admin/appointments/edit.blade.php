@@ -11,6 +11,7 @@
 
         $statusLabels = [
             'pending' => 'Pendiente',
+            'accepted' => 'Aceptada',
             'in_progress' => 'En curso',
             'attended' => 'Atendida',
             'absent' => 'Ausente',
@@ -21,6 +22,7 @@
             'appointment_at',
             $appointment->appointment_at?->format('Y-m-d\TH:i')
         );
+        $currentStatus = old('status', $appointment->status->value);
     @endphp
 
     <div class="mb-5">
@@ -32,7 +34,7 @@
     <div class="grid gap-6 xl:grid-cols-3">
         <div class="xl:col-span-2 rounded-lg border border-border bg-surface p-6">
             @if ($errors->any())
-                <div class="mb-5 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">
+                <div class="mb-5 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     <ul class="list-disc list-inside space-y-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -41,7 +43,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.appointments.update', $appointment) }}" class="space-y-5">
+            <form method="POST" action="{{ route('admin.appointments.update', $appointment) }}" class="space-y-5" id="appointment-edit-form">
                 @csrf
                 @method('PUT')
 
@@ -62,11 +64,19 @@
                         <label for="status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado *</label>
                         <select id="status" name="status" required class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                             @foreach ($statuses as $status)
-                                <option value="{{ $status->value }}" @selected(old('status', $appointment->status->value) === $status->value)>
-                                    {{ $statusLabels[$status->value] ?? $status->value }}
+                                <option value="{{ $status->value }}" @selected($currentStatus === $status->value)>
+                                    {{ $statusLabels[$status->value] ?? $status->label() }}
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <div class="sm:col-span-2 {{ $currentStatus === 'cancelled' ? '' : 'hidden' }}" data-cancellation-reason>
+                        <label for="cancellation_reason" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Motivo de cancelación *</label>
+                        <textarea id="cancellation_reason" name="cancellation_reason" rows="3"
+                                  class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                  placeholder="Indica por qué se cancela la reserva">{{ old('cancellation_reason', $appointment->cancellation_reason) }}</textarea>
+                        <p class="mt-1.5 text-xs text-muted">Este motivo lo verá el cliente en su perfil.</p>
                     </div>
 
                     <div>
@@ -164,3 +174,23 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const status = document.getElementById('status');
+        const reasonWrap = document.querySelector('[data-cancellation-reason]');
+        const reasonInput = document.getElementById('cancellation_reason');
+        if (!status || !reasonWrap || !reasonInput) return;
+
+        const sync = () => {
+            const cancelled = status.value === 'cancelled';
+            reasonWrap.classList.toggle('hidden', !cancelled);
+            reasonInput.required = cancelled;
+        };
+
+        status.addEventListener('change', sync);
+        sync();
+    })();
+</script>
+@endpush
