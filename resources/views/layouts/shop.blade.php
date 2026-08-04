@@ -202,13 +202,13 @@
                 </h3>
 
                 <a
-                    href="{{ route('shop.contact') }}"
+                    href="{{ route('shop.claim-book') }}"
                     class="inline-block w-fit"
                     title="Libro de reclamaciones"
                     aria-label="Libro de reclamaciones"
                 >
                     <img
-                        src="images/home/libro-de-reclamaciones.png"
+                        src="{{ asset('images/home/libro-de-reclamaciones.png') }}"
                         alt="Libro de reclamaciones"
                         class="h-24 w-auto transition-transform hover:scale-105"
                         width="96"

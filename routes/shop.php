@@ -6,6 +6,7 @@ use App\Http\Controllers\Shop\BlogController;
 use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
+use App\Http\Controllers\Shop\ClaimBookController;
 use App\Http\Controllers\Shop\ContactController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\ProductController;
@@ -27,6 +28,9 @@ Route::get('/nosotros', [AboutController::class, 'index'])->name('about');
 
 Route::get('/contacto', [ContactController::class, 'index'])->name('contact');
 Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/libro-de-reclamaciones', [ClaimBookController::class, 'index'])->name('claim-book');
+Route::post('/libro-de-reclamaciones', [ClaimBookController::class, 'store'])->name('claim-book.store');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');

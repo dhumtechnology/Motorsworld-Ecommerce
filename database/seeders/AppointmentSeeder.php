@@ -28,24 +28,48 @@ class AppointmentSeeder extends Seeder
     private function seedServiceTypes(): array
     {
         $definitions = [
-            'Mantenimiento preventivo' => 'Revisión periódica para mantener tu moto en óptimas condiciones.',
-            'Cambio de aceite' => 'Cambio de aceite y filtro con productos de calidad.',
-            'Revisión de frenos' => 'Inspección y servicio del sistema de frenos.',
-            'Alineamiento y balanceo' => 'Ajuste de dirección y balanceo de ruedas.',
-            'Diagnóstico electrónico' => 'Escaneo y análisis de fallas del sistema electrónico.',
-            'Cambio de batería' => 'Instalación y prueba de batería para tu moto.',
-            'Servicio de cadena' => 'Limpieza, lubricación y ajuste de cadena.',
-            'Lavado y detailing' => 'Lavado exterior y detailing para dejar tu moto impecable.',
+            'Mantenimiento preventivo' => [
+                'description' => 'Revisión periódica para mantener tu moto en óptimas condiciones.',
+                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTh_mUP8eGXNljBnZ34mtOKfTzDOgzHes4BjoxEAow2UmKsTIJlIOqJZ5I&s=10',
+            ],
+            'Cambio de aceite' => [
+                'description' => 'Cambio de aceite y filtro con productos de calidad.',
+                'image' => 'https://euroshop.com.pe/wp-content/uploads/2026/03/mantenimiento-preventivo-moto-deportiva.jpg',
+            ],
+            'Revisión de frenos' => [
+                'description' => 'Inspección y servicio del sistema de frenos.',
+                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA6dxlMtfcT9sSD6AGfbHnqpIxloBPZIDws3UeRFuQDWPaymqtjAZTDV8&s=10',
+            ],
+            'Alineamiento y balanceo' => [
+                'description' => 'Ajuste de dirección y balanceo de ruedas.',
+                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShYUXXf4v9Gyopqdg10S16PEaIw-_6dZ46FSVUgPX1VSv3jGqBlLc8ggj1&s=10',
+            ],
+            'Diagnóstico electrónico' => [
+                'description' => 'Escaneo y análisis de fallas del sistema electrónico.',
+                'image' => '/images/services/diagnostico-electronico.png',
+            ],
+            'Cambio de batería' => [
+                'description' => 'Instalación y prueba de batería para tu moto.',
+                'image' => '/images/services/cambio-de-bateria.png',
+            ],
+            'Servicio de cadena' => [
+                'description' => 'Limpieza, lubricación y ajuste de cadena.',
+                'image' => '/images/services/servicio-de-cadena.png',
+            ],
+            'Lavado y detailing' => [
+                'description' => 'Lavado exterior y detailing para dejar tu moto impecable.',
+                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFrHeWfL4kYXcgPdbsAiU2svw3wmCQFnQkvKi4G7xF4MVDhdtZZckMcnc&s=10',
+            ],
         ];
 
         $types = [];
 
-        foreach ($definitions as $name => $description) {
+        foreach ($definitions as $name => $data) {
             $types[$name] = ServiceType::query()->updateOrCreate(
                 ['name' => $name],
                 [
-                    'description' => $description,
-                    'image' => null,
+                    'description' => $data['description'],
+                    'image' => $data['image'],
                 ],
             );
         }
