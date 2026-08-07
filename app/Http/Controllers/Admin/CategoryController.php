@@ -62,7 +62,11 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): RedirectResponse|JsonResponse
     {
-        $category = $this->upsertCategory->execute($request->categoryAttributes());
+        $category = $this->upsertCategory->execute(
+            $request->categoryAttributes(),
+            null,
+            $request->imageFile(),
+        );
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -92,7 +96,12 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
-        $category = $this->upsertCategory->execute($request->categoryAttributes(), $category);
+        $category = $this->upsertCategory->execute(
+            $request->categoryAttributes(),
+            $category,
+            $request->imageFile(),
+            $request->shouldRemoveImage(),
+        );
 
         return redirect()
             ->route('admin.categories.index')

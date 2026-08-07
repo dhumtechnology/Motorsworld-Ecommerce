@@ -92,6 +92,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/usuarios', [AdminUserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
 
     Route::get('/clientes', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/clientes/{user}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::delete('/clientes/{user}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
     Route::get('/ordenes', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/ordenes/{order}', [OrderController::class, 'show'])->name('orders.show');

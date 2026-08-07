@@ -4,6 +4,7 @@ namespace App\Actions\Shop;
 
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Products\ProductStatus;
+use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Services\Products\ProductOfferPresenter;
@@ -24,7 +25,9 @@ class GetHomePageDataAction
     /**
      * @return array{
      *     popularProducts: Collection<int, Product>,
-     *     needLinks: list<array{key: string, label: string, href: string, image: string}>
+     *     needLinks: list<array{key: string, label: string, href: string, image: string}>,
+     *     brands: Collection<int, Brand>,
+     *     categories: Collection<int, Category>
      * }
      */
     public function execute(): array
@@ -32,7 +35,31 @@ class GetHomePageDataAction
         return [
             'popularProducts' => $this->popularProducts(),
             'needLinks' => $this->needLinks(),
+            'brands' => $this->brands(),
+            'categories' => $this->categories(),
         ];
+    }
+
+    /**
+     * @return Collection<int, Brand>
+     */
+    private function brands(): Collection
+    {
+        return Brand::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'image']);
+    }
+
+    /**
+     * All categories including MOTOS, with images for the home frontend.
+     *
+     * @return Collection<int, Category>
+     */
+    private function categories(): Collection
+    {
+        return Category::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'description', 'image']);
     }
 
     /**
@@ -62,7 +89,6 @@ class GetHomePageDataAction
             ->pluck('id');
 
         if ($rankedIds->isEmpty()) {
-            // Fallback: productos activos no-moto más recientes si aún no hay ventas.
             $fallback = Product::query()
                 ->active()
                 ->when(

@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="rounded-lg border border-border bg-surface p-6 max-w-2xl">
-        <form method="POST" action="{{ route('admin.categories.store') }}">
+        <form method="POST" action="{{ route('admin.categories.store') }}" enctype="multipart/form-data">
             @csrf
             @include('admin.categories._form')
         </form>

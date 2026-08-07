@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="rounded-lg border border-border bg-surface p-6 max-w-2xl">
-        <form method="POST" action="{{ route('admin.categories.update', $category) }}">
+        <form method="POST" action="{{ route('admin.categories.update', $category) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             @include('admin.categories._form', ['category' => $category])

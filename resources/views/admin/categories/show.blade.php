@@ -54,6 +54,16 @@
                 <dt class="text-xs uppercase tracking-wider text-muted">Nombre</dt>
                 <dd class="mt-1 font-semibold text-text">{{ $category->name }}</dd>
             </div>
+            <div class="sm:col-span-2">
+                <dt class="text-xs uppercase tracking-wider text-muted">Imagen</dt>
+                <dd class="mt-2">
+                    @if ($category->image)
+                        <img src="{{ $category->image }}" alt="" class="h-24 w-24 rounded object-cover border border-border bg-secondary">
+                    @else
+                        <span class="text-text-soft">—</span>
+                    @endif
+                </dd>
+            </div>
             <div>
                 <dt class="text-xs uppercase tracking-wider text-muted">Creada</dt>
                 <dd class="mt-1 text-text-soft">{{ $category->created_at?->format('d/m/Y H:i') ?? '—' }}</dd>

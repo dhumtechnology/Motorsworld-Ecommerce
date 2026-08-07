@@ -103,6 +103,7 @@
                             >
                         </th>
                         <th scope="col" class="px-5 py-3 font-bold">ID</th>
+                        <th scope="col" class="px-5 py-3 font-bold">Imagen</th>
                         <th scope="col" class="px-5 py-3 font-bold">Nombre</th>
                         <th scope="col" class="px-5 py-3 font-bold">Descripción</th>
                         <th scope="col" class="px-5 py-3 font-bold">Productos</th>
@@ -131,6 +132,13 @@
                                 >
                                     #{{ $category->id }}
                                 </span>
+                            </td>
+                            <td class="px-5 py-3">
+                                @if ($category->image)
+                                    <img src="{{ $category->image }}" alt="" class="h-10 w-10 rounded object-cover border border-border bg-secondary">
+                                @else
+                                    <span class="inline-flex h-10 w-10 items-center justify-center rounded border border-border bg-secondary text-xs text-muted">—</span>
+                                @endif
                             </td>
                             <td class="px-5 py-3 font-semibold text-text">{{ $category->name }}</td>
                             <td class="px-5 py-3 text-muted max-w-md">
@@ -186,7 +194,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-12 text-center text-muted">
+                            <td colspan="7" class="px-5 py-12 text-center text-muted">
                                 No se encontraron categorías.
                             </td>
                         </tr>

@@ -11,7 +11,6 @@ use App\Models\Auth\User;
 use App\Models\Products\VehicleModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -159,8 +158,8 @@ class StoreShopAppointmentAction
 
         $user = User::query()->create([
             'email' => $email,
-            'password_hash' => Hash::make(Str::password(32)),
-            'status' => UserStatus::Active,
+            'password_hash' => Str::password(32),
+            'status' => UserStatus::Pending,
         ]);
 
         $user->customerProfile()->create([

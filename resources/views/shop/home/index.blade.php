@@ -15,7 +15,9 @@
 
     Variables:
     - $popularProducts : Collection<Product> (top 4 por ventas, sin MOTOS)
-    - $needLinks       : enlaces de la sección "TENEMOS TODO LO QUE NECESITAS"
+    - $needLinks       : enlaces de la sección "TENEMOS TODO LO QUE NECESITAS" (legacy/estáticos)
+    - $brands          : Collection<Brand> — todas las marcas (id, name, image)
+    - $categories      : Collection<Category> — TODAS las categorías incl. MOTOS (id, name, description, image)
 --}}
 @extends('layouts.shop')
 

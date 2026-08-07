@@ -2,8 +2,12 @@
 
 namespace App\Http\Requests\Shop;
 
+use App\Enums\Auth\UserStatus;
+use App\Models\Auth\CustomerProfile;
+use App\Models\Auth\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Validator;
 
 class RegisterCustomerRequest extends FormRequest
 {
@@ -18,13 +22,49 @@ class RegisterCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', Password::defaults(), 'confirmed'],
-            'document' => ['required', 'string', 'max:50', 'unique:customer_profiles,document'],
+            'document' => ['required', 'string', 'max:50'],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $email = $this->email();
+            $document = $this->document();
+
+            $existingUser = User::query()
+                ->whereRaw('LOWER(email) = ?', [$email])
+                ->first();
+
+            if ($existingUser !== null && $existingUser->status !== UserStatus::Pending) {
+                $validator->errors()->add('email', 'Este correo ya está registrado.');
+            }
+
+            $profile = CustomerProfile::query()
+                ->where('document', $document)
+                ->first();
+
+            if ($profile === null) {
+                return;
+            }
+
+            $belongsToPending = $existingUser !== null
+                && $existingUser->status === UserStatus::Pending
+                && (int) $profile->user_id === (int) $existingUser->id;
+
+            if (! $belongsToPending) {
+                $validator->errors()->add('document', 'Este documento ya está registrado.');
+            }
+        });
     }
 
     /**
