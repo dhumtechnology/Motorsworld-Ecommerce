@@ -17,6 +17,14 @@
         </div>
     @endif
 
+    @guest
+        <div class="mb-6 rounded border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+            Compra asociada a <strong>{{ $order->user?->email }}</strong>.
+            Si te registras después con ese correo, conservarás el historial de pedidos.
+            <a href="{{ route('register') }}" class="font-bold underline ml-1">Crear cuenta</a>
+        </div>
+    @endguest
+
     @if ($errors->any())
         <div class="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
@@ -28,6 +36,9 @@
             <div class="flex justify-between gap-4 p-4 text-sm">
                 <div>
                     <p class="font-semibold text-neutral-900">{{ $item->product?->name ?? 'Producto' }}</p>
+                    @if ($item->variant)
+                        <p class="text-neutral-600 text-xs">{{ $item->variant->colorLabel() }} · {{ $item->variant->sku }}</p>
+                    @endif
                     <p class="text-neutral-500 text-xs">x{{ $item->quantity }}</p>
                 </div>
                 <p class="font-bold text-orange-600">

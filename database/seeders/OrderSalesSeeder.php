@@ -160,10 +160,16 @@ class OrderSalesSeeder extends Seeder
                 continue;
             }
 
-            $pricing = OrderItem::pricingAttributesFor($product, $line['qty']);
+            $pricing = OrderItem::pricingAttributesFor(
+                $product,
+                $line['qty'],
+                null,
+                $product->variants()->with('inventory')->orderBy('id')->first(),
+            );
 
             $resolved[] = [
                 'product_id' => $pricing['product_id'],
+                'product_variant_id' => $pricing['product_variant_id'],
                 'product_offer_id' => $pricing['product_offer_id'],
                 'quantity' => $pricing['quantity'],
                 'unit_price' => $pricing['unit_price'],

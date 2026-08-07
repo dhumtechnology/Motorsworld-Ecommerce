@@ -20,6 +20,7 @@ class ExportInventoryMovementsAction
             ->with([
                 'product.category:id,name',
                 'product.vehicleModel.brand:id,name',
+                'variant:id,sku,name',
                 'order:id',
                 'creator:id,email',
             ])
@@ -56,7 +57,7 @@ class ExportInventoryMovementsAction
                 $movement->id,
                 $movement->created_at?->format('d/m/Y H:i'),
                 $movement->type?->label(),
-                $product?->sku,
+                $movement->variant?->sku ?? $product?->sku,
                 $product?->name,
                 $product?->category?->name,
                 $product?->vehicleModel?->brand?->name,

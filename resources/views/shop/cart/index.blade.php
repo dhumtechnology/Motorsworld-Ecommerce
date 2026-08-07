@@ -30,6 +30,7 @@
                     class="flex flex-col sm:flex-row gap-4 p-4 sm:items-center"
                     data-cart-line
                     data-product-id="{{ $line['product']->id }}"
+                    data-variant-id="{{ $line['variant']->id }}"
                     data-unit-price="{{ $line['unit_price'] }}"
                     data-max-stock="{{ $line['max_quantity'] }}"
                     data-increment-url="{{ route('shop.cart.items.increment', $line['product']) }}"
@@ -48,7 +49,8 @@
                             {{ $line['product']->name }}
                         </a>
                         <p class="text-xs text-black mt-0.5">
-                            {{ $line['product']->sku }}
+                            {{ $line['variant']->sku }}
+                            · {{ $line['color_label'] }}
                             @if ($line['product']->category)
                                 · <span class="text-primary font-title font-bold">
                                     {{ $line['product']->category->name }}

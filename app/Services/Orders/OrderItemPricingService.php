@@ -3,6 +3,7 @@
 namespace App\Services\Orders;
 
 use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 use Illuminate\Support\Carbon;
 
 class OrderItemPricingService
@@ -14,6 +15,7 @@ class OrderItemPricingService
     /**
      * @return array{
      *     product_id: int,
+     *     product_variant_id: int|null,
      *     product_offer_id: int|null,
      *     quantity: int,
      *     unit_price: string,
@@ -25,11 +27,13 @@ class OrderItemPricingService
         Product $product,
         int $quantity,
         ?Carbon $at = null,
+        ?ProductVariant $variant = null,
     ): array {
         $pricing = $this->productPricing->resolve($product, $at);
 
         return [
             'product_id' => $product->id,
+            'product_variant_id' => $variant?->id,
             'product_offer_id' => $pricing->productOfferId,
             'quantity' => $quantity,
             'unit_price' => $pricing->unitPrice,

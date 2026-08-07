@@ -52,7 +52,7 @@ class ProductController extends Controller
         }
 
         $products = Product::query()
-            ->with(['category', 'inventory', 'primaryImage', 'vehicleModel.brand'])
+            ->with(['category', 'inventories', 'primaryImage', 'vehicleModel.brand', 'variants.colors'])
             ->when(
                 $request->categoryIds() !== [],
                 fn (Builder $query) => $query->whereIn('category_id', $request->categoryIds()),
@@ -91,6 +91,7 @@ class ProductController extends Controller
                         $searchQuery
                             ->where('sku', 'like', $like)
                             ->orWhere('name', 'like', $like)
+                            ->orWhereHas('variants', fn (Builder $q) => $q->where('sku', 'like', $like)->orWhere('name', 'like', $like))
                             ->orWhereHas('category', fn (Builder $q) => $q->where('name', 'like', $like))
                             ->orWhereHas('vehicleModel', function (Builder $q) use ($like) {
                                 $q->where('name', 'like', $like)
@@ -140,14 +141,14 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $attributes = $request->productAttributes();
-        $attributes['sku'] = ($this->generateProductSku)($attributes['sku'] ?? null);
+        $attributes['sku'] = ($this->generateProductSku)();
 
         $product = $this->upsertProduct->execute(
             $attributes,
-            $request->availableStock(),
             null,
-            $request->primaryImage(),
-            $request->secondaryImages(),
+            $request->technicalSheet(),
+            false,
+            $request->variantsPayload(),
         );
 
         return redirect()
@@ -162,7 +163,13 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
-        $product->load(['inventory', 'category', 'vehicleModel.brand', 'images']);
+        $product->load([
+            'category',
+            'vehicleModel.brand',
+            'variants.colors',
+            'variants.inventory',
+            'variants.images',
+        ]);
 
         return view('admin.products.edit', [
             ...$this->formData(),
@@ -172,15 +179,13 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
-        $availableStock = (int) ($product->inventory?->available_stock ?? 0);
-
         $product = $this->upsertProduct->execute(
             $request->productAttributes(),
-            $availableStock,
             $product,
-            $request->primaryImage(),
-            $request->secondaryImages(),
-            $request->removeImageIds(),
+            $request->technicalSheet(),
+            $request->shouldRemoveTechnicalSheet(),
+            $request->variantsPayload(),
+            $request->removeVariantIds(),
         );
 
         return redirect()
@@ -237,6 +242,7 @@ class ProductController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'brand_id']),
             'statuses' => ProductStatus::cases(),
+            'colors' => \App\Models\Products\Color::query()->orderBy('name')->get(['id', 'name', 'hex']),
         ];
     }
 }

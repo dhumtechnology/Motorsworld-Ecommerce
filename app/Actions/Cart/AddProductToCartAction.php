@@ -4,7 +4,7 @@ namespace App\Actions\Cart;
 
 use App\Models\Cart\Cart;
 use App\Models\Cart\CartItem;
-use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 
 class AddProductToCartAction
 {
@@ -12,15 +12,15 @@ class AddProductToCartAction
         private readonly UpdateCartItemQuantityAction $updateQuantity,
     ) {}
 
-    public function execute(Cart $cart, Product $product, int $quantity = 1): CartItem
+    public function execute(Cart $cart, ProductVariant $variant, int $quantity = 1): CartItem
     {
         $currentQuantity = (int) $cart->items()
-            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variant->id)
             ->value('quantity');
 
         return $this->updateQuantity->execute(
             $cart,
-            $product,
+            $variant,
             $currentQuantity + $quantity,
         );
     }

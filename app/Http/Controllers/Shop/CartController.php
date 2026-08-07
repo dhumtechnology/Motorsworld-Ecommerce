@@ -9,12 +9,14 @@ use App\Http\Requests\Shop\AddToCartRequest;
 use App\Http\Requests\Shop\UpdateCartItemRequest;
 use App\Models\Cart\Cart;
 use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 use App\Services\Cart\CartResolver;
 use App\Services\Orders\ProductPricingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
@@ -24,37 +26,39 @@ class CartController extends Controller
         private readonly UpdateCartItemQuantityAction $updateQuantity,
     ) {}
 
-    /**
-     * Vista del carrito con líneas y totales.
-     */
     public function index(Request $request): View
     {
         $cart = $this->resolveCart($request);
         $cart->loadMissing([
-            'items.product.inventory',
             'items.product.category',
             'items.product.primaryImage',
             'items.product.activeOffer',
+            'items.variant.inventory',
+            'items.variant.images',
+            'items.variant.colors',
         ]);
 
         $pricing = app(ProductPricingService::class);
 
         $lines = $cart->items
-            ->filter(fn ($item) => $item->product !== null)
+            ->filter(fn ($item) => $item->product !== null && $item->variant !== null)
             ->map(function ($item) use ($pricing) {
                 $product = $item->product;
+                $variant = $item->variant;
                 $price = $pricing->resolve($product);
 
                 return [
                     'item' => $item,
                     'product' => $product,
+                    'variant' => $variant,
                     'quantity' => (int) $item->quantity,
                     'unit_price' => (float) $price->unitPrice,
                     'list_unit_price' => (float) $price->listUnitPrice,
                     'line_total' => (float) $price->unitPrice * (int) $item->quantity,
                     'is_on_sale' => $price->hasOffer(),
-                    'image' => $product->catalogImageUrl(),
-                    'max_quantity' => max(0, (int) ($product->inventory?->available_stock ?? 0)),
+                    'image' => $variant->catalogImageUrl() ?? $product->catalogImageUrl(),
+                    'max_quantity' => max(0, (int) ($variant->inventory?->available_stock ?? 0)),
+                    'color_label' => $variant->colorLabel(),
                 ];
             })
             ->values();
@@ -67,60 +71,52 @@ class CartController extends Controller
         ]);
     }
 
-    /**
-     * Agregar unidades al carrito (detalle de producto). Suma sobre la cantidad existente.
-     */
     public function store(AddToCartRequest $request, Product $product): JsonResponse|RedirectResponse
     {
         $cart = $this->resolveCart($request);
+        $variant = $this->resolveVariant($request, $product);
 
-        $this->addProduct->execute($cart, $product, $request->quantity());
+        $this->addProduct->execute($cart, $variant, $request->quantity());
 
-        return $this->respond($request, $cart, $product->id);
+        return $this->respond($request, $cart, $variant->id);
     }
 
-    /**
-     * Establecer cantidad absoluta (input numérico del detalle de producto).
-     */
     public function update(UpdateCartItemRequest $request, Product $product): JsonResponse|RedirectResponse
     {
         $cart = $this->resolveCart($request);
+        $variant = $this->resolveVariant($request, $product);
 
-        $this->updateQuantity->execute($cart, $product, $request->quantity());
+        $this->updateQuantity->execute($cart, $variant, $request->quantity());
 
-        return $this->respond($request, $cart, $product->id);
+        return $this->respond($request, $cart, $variant->id);
     }
 
-    /**
-     * Botón "+" en detalle de producto.
-     */
     public function increment(Request $request, Product $product): JsonResponse|RedirectResponse
     {
         $cart = $this->resolveCart($request);
+        $variant = $this->resolveVariant($request, $product);
 
         $currentQuantity = (int) $cart->items()
-            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variant->id)
             ->value('quantity');
 
-        $this->updateQuantity->execute($cart, $product, $currentQuantity + 1);
+        $this->updateQuantity->execute($cart, $variant, $currentQuantity + 1);
 
-        return $this->respond($request, $cart, $product->id);
+        return $this->respond($request, $cart, $variant->id);
     }
 
-    /**
-     * Botón "−" en detalle de producto.
-     */
     public function decrement(Request $request, Product $product): JsonResponse|RedirectResponse
     {
         $cart = $this->resolveCart($request);
+        $variant = $this->resolveVariant($request, $product);
 
         $currentQuantity = (int) $cart->items()
-            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variant->id)
             ->value('quantity');
 
-        $this->updateQuantity->execute($cart, $product, max(0, $currentQuantity - 1));
+        $this->updateQuantity->execute($cart, $variant, max(0, $currentQuantity - 1));
 
-        return $this->respond($request, $cart, $product->id);
+        return $this->respond($request, $cart, $variant->id);
     }
 
     private function resolveCart(Request $request): Cart
@@ -131,38 +127,63 @@ class CartController extends Controller
         );
     }
 
+    private function resolveVariant(Request $request, Product $product): ProductVariant
+    {
+        $variantId = (int) $request->input('product_variant_id', 0);
+
+        $variant = ProductVariant::query()
+            ->with(['inventory', 'product'])
+            ->where('product_id', $product->id)
+            ->when(
+                $variantId > 0,
+                fn ($q) => $q->where('id', $variantId),
+                fn ($q) => $q->orderBy('id'),
+            )
+            ->first();
+
+        if ($variant === null) {
+            throw ValidationException::withMessages([
+                'product_variant_id' => 'Selecciona un color disponible.',
+            ]);
+        }
+
+        return $variant;
+    }
+
     /**
      * @return array<string, mixed>
      */
-    private function cartSummary(Cart $cart, ?int $productId = null): array
+    private function cartSummary(Cart $cart, ?int $variantId = null): array
     {
-        $cart->loadMissing(['items.product.inventory']);
+        $cart->loadMissing(['items.product', 'items.variant.inventory']);
 
         $lineQuantity = 0;
 
-        if ($productId !== null) {
+        if ($variantId !== null) {
             $lineQuantity = (int) $cart->items
-                ->firstWhere('product_id', $productId)
+                ->firstWhere('product_variant_id', $variantId)
                 ?->quantity;
         }
 
         return [
             'item_count' => (int) $cart->items->sum('quantity'),
             'line_count' => $cart->items->count(),
-            'product_id' => $productId,
+            'product_variant_id' => $variantId,
             'line_quantity' => $lineQuantity,
             'items' => $cart->items->map(fn ($item) => [
                 'product_id' => $item->product_id,
+                'product_variant_id' => $item->product_variant_id,
                 'quantity' => (int) $item->quantity,
-                'sku' => $item->product?->sku,
+                'sku' => $item->variant?->sku ?? $item->product?->sku,
                 'name' => $item->product?->name,
+                'color' => $item->variant?->colorLabel(),
             ])->values()->all(),
         ];
     }
 
-    private function respond(Request $request, Cart $cart, int $productId): JsonResponse|RedirectResponse
+    private function respond(Request $request, Cart $cart, int $variantId): JsonResponse|RedirectResponse
     {
-        $summary = $this->cartSummary($cart, $productId);
+        $summary = $this->cartSummary($cart, $variantId);
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json($summary);

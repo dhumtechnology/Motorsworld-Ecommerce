@@ -14,20 +14,12 @@ class StoreProductRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation(): void
-    {
-        if (! $this->filled('sku')) {
-            $this->merge(['sku' => null]);
-        }
-    }
-
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'additional_information' => ['nullable', 'string'],
@@ -44,10 +36,17 @@ class StoreProductRequest extends FormRequest
                     fn ($rule) => $rule->where('brand_id', (int) $this->input('brand_id')),
                 ),
             ],
-            'available_stock' => ['required', 'integer', 'min:0'],
-            'primary_image' => ['nullable', 'image', 'max:5120'],
-            'secondary_images' => ['nullable', 'array', 'max:12'],
-            'secondary_images.*' => ['image', 'max:5120'],
+            'technical_sheet' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.color_ids' => ['nullable', 'array'],
+            'variants.*.color_ids.*' => ['integer', 'exists:colors,id'],
+            'variants.*.new_colors' => ['nullable', 'array'],
+            'variants.*.new_colors.*.name' => ['nullable', 'string', 'max:100'],
+            'variants.*.new_colors.*.hex' => ['nullable', 'string', 'max:7'],
+            'variants.*.available_stock' => ['required', 'integer', 'min:0'],
+            'variants.*.primary_image' => ['nullable', 'image', 'max:5120'],
+            'variants.*.secondary_images' => ['nullable', 'array', 'max:12'],
+            'variants.*.secondary_images.*' => ['image', 'max:5120'],
         ];
     }
 
@@ -57,11 +56,9 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'sku.unique' => 'Ya existe un producto con ese SKU.',
             'category_id.required' => 'Selecciona una categoría.',
             'model_id.exists' => 'El modelo no pertenece a la marca seleccionada.',
-            'primary_image.image' => 'La imagen principal debe ser un archivo de imagen válido.',
-            'secondary_images.*.image' => 'Cada imagen secundaria debe ser un archivo de imagen válido.',
+            'variants.*.available_stock.required' => 'Indica el stock de cada color.',
         ];
     }
 
@@ -71,7 +68,6 @@ class StoreProductRequest extends FormRequest
     public function productAttributes(): array
     {
         return [
-            'sku' => trim((string) $this->input('sku', '')),
             'name' => trim((string) $this->input('name')),
             'description' => $this->nullableString('description'),
             'additional_information' => $this->nullableString('additional_information'),
@@ -83,34 +79,93 @@ class StoreProductRequest extends FormRequest
         ];
     }
 
-    public function availableStock(): int
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function variantsPayload(): array
     {
-        return (int) $this->input('available_stock', 0);
+        return $this->parseVariantsPayload();
     }
 
-    public function primaryImage(): ?UploadedFile
+    public function technicalSheet(): ?UploadedFile
     {
         /** @var UploadedFile|null $file */
-        $file = $this->file('primary_image');
+        $file = $this->file('technical_sheet');
 
         return $file instanceof UploadedFile ? $file : null;
     }
 
     /**
-     * @return list<UploadedFile>
+     * @return list<array<string, mixed>>
      */
-    public function secondaryImages(): array
+    protected function parseVariantsPayload(): array
     {
-        $files = $this->file('secondary_images', []);
-
-        if (! is_array($files)) {
+        $rows = $this->input('variants', []);
+        if (! is_array($rows)) {
             return [];
         }
 
-        return array_values(array_filter(
-            $files,
-            static fn ($file): bool => $file instanceof UploadedFile,
-        ));
+        $payload = [];
+
+        foreach ($rows as $index => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $colorIds = $row['color_ids'] ?? [];
+            if (! is_array($colorIds)) {
+                $colorIds = [];
+            }
+
+            $newColorsInput = $row['new_colors'] ?? [];
+            $newColors = [];
+            if (is_array($newColorsInput)) {
+                foreach ($newColorsInput as $newColor) {
+                    if (! is_array($newColor)) {
+                        continue;
+                    }
+                    $name = trim((string) ($newColor['name'] ?? ''));
+                    if ($name === '') {
+                        continue;
+                    }
+                    $newColors[] = [
+                        'name' => $name,
+                        'hex' => isset($newColor['hex']) ? trim((string) $newColor['hex']) : null,
+                    ];
+                }
+            }
+
+            if ($colorIds === [] && $newColors === []) {
+                continue;
+            }
+
+            $secondary = $this->file("variants.{$index}.secondary_images", []);
+            if (! is_array($secondary)) {
+                $secondary = [];
+            }
+
+            $removeImageIds = $row['remove_image_ids'] ?? [];
+            if (! is_array($removeImageIds)) {
+                $removeImageIds = [];
+            }
+
+            $primary = $this->file("variants.{$index}.primary_image");
+
+            $payload[] = [
+                'id' => isset($row['id']) && $row['id'] !== '' ? (int) $row['id'] : null,
+                'color_ids' => array_values(array_map('intval', $colorIds)),
+                'new_colors' => $newColors,
+                'available_stock' => (int) ($row['available_stock'] ?? 0),
+                'primary_image' => $primary instanceof UploadedFile ? $primary : null,
+                'secondary_images' => array_values(array_filter(
+                    $secondary,
+                    static fn ($file): bool => $file instanceof UploadedFile,
+                )),
+                'remove_image_ids' => array_values(array_unique(array_map('intval', $removeImageIds))),
+            ];
+        }
+
+        return $payload;
     }
 
     private function nullableString(string $key): ?string

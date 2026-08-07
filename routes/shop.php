@@ -80,14 +80,15 @@ Route::prefix('carrito')->name('cart.')->group(function () {
 | Checkout + Culqi
 |--------------------------------------------------------------------------
 |
-| Requiere autenticación (orders.user_id obligatorio).
+| Público (como reservas): si no hay sesión, el pedido se asocia a un usuario
+| Pending creado/reutilizado por correo. La confirmación queda en sesión.
 |
 | GET  /checkout                  shop.checkout.show
 | POST /checkout/pagar            shop.checkout.pay
 | GET  /checkout/pedidos/{order}  shop.checkout.orders.show
 |
 */
-Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function () {
+Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'show'])->name('show');
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');

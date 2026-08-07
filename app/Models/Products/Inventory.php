@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['product_id', 'total_stock', 'available_stock', 'reserved_stock'])]
+#[Fillable([
+    'product_id',
+    'product_variant_id',
+    'total_stock',
+    'available_stock',
+    'reserved_stock',
+])]
 class Inventory extends Model
 {
     protected $table = 'inventory';
@@ -17,5 +23,13 @@ class Inventory extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * @return BelongsTo<ProductVariant, $this>
+     */
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

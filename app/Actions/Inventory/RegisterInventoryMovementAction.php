@@ -8,7 +8,7 @@ use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Products\Inventory;
 use App\Models\Products\InventoryMovement;
-use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -16,7 +16,7 @@ class RegisterInventoryMovementAction
 {
     /**
      * @param  array{
-     *     product_id: int,
+     *     product_variant_id: int,
      *     type: InventoryMovementType,
      *     reason: InventoryMovementReason,
      *     quantity: int,
@@ -38,18 +38,27 @@ class RegisterInventoryMovementAction
         }
 
         return DB::transaction(function () use ($attributes, $quantity) {
-            $productId = (int) $attributes['product_id'];
+            $variantId = (int) $attributes['product_variant_id'];
             /** @var InventoryMovementType $type */
             $type = $attributes['type'];
 
+            $variant = ProductVariant::query()->with('product')->find($variantId);
+
+            if ($variant === null) {
+                throw ValidationException::withMessages([
+                    'product_variant_id' => 'La variante de color no existe.',
+                ]);
+            }
+
             $inventory = Inventory::query()
-                ->where('product_id', $productId)
+                ->where('product_variant_id', $variantId)
                 ->lockForUpdate()
                 ->first();
 
             if ($inventory === null) {
                 $inventory = Inventory::query()->create([
-                    'product_id' => $productId,
+                    'product_id' => $variant->product_id,
+                    'product_variant_id' => $variantId,
                     'total_stock' => 0,
                     'available_stock' => 0,
                     'reserved_stock' => 0,
@@ -69,8 +78,7 @@ class RegisterInventoryMovementAction
                 $force = (bool) ($attributes['force'] ?? false);
 
                 if (! $force && $quantity > $available) {
-                    $product = Product::query()->find($productId);
-                    $label = $product?->sku ?? (string) $productId;
+                    $label = $variant->sku;
 
                     throw ValidationException::withMessages([
                         'quantity' => "Stock insuficiente para «{$label}». Disponible: {$available}.",
@@ -84,7 +92,8 @@ class RegisterInventoryMovementAction
             $inventory->save();
 
             return InventoryMovement::query()->create([
-                'product_id' => $productId,
+                'product_id' => $variant->product_id,
+                'product_variant_id' => $variantId,
                 'type' => $type,
                 'reason' => $attributes['reason'],
                 'quantity' => $quantity,
@@ -98,8 +107,17 @@ class RegisterInventoryMovementAction
 
     public function registerSaleExit(Order $order, OrderItem $item, ?int $createdBy = null): InventoryMovement
     {
+        $variantId = (int) ($item->product_variant_id ?? 0);
+
+        if ($variantId < 1) {
+            $variantId = (int) ProductVariant::query()
+                ->where('product_id', $item->product_id)
+                ->orderBy('id')
+                ->value('id');
+        }
+
         return $this->execute([
-            'product_id' => (int) $item->product_id,
+            'product_variant_id' => $variantId,
             'type' => InventoryMovementType::Exit,
             'reason' => InventoryMovementReason::Sale,
             'quantity' => (int) $item->quantity,
@@ -107,7 +125,6 @@ class RegisterInventoryMovementAction
             'order_id' => $order->id,
             'order_item_id' => $item->id,
             'created_by' => $createdBy,
-            // Las ventas ya cobradas no deben fallar por desfase de stock.
             'force' => true,
         ]);
     }

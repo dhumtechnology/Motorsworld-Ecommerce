@@ -188,7 +188,7 @@
                             </div>
                             <div class="flex items-center justify-center bg-primary px-3 py-3 text-center">
                                 <span class="text-xl font-black text-white tracking-tight">
-                                    S/ {{ number_format($price, 2) }}
+                                    {{ $product->currencySymbol() }} {{ number_format($price, 2) }}
                                 </span>
                             </div>
                         </div>

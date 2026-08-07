@@ -114,10 +114,10 @@ class InventoryController extends Controller
     public function create(): View
     {
         return view('admin.inventory.create', [
-            'products' => Product::query()
-                ->with('inventory:id,product_id,available_stock')
-                ->orderBy('name')
-                ->get(['id', 'sku', 'name']),
+            'variants' => \App\Models\Products\ProductVariant::query()
+                ->with(['product:id,name', 'inventory:id,product_variant_id,available_stock', 'colors:id,name'])
+                ->orderBy('sku')
+                ->get(),
             'entryReasons' => InventoryMovementReason::forEntries(),
             'exitReasons' => InventoryMovementReason::forManualExits(),
             'types' => InventoryMovementType::cases(),
@@ -129,7 +129,7 @@ class InventoryController extends Controller
         $attrs = $request->movementAttributes();
 
         $movement = $this->registerMovement->execute([
-            'product_id' => $attrs['product_id'],
+            'product_variant_id' => $attrs['product_variant_id'],
             'type' => $attrs['type'],
             'reason' => $attrs['reason'],
             'quantity' => $attrs['quantity'],
@@ -137,12 +137,13 @@ class InventoryController extends Controller
             'created_by' => auth()->id(),
         ]);
 
-        $movement->load('product:id,sku,name');
+        $movement->load(['product:id,sku,name', 'variant:id,sku,name']);
         $sign = $attrs['type'] === InventoryMovementType::Entry ? '+' : '-';
+        $label = $movement->variant?->sku ?? $movement->product?->name;
 
         return redirect()
             ->route('admin.inventory.index')
-            ->with('status', "Movimiento #{$movement->id} registrado: {$sign}{$movement->quantity} de «{$movement->product?->name}».");
+            ->with('status', "Movimiento #{$movement->id} registrado: {$sign}{$movement->quantity} de «{$label}».");
     }
 
     public function show(InventoryMovement $inventoryMovement): View

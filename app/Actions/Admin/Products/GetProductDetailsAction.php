@@ -28,13 +28,16 @@ class GetProductDetailsAction
         $product->load([
             'category',
             'vehicleModel.brand',
-            'inventory',
+            'inventories',
             'images',
             'activeOffer',
+            'variants.colors',
+            'variants.inventory',
+            'variants.images',
         ]);
 
         $movements = InventoryMovement::query()
-            ->with(['creator:id,email', 'order:id'])
+            ->with(['creator:id,email', 'order:id', 'variant:id,sku,name'])
             ->where('product_id', $product->id)
             ->orderByDesc('id')
             ->paginate(self::MOVEMENTS_PER_PAGE, ['*'], 'movements_page')
@@ -77,9 +80,9 @@ class GetProductDetailsAction
             ->where('product_id', $product->id)
             ->max('created_at');
 
-        $available = (int) ($product->inventory?->available_stock ?? 0);
-        $reserved = (int) ($product->inventory?->reserved_stock ?? 0);
-        $totalStock = (int) ($product->inventory?->total_stock ?? ($available + $reserved));
+        $available = $product->availableStockTotal();
+        $reserved = $product->reservedStockTotal();
+        $totalStock = $available + $reserved;
 
         return [
             'product' => $product,
@@ -100,6 +103,7 @@ class GetProductDetailsAction
                 'line_count' => (int) ($sales->line_count ?? 0),
                 'cart_count' => $product->cartItems()->count(),
                 'images_count' => $product->images->count(),
+                'variants_count' => $product->variants->count(),
                 'last_movement_at' => $lastMovementAt,
                 'offers_count' => $offers->total(),
             ],

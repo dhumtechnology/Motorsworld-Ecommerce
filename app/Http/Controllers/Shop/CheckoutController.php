@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Shop;
 use App\Actions\Orders\CreateOrderFromCartAction;
 use App\Actions\Orders\MarkOrderAsPaidAction;
 use App\Actions\Payments\ProcessCulqiPaymentAction;
+use App\Actions\Shop\ResolveOrCreateCustomerAction;
 use App\Enums\Orders\PaymentStatus;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\CheckoutPayRequest;
+use App\Models\Auth\User;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Services\Cart\CartResolver;
@@ -23,12 +25,15 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
+    private const ACCESSIBLE_ORDERS_SESSION_KEY = 'checkout.accessible_order_ids';
+
     public function __construct(
         private readonly CartResolver $cartResolver,
         private readonly ProductPricingService $pricing,
         private readonly CreateOrderFromCartAction $createOrderFromCart,
         private readonly ProcessCulqiPaymentAction $processPayment,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
+        private readonly ResolveOrCreateCustomerAction $resolveOrCreateCustomer,
     ) {}
 
     public function show(Request $request): View|RedirectResponse
@@ -39,10 +44,12 @@ class CheckoutController extends Controller
         );
 
         $cart->loadMissing([
-            'items.product.inventory',
             'items.product.category',
             'items.product.primaryImage',
             'items.product.activeOffer',
+            'items.variant.inventory',
+            'items.variant.images',
+            'items.variant.colors',
         ]);
 
         if ($cart->items->isEmpty()) {
@@ -51,20 +58,24 @@ class CheckoutController extends Controller
                 ->with('status', 'Tu carrito está vacío.');
         }
 
-        $lines = $cart->items->map(function ($item) {
-            $product = $item->product;
-            $pricing = $this->pricing->resolve($product);
+        $lines = $cart->items
+            ->filter(fn ($item) => $item->product !== null)
+            ->map(function ($item) {
+                $product = $item->product;
+                $pricing = $this->pricing->resolve($product);
 
-            return [
-                'product' => $product,
-                'quantity' => $item->quantity,
-                'unit_price' => (float) $pricing->unitPrice,
-                'list_unit_price' => (float) $pricing->listUnitPrice,
-                'line_total' => (float) $pricing->unitPrice * $item->quantity,
-                'is_on_sale' => $pricing->hasOffer(),
-                'currency' => $pricing->currency,
-            ];
-        });
+                return [
+                    'product' => $product,
+                    'variant' => $item->variant,
+                    'quantity' => $item->quantity,
+                    'unit_price' => (float) $pricing->unitPrice,
+                    'list_unit_price' => (float) $pricing->listUnitPrice,
+                    'line_total' => (float) $pricing->unitPrice * $item->quantity,
+                    'is_on_sale' => $pricing->hasOffer(),
+                    'currency' => $pricing->currency,
+                    'color_label' => $item->variant?->colorLabel(),
+                ];
+            });
 
         $total = $lines->sum('line_total');
         $user = $request->user();
@@ -78,27 +89,51 @@ class CheckoutController extends Controller
             'culqiPublicKey' => config('services.culqi.public_key'),
             'culqiFake' => (bool) config('services.culqi.fake'),
             'profile' => $profile,
+            'user' => $user,
             'amountCents' => (int) round($total * 100),
         ]);
     }
 
     public function pay(CheckoutPayRequest $request): JsonResponse|RedirectResponse
     {
-        $user = $request->user();
-        $cart = $this->cartResolver->resolve($user, $request->session()->getId());
+        $authenticated = $request->user();
+        $cart = $this->cartResolver->resolve($authenticated, $request->session()->getId());
 
-        $shippingAddress = $this->resolveAddress($request, $user->id);
-        $this->syncCustomerProfile($user, $request->customerDetails());
+        try {
+            $customer = $this->resolveOrCreateCustomer->execute(
+                $request->customerPayload(),
+                $authenticated,
+            );
+        } catch (ValidationException $e) {
+            throw $e;
+        }
+
+        if ($authenticated === null && blank($request->customerPayload()['customer_document'])) {
+            throw ValidationException::withMessages([
+                'customer_document' => 'El documento es obligatorio para comprar como invitado.',
+            ]);
+        }
+
+        if ($authenticated === null && blank($request->customerPayload()['customer_email'])) {
+            throw ValidationException::withMessages([
+                'customer_email' => 'El correo es obligatorio para comprar como invitado.',
+            ]);
+        }
+
+        $shippingAddress = $this->resolveAddress($request, $customer->id);
+        $this->syncCustomerProfile($customer, $request->customerDetails());
 
         $order = null;
 
         try {
             $order = $this->createOrderFromCart->execute(
-                $user,
+                $customer,
                 $cart,
                 $shippingAddress,
                 $shippingAddress,
             );
+
+            $this->rememberAccessibleOrder($request, $order);
 
             $result = $this->processPayment->execute(
                 $order,
@@ -114,6 +149,10 @@ class CheckoutController extends Controller
                 'payload' => $e->payload,
                 'order_id' => $order?->id,
             ]);
+
+            if ($order !== null) {
+                $this->rememberAccessibleOrder($request, $order);
+            }
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -138,6 +177,7 @@ class CheckoutController extends Controller
 
         $order = $result['order'];
         $payment = $result['payment'];
+        $this->rememberAccessibleOrder($request, $order);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -167,10 +207,11 @@ class CheckoutController extends Controller
 
     public function showOrder(Request $request, Order $order): View
     {
-        abort_unless($order->user_id === $request->user()->id, 403);
+        $this->assertCanAccessOrder($request, $order);
 
         $order->load([
             'items.product.primaryImage',
+            'items.variant.colors',
             'payments',
             'user.customerProfile',
             'shippingAddress',
@@ -190,7 +231,7 @@ class CheckoutController extends Controller
     public function simulatePaid(Request $request, Order $order): RedirectResponse
     {
         abort_unless((bool) config('services.culqi.fake'), 404);
-        abort_unless($order->user_id === $request->user()->id, 403);
+        $this->assertCanAccessOrder($request, $order);
 
         if ($order->payment_status === PaymentStatus::Paid) {
             return redirect()
@@ -218,7 +259,34 @@ class CheckoutController extends Controller
             ->with('status', 'Pago simulado correctamente (modo fake).');
     }
 
-    private function syncCustomerProfile(\App\Models\Auth\User $user, array $customer): void
+    private function assertCanAccessOrder(Request $request, Order $order): void
+    {
+        $user = $request->user();
+
+        if ($user !== null && (int) $order->user_id === (int) $user->id) {
+            return;
+        }
+
+        $accessibleIds = collect($request->session()->get(self::ACCESSIBLE_ORDERS_SESSION_KEY, []))
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        abort_unless(in_array((int) $order->id, $accessibleIds, true), 403);
+    }
+
+    private function rememberAccessibleOrder(Request $request, Order $order): void
+    {
+        $ids = collect($request->session()->get(self::ACCESSIBLE_ORDERS_SESSION_KEY, []))
+            ->map(fn ($id) => (int) $id)
+            ->push((int) $order->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $request->session()->put(self::ACCESSIBLE_ORDERS_SESSION_KEY, $ids);
+    }
+
+    private function syncCustomerProfile(User $user, array $customer): void
     {
         $profile = $user->customerProfile;
 

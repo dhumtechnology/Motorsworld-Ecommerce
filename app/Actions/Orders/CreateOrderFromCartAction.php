@@ -27,7 +27,11 @@ class CreateOrderFromCartAction
         ?Address $shippingAddress = null,
         ?Address $billingAddress = null,
     ): Order {
-        $cart->loadMissing(['items.product.inventory', 'items.product.activeOffer']);
+        $cart->loadMissing([
+            'items.product.activeOffer',
+            'items.variant.inventory',
+            'items.variant.product',
+        ]);
 
         if ($cart->items->isEmpty()) {
             throw ValidationException::withMessages([
@@ -42,22 +46,23 @@ class CreateOrderFromCartAction
 
             foreach ($cart->items as $item) {
                 $product = $item->product;
+                $variant = $item->variant;
 
-                if ($product === null || $product->status !== ProductStatus::Active) {
+                if ($product === null || $product->status !== ProductStatus::Active || $variant === null || ! $variant->is_active) {
                     throw ValidationException::withMessages([
                         'cart' => "El producto «{$item->product_id}» ya no está disponible.",
                     ]);
                 }
 
-                $available = (int) ($product->inventory?->available_stock ?? 0);
+                $available = (int) ($variant->inventory?->available_stock ?? 0);
 
                 if ($item->quantity > $available) {
                     throw ValidationException::withMessages([
-                        'cart' => "Stock insuficiente para «{$product->name}». Disponible: {$available}.",
+                        'cart' => "Stock insuficiente para «{$product->name}» ({$variant->colorLabel()}). Disponible: {$available}.",
                     ]);
                 }
 
-                $pricing = OrderItem::pricingAttributesFor($product, $item->quantity);
+                $pricing = OrderItem::pricingAttributesFor($product, $item->quantity, null, $variant);
                 $lineTotal = (float) $pricing['unit_price'] * $pricing['quantity'];
                 $total += $lineTotal;
                 $currency = $pricing['currency'];
@@ -97,7 +102,7 @@ class CreateOrderFromCartAction
 
             $cart->items()->delete();
 
-            return $order->load(['items.product', 'user.customerProfile']);
+            return $order->load(['items.product', 'items.variant', 'user.customerProfile']);
         });
     }
 }

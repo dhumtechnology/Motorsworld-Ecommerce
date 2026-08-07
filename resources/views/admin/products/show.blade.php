@@ -157,29 +157,64 @@
                     </div>
                 @endif
 
-                @if ($product->images->isNotEmpty())
-                    <div class="mt-6">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-3">
-                            Imágenes ({{ $stats['images_count'] }})
-                        </h3>
-                        <div class="flex flex-wrap gap-3">
-                            @foreach ($product->images as $image)
-                                <div class="relative">
-                                    <img
-                                        src="{{ $image->path }}"
-                                        alt=""
-                                        class="h-16 w-16 rounded object-cover border border-border bg-secondary"
-                                    >
-                                    @if ($image->is_primary)
-                                        <span class="absolute -top-1 -right-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                                            Principal
-                                        </span>
+                <div class="mt-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Ficha técnica</h3>
+                    @if ($product->technical_sheet)
+                        <a
+                            href="{{ $product->technical_sheet }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 rounded border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100 transition-colors"
+                        >
+                            Ver / descargar PDF
+                        </a>
+                        <p class="mt-2 text-xs text-muted">Para reemplazar o eliminar, usa Editar producto.</p>
+                    @else
+                        <p class="text-sm text-muted">Sin ficha técnica. Agrégala desde Editar producto.</p>
+                    @endif
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-3">
+                        Colores ({{ $stats['variants_count'] ?? $product->variants->count() }})
+                    </h3>
+                    @if ($product->variants->isEmpty())
+                        <p class="text-sm text-muted">Sin colores. Agrégalos desde Editar producto.</p>
+                    @else
+                        <div class="space-y-4">
+                            @foreach ($product->variants as $variant)
+                                <div class="rounded border border-border bg-secondary/40 p-3">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p class="text-sm font-semibold text-text">{{ $variant->colorLabel() }}</p>
+                                            <p class="text-xs font-mono text-muted">{{ $variant->sku }}</p>
+                                        </div>
+                                        <p class="text-sm font-bold {{ ($variant->inventory?->available_stock ?? 0) > 0 ? 'text-emerald-700' : 'text-red-600' }}">
+                                            Stock: {{ (int) ($variant->inventory?->available_stock ?? 0) }}
+                                        </p>
+                                    </div>
+                                    @if ($variant->colors->isNotEmpty())
+                                        <div class="mt-2 flex flex-wrap gap-2">
+                                            @foreach ($variant->colors as $color)
+                                                <span class="inline-flex items-center gap-1.5 rounded border border-border bg-surface px-2 py-1 text-xs text-text-soft">
+                                                    <span class="h-3 w-3 rounded-full border border-border" style="background: {{ $color->hex ?: '#d1d5db' }}"></span>
+                                                    {{ $color->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if ($variant->images->isNotEmpty())
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            @foreach ($variant->images as $image)
+                                                <img src="{{ $image->path }}" alt="" class="h-14 w-14 rounded object-cover border border-border">
+                                            @endforeach
+                                        </div>
                                     @endif
                                 </div>
                             @endforeach
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -317,7 +352,7 @@
                 <p class="text-xs text-muted mt-0.5">Historial de entradas y salidas (kardex)</p>
             </div>
             <a
-                href="{{ route('admin.inventory.create', ['product_id' => $product->id]) }}"
+                href="{{ route('admin.inventory.create') }}"
                 class="inline-flex items-center gap-2 rounded border border-sky-200 bg-sky-50 px-4 py-2 text-xs font-bold uppercase tracking-wide text-sky-700 hover:bg-sky-100 transition-colors"
             >
                 Nuevo movimiento

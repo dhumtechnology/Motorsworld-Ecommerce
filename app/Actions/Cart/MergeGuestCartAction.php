@@ -5,7 +5,7 @@ namespace App\Actions\Cart;
 use App\Enums\Products\ProductStatus;
 use App\Models\Auth\User;
 use App\Models\Cart\Cart;
-use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 use Illuminate\Support\Facades\DB;
 
 class MergeGuestCartAction
@@ -36,29 +36,31 @@ class MergeGuestCartAction
             );
 
             foreach ($guestCart->items as $guestItem) {
-                $product = Product::query()->find($guestItem->product_id);
+                $variant = ProductVariant::query()
+                    ->with(['product', 'inventory'])
+                    ->find($guestItem->product_variant_id);
 
-                if ($product === null || $product->status !== ProductStatus::Active) {
+                if ($variant === null || ! $variant->is_active || $variant->product?->status !== ProductStatus::Active) {
                     continue;
                 }
 
                 $existingQuantity = (int) $userCart->items()
-                    ->where('product_id', $product->id)
+                    ->where('product_variant_id', $variant->id)
                     ->value('quantity');
 
                 $mergedQuantity = $existingQuantity + $guestItem->quantity;
 
                 try {
-                    $this->updateQuantity->execute($userCart, $product, $mergedQuantity);
+                    $this->updateQuantity->execute($userCart, $variant, $mergedQuantity);
                 } catch (\Illuminate\Validation\ValidationException) {
                     if ($existingQuantity > 0) {
                         continue;
                     }
 
-                    $maxStock = max(0, (int) ($product->inventory?->available_stock ?? 0));
+                    $maxStock = max(0, (int) ($variant->inventory?->available_stock ?? 0));
 
                     if ($maxStock > 0) {
-                        $this->updateQuantity->execute($userCart, $product, $maxStock);
+                        $this->updateQuantity->execute($userCart, $variant, $maxStock);
                     }
                 }
             }

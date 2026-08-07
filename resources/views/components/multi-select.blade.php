@@ -28,7 +28,7 @@
 @endphp
 
 <div
-    class="relative"
+    class="relative z-20"
     data-multi-select
     data-multi-select-key="{{ $name }}"
     data-placeholder="{{ $placeholder }}"
@@ -60,7 +60,7 @@
 
     <div
         data-multi-select-panel
-        class="absolute left-0 right-0 z-30 mt-1 hidden overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
+        class="absolute left-0 right-0 z-50 mt-1 hidden overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
         role="listbox"
         aria-multiselectable="true"
     >

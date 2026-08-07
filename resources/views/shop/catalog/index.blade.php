@@ -171,6 +171,7 @@
                                     :image="$popularProduct->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
                                     :isSale="$popularProduct->is_on_sale"
                                     :discountPercent="$popularProduct->discount_percent"
+                                    :currency="$popularProduct->currency ?? 'PEN'"
                                     :href="route('shop.product.show', $popularProduct)"
                                     :cartQty="$cartQuantities[$popularProduct->id] ?? 0"
                                 />

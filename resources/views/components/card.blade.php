@@ -8,7 +8,12 @@
     'discountPercent' => null,
     'href' => '#',
     'cartQty' => 0,
+    'currency' => 'PEN',
 ])
+
+@php
+    $currencySymbol = \App\Support\Currency::symbol($currency);
+@endphp
 
 <div {{ $attributes->class('bg-white text-black p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none') }}>
 
@@ -49,11 +54,11 @@
 
         <div class="mt-4 flex items-baseline gap-3">
             <span class="text-neutral-900 font-black text-xl tracking-tight">
-                S/ {{ number_format((float) $price, 2) }}
+                {{ $currencySymbol }} {{ number_format((float) $price, 2) }}
             </span>
             @if($oldPrice)
                 <span class="text-neutral-400 line-through text-sm font-semibold">
-                    S/ {{ number_format((float) $oldPrice, 2) }}
+                    {{ $currencySymbol }} {{ number_format((float) $oldPrice, 2) }}
                 </span>
             @endif
         </div>

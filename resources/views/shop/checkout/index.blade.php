@@ -32,20 +32,46 @@
 
                 <div>
                     <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900 mb-4">Datos del comprador</h2>
+                    @guest
+                        <p class="mb-4 text-sm text-neutral-600">
+                            No necesitas iniciar sesión. Usa tu correo para asociar la compra.
+                            Si más adelante te registras con el mismo correo, recuperarás tu historial.
+                        </p>
+                    @endguest
                     <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <label class="{{ $labelClass }}" for="customer_email">Correo *</label>
+                            <input id="customer_email" name="customer_email" type="email" required
+                                   value="{{ old('customer_email', $user?->email) }}"
+                                   @disabled($user !== null)
+                                   class="{{ $fieldClass }} {{ $user ? 'bg-neutral-100 cursor-not-allowed' : '' }}">
+                            @if ($user)
+                                <input type="hidden" name="customer_email" value="{{ $user->email }}">
+                            @endif
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="{{ $labelClass }}" for="customer_document">Documento (DNI) *</label>
+                            <input id="customer_document" name="customer_document" required
+                                   value="{{ old('customer_document', $profile?->document) }}"
+                                   @disabled($profile?->document)
+                                   class="{{ $fieldClass }} {{ $profile?->document ? 'bg-neutral-100 cursor-not-allowed' : '' }}">
+                            @if ($profile?->document)
+                                <input type="hidden" name="customer_document" value="{{ $profile->document }}">
+                            @endif
+                        </div>
                         <div>
-                            <label class="{{ $labelClass }}" for="first_name">Nombre</label>
-                            <input id="first_name" name="first_name" value="{{ old('first_name', $profile?->first_name) }}"
+                            <label class="{{ $labelClass }}" for="first_name">Nombre *</label>
+                            <input id="first_name" name="first_name" required value="{{ old('first_name', $profile?->first_name) }}"
                                    class="{{ $fieldClass }}">
                         </div>
                         <div>
-                            <label class="{{ $labelClass }}" for="last_name">Apellido</label>
-                            <input id="last_name" name="last_name" value="{{ old('last_name', $profile?->last_name) }}"
+                            <label class="{{ $labelClass }}" for="last_name">Apellido *</label>
+                            <input id="last_name" name="last_name" required value="{{ old('last_name', $profile?->last_name) }}"
                                    class="{{ $fieldClass }}">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="phone">Teléfono</label>
-                            <input id="phone" name="phone" value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
+                            <label class="{{ $labelClass }}" for="phone">Teléfono *</label>
+                            <input id="phone" name="phone" required value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
                                    class="{{ $fieldClass }}">
                         </div>
                         <div class="sm:col-span-2">
@@ -82,11 +108,13 @@
                 </div>
 
                 <div id="card-fields" class="space-y-4 rounded-md border border-neutral-200 bg-neutral-50 p-4">
-                    <div>
-                        <label class="{{ $labelClass }}" for="card_email">Email del cargo</label>
-                        <input id="card_email" type="email" value="{{ auth()->user()->email }}"
-                               class="{{ $fieldClass }}">
-                    </div>
+                        <div>
+                            <label class="{{ $labelClass }}" for="card_email">Email del cargo</label>
+                            <input id="card_email" type="email"
+                                   value="{{ old('customer_email', $user?->email) }}"
+                                   class="{{ $fieldClass }}">
+                            <p class="mt-1 text-xs text-neutral-500">Por defecto usa el correo del comprador.</p>
+                        </div>
                     <div>
                         <label class="{{ $labelClass }}" for="card_number">Número de tarjeta</label>
                         <input id="card_number" inputmode="numeric" placeholder="4111111111111111" autocomplete="cc-number"
@@ -149,6 +177,9 @@
                         @endif
                         <div class="flex-1 font-secondary min-w-0">
                             <p class="font-bold truncate text-neutral-900">{{ $line['product']->name }}</p>
+                            @if (! empty($line['color_label']))
+                                <p class="text-xs text-neutral-600">Color: {{ $line['color_label'] }}</p>
+                            @endif
                             <p class="text-xs text-neutral-500">Cantidad: {{ $line['quantity'] }}</p>
                         </div>
                         <div class="text-right shrink-0 font-secondary text-orange-600">
@@ -223,6 +254,13 @@
             return randomId('tkn_test_fake_');
         }
 
+        const buyerEmail = document.getElementById('customer_email')?.value
+            || document.getElementById('card_email').value;
+
+        if (document.getElementById('card_email') && !document.getElementById('card_email').value) {
+            document.getElementById('card_email').value = buyerEmail;
+        }
+
         const response = await fetch('https://secure.culqi.com/v2/tokens', {
             method: 'POST',
             headers: {
@@ -234,7 +272,7 @@
                 cvv: document.getElementById('card_cvv').value,
                 expiration_month: document.getElementById('card_exp_month').value.padStart(2, '0'),
                 expiration_year: document.getElementById('card_exp_year').value,
-                email: document.getElementById('card_email').value,
+                email: document.getElementById('card_email').value || buyerEmail,
             }),
         });
 

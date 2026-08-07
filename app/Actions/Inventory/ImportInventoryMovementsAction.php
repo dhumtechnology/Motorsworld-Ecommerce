@@ -5,6 +5,7 @@ namespace App\Actions\Inventory;
 use App\Enums\Inventory\InventoryMovementReason;
 use App\Enums\Inventory\InventoryMovementType;
 use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -167,9 +168,19 @@ class ImportInventoryMovementsAction
             throw new \RuntimeException('Falta el SKU.');
         }
 
-        $productId = Product::query()->where('sku', $sku)->value('id');
+        $variantId = ProductVariant::query()->where('sku', $sku)->value('id');
 
-        if ($productId === null) {
+        if ($variantId === null) {
+            $productId = Product::query()->where('sku', $sku)->value('id');
+            if ($productId !== null) {
+                $variantId = ProductVariant::query()
+                    ->where('product_id', $productId)
+                    ->orderBy('id')
+                    ->value('id');
+            }
+        }
+
+        if ($variantId === null) {
             throw new \RuntimeException("SKU «{$sku}» no existe.");
         }
 
@@ -186,7 +197,7 @@ class ImportInventoryMovementsAction
         $reason = $this->resolveReason($type, $reasonRaw);
 
         $this->registerMovement->execute([
-            'product_id' => (int) $productId,
+            'product_variant_id' => (int) $variantId,
             'type' => $type,
             'reason' => $reason,
             'quantity' => $quantity,

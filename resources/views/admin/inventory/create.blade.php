@@ -31,13 +31,13 @@
                 </div>
 
                 <div>
-                    <label for="product_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Producto *</label>
-                    <select id="product_id" name="product_id" required
+                    <label for="product_variant_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Color / SKU *</label>
+                    <select id="product_variant_id" name="product_variant_id" required
                             class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
-                        <option value="">Seleccionar producto...</option>
-                        @foreach ($products as $product)
-                            <option value="{{ $product->id }}" @selected((int) old('product_id', request('product_id')) === $product->id)>
-                                {{ $product->sku }} — {{ $product->name }} (stock: {{ (int) ($product->inventory?->available_stock ?? 0) }})
+                        <option value="">Seleccionar color...</option>
+                        @foreach ($variants as $variant)
+                            <option value="{{ $variant->id }}" @selected((int) old('product_variant_id', request('product_variant_id')) === $variant->id)>
+                                {{ $variant->sku }} — {{ $variant->product?->name }} ({{ $variant->colorLabel() }}) · stock: {{ (int) ($variant->inventory?->available_stock ?? 0) }}
                             </option>
                         @endforeach
                     </select>

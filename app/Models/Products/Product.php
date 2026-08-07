@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
     'currency',
     'status',
     'image',
+    'technical_sheet',
     'category_id',
     'model_id',
 ])]
@@ -46,6 +47,14 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany<ProductVariant, $this>
+     */
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('id');
+    }
+
+    /**
      * @return HasMany<ProductImage, $this>
      */
     public function images(): HasMany
@@ -62,10 +71,19 @@ class Product extends Model
     }
 
     /**
-     * Imagen principal para listados (catálogo, cards). Mantiene compatibilidad con $product->image.
+     * Imagen principal para listados (catálogo, cards).
      */
     public function catalogImageUrl(): ?string
     {
+        if ($this->relationLoaded('variants')) {
+            foreach ($this->variants as $variant) {
+                $url = $variant->catalogImageUrl();
+                if ($url) {
+                    return $url;
+                }
+            }
+        }
+
         if ($this->relationLoaded('images')) {
             $primary = $this->images->firstWhere('is_primary', true);
 
@@ -84,11 +102,45 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany<Inventory, $this>
+     */
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(Inventory::class);
+    }
+
+    /**
+     * @deprecated Use inventories()/variants(); kept for transitional accessors.
+     *
      * @return HasOne<Inventory, $this>
      */
     public function inventory(): HasOne
     {
-        return $this->hasOne(Inventory::class);
+        return $this->hasOne(Inventory::class)->oldestOfMany();
+    }
+
+    public function availableStockTotal(): int
+    {
+        if ($this->relationLoaded('variants')) {
+            return (int) $this->variants->sum(
+                fn (ProductVariant $variant) => (int) ($variant->inventory?->available_stock ?? 0),
+            );
+        }
+
+        if ($this->relationLoaded('inventories')) {
+            return (int) $this->inventories->sum('available_stock');
+        }
+
+        return (int) $this->inventories()->sum('available_stock');
+    }
+
+    public function reservedStockTotal(): int
+    {
+        if ($this->relationLoaded('inventories')) {
+            return (int) $this->inventories->sum('reserved_stock');
+        }
+
+        return (int) $this->inventories()->sum('reserved_stock');
     }
 
     /**
@@ -162,6 +214,11 @@ class Product extends Model
         return app(ProductPricingService::class)->resolve($this, $at);
     }
 
+    public function currencySymbol(): string
+    {
+        return \App\Support\Currency::symbol($this->currency);
+    }
+
     public function hasActiveOffer(?Carbon $at = null): bool
     {
         return $this->activeOfferAt($at) !== null;
@@ -183,15 +240,15 @@ class Product extends Model
     public function scopeCatalogOrder(Builder $query): void
     {
         $query
-            ->leftJoin('inventory', 'products.id', '=', 'inventory.product_id')
-            ->select('products.*')
-            ->orderByRaw('CASE WHEN COALESCE(inventory.available_stock, 0) > 0 THEN 0 ELSE 1 END')
+            ->orderByRaw(
+                'CASE WHEN (SELECT COALESCE(SUM(available_stock), 0) FROM inventory WHERE inventory.product_id = products.id) > 0 THEN 0 ELSE 1 END'
+            )
             ->orderBy('products.id');
     }
 
     public function hasAvailableStock(): bool
     {
-        return ($this->inventory?->available_stock ?? 0) > 0;
+        return $this->availableStockTotal() > 0;
     }
 
     /**

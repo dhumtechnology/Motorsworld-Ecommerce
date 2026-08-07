@@ -5,10 +5,12 @@ namespace Database\Seeders;
 use App\Enums\Products\ProductStatus;
 use App\Models\Products\Brand;
 use App\Models\Products\Category;
+use App\Models\Products\Color;
 use App\Models\Products\Inventory;
 use App\Models\Products\Product;
 use App\Models\Products\ProductImage;
 use App\Models\Products\ProductOffer;
+use App\Models\Products\ProductVariant;
 use App\Models\Products\VehicleModel;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -214,20 +216,60 @@ class CatalogSeeder extends Seeder
                 ],
             );
 
-            $this->syncProductImages($product, $this->resolveImages($data));
-
-            $available = (int) $data['stock'];
-            $reserved = $available > 0 ? min(1, $available) : 0;
-
-            Inventory::query()->updateOrCreate(
-                ['product_id' => $product->id],
-                [
-                    'total_stock' => $available + $reserved,
-                    'available_stock' => $available,
-                    'reserved_stock' => $reserved,
-                ],
+            $this->syncProductVariant(
+                $product,
+                $this->resolveImages($data),
+                (int) $data['stock'],
             );
         }
+    }
+
+    /**
+     * @param  list<string>  $images
+     */
+    private function syncProductVariant(Product $product, array $images, int $available): void
+    {
+        $color = Color::query()->firstOrCreate(
+            ['name' => 'Estándar'],
+            ['hex' => '#6B7280'],
+        );
+
+        $variant = ProductVariant::query()->updateOrCreate(
+            ['sku' => $product->sku.'-ESTANDAR'],
+            [
+                'product_id' => $product->id,
+                'name' => 'Estándar',
+                'is_active' => true,
+            ],
+        );
+
+        $variant->colors()->sync([$color->id => ['sort_order' => 0]]);
+
+        $reserved = $available > 0 ? min(1, $available) : 0;
+
+        Inventory::query()->updateOrCreate(
+            ['product_variant_id' => $variant->id],
+            [
+                'product_id' => $product->id,
+                'total_stock' => $available + $reserved,
+                'available_stock' => $available,
+                'reserved_stock' => $reserved,
+            ],
+        );
+
+        $variant->images()->delete();
+
+        foreach ($images as $index => $path) {
+            ProductImage::query()->create([
+                'product_id' => $product->id,
+                'product_variant_id' => $variant->id,
+                'path' => $path,
+                'sort_order' => $index + 1,
+                'is_primary' => $index === 0,
+            ]);
+        }
+
+        $product->forceFill(['image' => $images[0] ?? null])->save();
     }
 
     /**
@@ -259,23 +301,6 @@ class CatalogSeeder extends Seeder
             'tire' => self::GALLERY_TIRE,
             default => [],
         };
-    }
-
-    /**
-     * @param  list<string>  $images
-     */
-    private function syncProductImages(Product $product, array $images): void
-    {
-        $product->images()->delete();
-
-        foreach ($images as $index => $path) {
-            ProductImage::query()->create([
-                'product_id' => $product->id,
-                'path' => $path,
-                'sort_order' => $index + 1,
-                'is_primary' => $index === 0,
-            ]);
-        }
     }
 
     private function seedProductOffers(): void

@@ -7,6 +7,7 @@ use App\Enums\Inventory\InventoryMovementReason;
 use App\Enums\Inventory\InventoryMovementType;
 use App\Models\Products\InventoryMovement;
 use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
 use Illuminate\Database\Seeder;
 
 class InventoryMovementSeeder extends Seeder
@@ -27,14 +28,14 @@ class InventoryMovementSeeder extends Seeder
         ];
 
         foreach ($entries as $entry) {
-            $productId = Product::query()->where('sku', $entry['sku'])->value('id');
+            $variantId = $this->resolveVariantId($entry['sku']);
 
-            if ($productId === null) {
+            if ($variantId === null) {
                 continue;
             }
 
             $register->execute([
-                'product_id' => (int) $productId,
+                'product_variant_id' => $variantId,
                 'type' => InventoryMovementType::Entry,
                 'reason' => $entry['reason'],
                 'quantity' => $entry['qty'],
@@ -48,15 +49,15 @@ class InventoryMovementSeeder extends Seeder
         ];
 
         foreach ($manualExits as $exit) {
-            $productId = Product::query()->where('sku', $exit['sku'])->value('id');
+            $variantId = $this->resolveVariantId($exit['sku']);
 
-            if ($productId === null) {
+            if ($variantId === null) {
                 continue;
             }
 
             try {
                 $register->execute([
-                    'product_id' => (int) $productId,
+                    'product_variant_id' => $variantId,
                     'type' => InventoryMovementType::Exit,
                     'reason' => $exit['reason'],
                     'quantity' => $exit['qty'],
@@ -66,6 +67,20 @@ class InventoryMovementSeeder extends Seeder
                 // Stock insuficiente en reseed; se omite.
             }
         }
+    }
+
+    private function resolveVariantId(string $productSku): ?int
+    {
+        $productId = Product::query()->where('sku', $productSku)->value('id');
+
+        if ($productId === null) {
+            return null;
+        }
+
+        return ProductVariant::query()
+            ->where('product_id', $productId)
+            ->orderBy('id')
+            ->value('id');
     }
 
     private function resetPreviousSeedMovements(): void

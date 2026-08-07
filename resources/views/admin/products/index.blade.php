@@ -90,7 +90,7 @@
                     </select>
                 </div>
 
-                <div class="lg:col-span-4">
+                <div class="lg:col-span-4 relative z-0">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold uppercase tracking-wider text-muted">
                             Rango de precio
@@ -103,7 +103,7 @@
                     </div>
 
                     <div
-                        class="relative h-10 rounded border border-border bg-secondary px-3 flex items-center"
+                        class="relative z-0 h-10 rounded border border-border bg-secondary px-3 flex items-center"
                         data-dual-range
                         data-min="{{ $boundMin }}"
                         data-max="{{ $boundMax }}"
@@ -288,7 +288,7 @@
                                 <span class="text-muted text-xs">{{ $product->currency }}</span>
                             </td>
                             <td class="px-5 py-3">
-                                @php $stock = $product->inventory?->available_stock ?? 0; @endphp
+                                @php $stock = $product->availableStockTotal(); @endphp
                                 <span class="{{ $stock > 0 ? 'text-emerald-700' : 'text-red-600' }} font-semibold">
                                     {{ $stock }}
                                 </span>
@@ -541,9 +541,17 @@
                 const close = () => {
                     panel.classList.add('hidden');
                     trigger.setAttribute('aria-expanded', 'false');
+                    root.classList.remove('z-50');
+                    root.classList.add('z-20');
                 };
 
                 const open = () => {
+                    multiSelects.forEach((other) => {
+                        other.classList.remove('z-50');
+                        other.classList.add('z-20');
+                    });
+                    root.classList.remove('z-20');
+                    root.classList.add('z-50');
                     panel.classList.remove('hidden');
                     trigger.setAttribute('aria-expanded', 'true');
                 };
@@ -560,6 +568,12 @@
                     });
                     document.querySelectorAll('[data-multi-select-trigger]').forEach((other) => {
                         if (other !== trigger) other.setAttribute('aria-expanded', 'false');
+                    });
+                    multiSelects.forEach((other) => {
+                        if (other !== root) {
+                            other.classList.remove('z-50');
+                            other.classList.add('z-20');
+                        }
                     });
 
                     if (isOpen) {

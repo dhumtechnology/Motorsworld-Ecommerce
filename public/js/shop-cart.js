@@ -47,7 +47,9 @@
             options.body = JSON.stringify(body);
         }
 
-        const response = await fetch(url, options);
+        const response = await fetch(url, {
+            ...options,
+        });
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
@@ -86,11 +88,11 @@
         }
     }
 
-    function updateCartPage(data, productId) {
+    function updateCartPage(data, variantId) {
         const page = document.querySelector('[data-cart-page]');
         if (!page) return;
 
-        const line = page.querySelector(`[data-cart-line][data-product-id="${productId}"]`);
+        const line = page.querySelector(`[data-cart-line][data-variant-id="${variantId}"]`);
         const quantity = Number(data.line_quantity || 0);
 
         if (line) {
@@ -158,13 +160,22 @@
         const url = urls[action];
         if (!url) return;
 
+        const variantId = Number(root.dataset.variantId || 0);
+        if (!variantId) {
+            const errorEl = root.querySelector('[data-cart-error]') || document.querySelector('[data-cart-error]');
+            if (errorEl) {
+                errorEl.textContent = 'Selecciona un color.';
+                errorEl.classList.remove('hidden');
+            }
+            return;
+        }
+
         button.dataset.busy = '1';
         button.classList.add('opacity-60');
 
         const qtyValue = root.querySelector('[data-cart-qty-value], [data-line-qty]');
         const previousQty = qtyValue ? Number(qtyValue.textContent || 0) : 0;
 
-        // Optimistic UI
         if (action === 'increment' && qtyValue) {
             qtyValue.textContent = String(previousQty + 1);
         } else if (action === 'decrement' && qtyValue && previousQty > 0) {
@@ -174,17 +185,35 @@
         }
 
         try {
-            const body = action === 'store' ? { quantity: 1 } : null;
+            const body = {
+                product_variant_id: variantId,
+                ...(action === 'store' ? { quantity: 1 } : {}),
+            };
             const data = await cartRequest(url, 'POST', body);
 
             updateBadge(Number(data.item_count || 0));
 
             if (root.hasAttribute('data-product-cart')) {
-                setProductMode(root, Number(data.line_quantity || 0));
+                const lineQty = Number(data.line_quantity || 0);
+                const alpineRoot = root.closest('[x-data]');
+
+                if (alpineRoot && window.Alpine) {
+                    const dataAlpine = window.Alpine.$data(alpineRoot);
+                    const currentVariantId = Number(root.dataset.variantId || dataAlpine?.selectedId || 0);
+
+                    if (dataAlpine?.variants?.length && currentVariantId) {
+                        const variant = dataAlpine.variants.find((item) => Number(item.id) === currentVariantId);
+                        if (variant) {
+                            variant.cart_quantity = lineQty;
+                        }
+                    }
+                }
+
+                setProductMode(root, lineQty);
             }
 
             if (document.querySelector('[data-cart-page]')) {
-                updateCartPage(data, Number(data.product_id || root.dataset.productId));
+                updateCartPage(data, Number(data.product_variant_id || variantId));
             }
         } catch (error) {
             if (root.hasAttribute('data-product-cart')) {
@@ -193,7 +222,7 @@
                 qtyValue.textContent = String(previousQty);
             }
 
-            const errorEl = document.querySelector('[data-cart-error]');
+            const errorEl = root.querySelector('[data-cart-error]') || document.querySelector('[data-cart-error]');
             if (errorEl) {
                 errorEl.textContent = error.message;
                 errorEl.classList.remove('hidden');

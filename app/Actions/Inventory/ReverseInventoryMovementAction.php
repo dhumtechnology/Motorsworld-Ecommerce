@@ -30,13 +30,17 @@ class ReverseInventoryMovementAction
             }
 
             $inventory = Inventory::query()
-                ->where('product_id', $movement->product_id)
+                ->when(
+                    $movement->product_variant_id,
+                    fn ($q) => $q->where('product_variant_id', $movement->product_variant_id),
+                    fn ($q) => $q->where('product_id', $movement->product_id),
+                )
                 ->lockForUpdate()
                 ->first();
 
             if ($inventory === null) {
                 throw ValidationException::withMessages([
-                    'movement' => 'No existe inventario para este producto.',
+                    'movement' => 'No existe inventario para este color.',
                 ]);
             }
 

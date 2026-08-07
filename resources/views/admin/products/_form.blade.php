@@ -2,11 +2,8 @@
     /** @var \App\Models\Products\Product|null $product */
     $product = $product ?? null;
     $isEdit = $product !== null;
-    $existingImages = $product?->images ?? collect();
-    $primaryImage = $existingImages->firstWhere('is_primary', true) ?? $existingImages->first();
-    $secondaryImages = $existingImages->where('id', '!=', $primaryImage?->id)->values();
-    $availableStock = (int) ($product?->inventory?->available_stock ?? 0);
-    $reservedStock = (int) ($product?->inventory?->reserved_stock ?? 0);
+    /** @var \Illuminate\Support\Collection<int, \App\Models\Products\Color> $colors */
+    $colors = $colors ?? collect();
 
     $statusLabels = [
         'active' => 'Activo',
@@ -24,6 +21,31 @@
 
     $fieldClass = 'w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
     $readonlyClass = 'w-full rounded border border-border bg-secondary px-4 py-2.5 text-sm text-muted cursor-not-allowed';
+
+    $initialVariants = old('variants');
+    if (! is_array($initialVariants)) {
+        $initialVariants = ($product?->variants ?? collect())->map(function ($variant) {
+            return [
+                'id' => $variant->id,
+                'sku' => $variant->sku,
+                'color_ids' => $variant->colors->pluck('id')->map(fn ($id) => (string) $id)->values()->all(),
+                'new_colors' => [],
+                'available_stock' => (int) ($variant->inventory?->available_stock ?? 0),
+                'images' => $variant->images->map(fn ($img) => [
+                    'id' => $img->id,
+                    'path' => $img->path,
+                    'is_primary' => (bool) $img->is_primary,
+                ])->values()->all(),
+                'remove_image_ids' => [],
+            ];
+        })->values()->all();
+    }
+
+    $colorsJson = $colors->map(fn ($c) => [
+        'id' => (string) $c->id,
+        'name' => $c->name,
+        'hex' => $c->hex,
+    ])->values();
 @endphp
 
 @if ($errors->any())
@@ -42,14 +64,15 @@
      data-models-store-url="{{ route('admin.models.store') }}">
 
     <div>
-        <label for="sku" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">SKU</label>
+        <label for="sku" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Código base</label>
         @if ($isEdit)
             <input id="sku" type="text" value="{{ $product->sku }}" readonly class="{{ $readonlyClass }}">
+            <p class="mt-1.5 text-xs text-muted">Prefijo automático. El SKU vendible se genera por cada color.</p>
         @else
-            <input id="sku" name="sku" type="text" value="" readonly
+            <input id="sku" type="text" value="" readonly
                    placeholder="Se generará automáticamente al guardar"
                    class="{{ $readonlyClass }}">
-            <p class="mt-1.5 text-xs text-muted">Código único generado por el sistema.</p>
+            <p class="mt-1.5 text-xs text-muted">El SKU de cada color se genera al guardar (producto + colores).</p>
         @endif
     </div>
 
@@ -162,24 +185,6 @@
         </select>
     </div>
 
-    <div>
-        <label for="available_stock" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
-            Stock disponible{{ $isEdit ? '' : ' *' }}
-        </label>
-        @if ($isEdit)
-            <input id="available_stock" type="number" value="{{ $availableStock }}" readonly class="{{ $readonlyClass }}">
-        @else
-            <input id="available_stock" name="available_stock" type="number" min="0" required
-                   value="{{ old('available_stock', 0) }}"
-                   class="{{ $fieldClass }}">
-        @endif
-    </div>
-
-    <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Stock reservado</label>
-        <div class="{{ $readonlyClass }}">{{ $reservedStock }}</div>
-    </div>
-
     <div class="lg:col-span-2">
         <label for="description" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</label>
         <textarea id="description" name="description" rows="4" class="{{ $fieldClass }}">{{ old('description', $product?->description) }}</textarea>
@@ -191,74 +196,177 @@
     </div>
 </div>
 
-<div class="mt-8 space-y-6 border-t border-border pt-6" data-product-images>
-    <div>
-        <h3 class="text-sm font-title text-text">Imágenes</h3>
-        <p class="mt-1 text-xs text-muted">Sube archivos locales (JPG, PNG, WEBP o GIF, máx. 5 MB cada una).</p>
+<div
+    class="mt-8 space-y-4 border-t border-border pt-6"
+    x-data="productVariantsForm(@js($initialVariants), @js($colorsJson))"
+>
+    <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <h3 class="text-sm font-title text-text">Colores / combinaciones</h3>
+            <p class="mt-1 text-xs text-muted">
+                Cada fila es un color o combinación (ej. Rojo / Blanco), con su stock, fotos y SKU automático.
+            </p>
+        </div>
+        <button type="button" @click="addVariant()"
+                class="rounded bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-primary-hover">
+            Agregar color
+        </button>
     </div>
 
-    <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imagen principal</label>
+    <template x-for="(variant, index) in variants" :key="variant._key">
+        <div class="rounded-lg border border-border bg-secondary/40 p-4 space-y-4">
+            <input type="hidden" :name="`variants[${index}][id]`" :value="variant.id || ''">
 
-        @if ($primaryImage)
-            <div class="mb-3 flex items-center gap-3 rounded border border-border bg-secondary p-3" data-existing-primary>
-                <img src="{{ $primaryImage->path }}" alt="" class="h-16 w-16 rounded object-cover border border-border">
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm text-text font-semibold truncate">Imagen actual</p>
-                    <p class="text-xs text-muted">Se reemplazará si subes otra.</p>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <p class="text-sm font-semibold text-text">Combinación <span x-text="index + 1"></span></p>
+                    <p class="text-xs text-muted" x-show="variant.sku">
+                        SKU: <span class="font-mono" x-text="variant.sku"></span>
+                    </p>
+                    <p class="text-xs text-muted" x-show="!variant.sku">SKU se generará al guardar</p>
                 </div>
-                <label class="inline-flex items-center gap-2 text-xs text-red-600 cursor-pointer">
-                    <input type="checkbox" name="remove_image_ids[]" value="{{ $primaryImage->id }}"
-                           class="rounded border-border-strong bg-surface text-red-500 focus:ring-red-500">
-                    Eliminar
-                </label>
+                <button type="button" @click="removeVariant(index)"
+                        class="text-xs font-bold uppercase tracking-wide text-red-600 hover:underline">
+                    Quitar
+                </button>
             </div>
-        @endif
 
-        <div data-dropzone="primary"
-             class="flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary px-4 py-8 text-center transition-colors hover:border-primary">
-            <input id="primary_image" type="file" name="primary_image" accept="image/*" class="sr-only" data-file-input="primary">
-            <button type="button" data-dropzone-trigger class="flex flex-col items-center cursor-pointer">
-                <svg class="h-8 w-8 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5V19a2 2 0 002 2h14a2 2 0 002-2v-2.5M16 8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <p class="mt-3 text-sm text-text-soft">Arrastra la imagen principal o haz clic para seleccionar</p>
-                <p class="mt-1 text-xs text-muted">Una sola imagen</p>
-            </button>
-            <div data-preview="primary" class="mt-4 hidden w-full"></div>
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Colores existentes</label>
+                    <div class="max-h-40 overflow-y-auto rounded border border-border bg-surface p-2 space-y-1">
+                        <template x-for="color in availableColors" :key="color.id">
+                            <label class="flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-secondary cursor-pointer">
+                                <input type="checkbox"
+                                       :name="`variants[${index}][color_ids][]`"
+                                       :value="color.id"
+                                       :checked="variant.color_ids.includes(color.id)"
+                                       @change="toggleColor(variant, color.id, $event.target.checked)"
+                                       class="rounded border-border-strong text-primary focus:ring-primary">
+                                <span class="inline-block h-3.5 w-3.5 rounded-full border border-border"
+                                      :style="color.hex ? `background:${color.hex}` : 'background:#d1d5db'"></span>
+                                <span x-text="color.name"></span>
+                            </label>
+                        </template>
+                        <p class="px-2 py-1 text-xs text-muted" x-show="availableColors.length === 0">Aún no hay colores. Crea uno abajo.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Stock disponible *</label>
+                    <input type="number" min="0" required
+                           :name="`variants[${index}][available_stock]`"
+                           x-model.number="variant.available_stock"
+                           class="{{ $fieldClass }}">
+                    <p class="mt-1.5 text-xs text-muted">Puedes combinar 2+ colores marcándolos juntos.</p>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-muted">Colores nuevos en esta combinación</label>
+                    <button type="button" @click="addNewColor(variant)" class="text-xs font-bold text-primary hover:underline">+ Nuevo color</button>
+                </div>
+                <template x-for="(nc, ncIndex) in variant.new_colors" :key="ncIndex">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <input type="text" :name="`variants[${index}][new_colors][${ncIndex}][name]`" x-model="nc.name"
+                               placeholder="Nombre (ej. Rojo)" class="{{ $fieldClass }} max-w-xs">
+                        <input type="color" :name="`variants[${index}][new_colors][${ncIndex}][hex]`" x-model="nc.hex"
+                               class="h-10 w-14 rounded border border-border bg-surface p-1">
+                        <button type="button" @click="variant.new_colors.splice(ncIndex, 1)" class="text-xs text-red-600">Quitar</button>
+                    </div>
+                </template>
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imagen principal</label>
+                    <template x-if="variant.images.filter(i => i.is_primary && !variant.remove_image_ids.includes(i.id)).length">
+                        <div class="mb-2 flex items-center gap-3 rounded border border-border bg-surface p-2">
+                            <img :src="variant.images.find(i => i.is_primary && !variant.remove_image_ids.includes(i.id))?.path" class="h-14 w-14 rounded object-cover border border-border" alt="">
+                            <label class="text-xs text-red-600 cursor-pointer">
+                                <input type="checkbox"
+                                       :name="`variants[${index}][remove_image_ids][]`"
+                                       :value="variant.images.find(i => i.is_primary)?.id"
+                                       @change="toggleRemoveImage(variant, variant.images.find(i => i.is_primary)?.id, $event.target.checked)">
+                                Eliminar
+                            </label>
+                        </div>
+                    </template>
+                    <input type="file" accept="image/*" :name="`variants[${index}][primary_image]`"
+                           class="block w-full text-sm text-text-soft file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-2 file:text-xs file:font-bold file:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imágenes secundarias</label>
+                    <div class="mb-2 flex flex-wrap gap-2" x-show="variant.images.some(i => !i.is_primary)">
+                        <template x-for="img in variant.images.filter(i => !i.is_primary)" :key="img.id">
+                            <div class="relative" x-show="!variant.remove_image_ids.includes(img.id)">
+                                <img :src="img.path" class="h-14 w-14 rounded object-cover border border-border" alt="">
+                                <label class="absolute inset-x-0 bottom-0 bg-black/70 text-[9px] text-center text-red-200 cursor-pointer">
+                                    <input type="checkbox" class="sr-only"
+                                           :name="`variants[${index}][remove_image_ids][]`"
+                                           :value="img.id"
+                                           @change="toggleRemoveImage(variant, img.id, $event.target.checked)">
+                                    Del
+                                </label>
+                            </div>
+                        </template>
+                    </div>
+                    <input type="file" accept="image/*" multiple :name="`variants[${index}][secondary_images][]`"
+                           class="block w-full text-sm text-text-soft file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-2 file:text-xs file:font-bold file:text-white">
+                </div>
+            </div>
         </div>
+    </template>
+
+    <template x-for="id in removedVariantIds" :key="id">
+        <input type="hidden" name="remove_variant_ids[]" :value="id">
+    </template>
+
+    <p class="text-sm text-muted" x-show="variants.length === 0">
+        Sin colores aún. Agrega al menos uno para poder vender el producto con stock.
+    </p>
+</div>
+
+<div class="mt-8 space-y-4 border-t border-border pt-6" data-product-technical-sheet>
+    <div>
+        <h3 class="text-sm font-title text-text">Ficha técnica (PDF)</h3>
+        <p class="mt-1 text-xs text-muted">Documento opcional en PDF (máx. 10 MB). Se muestra en la ficha pública del producto.</p>
     </div>
 
-    <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imágenes secundarias</label>
-
-        @if ($secondaryImages->isNotEmpty())
-            <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                @foreach ($secondaryImages as $image)
-                    <div class="relative overflow-hidden rounded border border-border bg-secondary">
-                        <img src="{{ $image->path }}" alt="" class="h-28 w-full object-cover">
-                        <label class="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/70 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-300 cursor-pointer">
-                            <input type="checkbox" name="remove_image_ids[]" value="{{ $image->id }}"
-                                   class="rounded border-border-strong bg-surface text-red-500 focus:ring-red-500">
-                            Eliminar
-                        </label>
-                    </div>
-                @endforeach
-            </div>
-        @endif
-
-        <div data-dropzone="secondary"
-             class="flex min-h-[180px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-secondary px-4 py-8 text-center transition-colors hover:border-primary">
-            <input id="secondary_images" type="file" name="secondary_images[]" accept="image/*" multiple class="sr-only" data-file-input="secondary">
-            <button type="button" data-dropzone-trigger class="flex flex-col items-center cursor-pointer">
-                <svg class="h-8 w-8 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    @if ($product?->technical_sheet)
+        <div class="flex flex-wrap items-center gap-3 rounded border border-border bg-secondary p-3">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded border border-border bg-surface text-red-600">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5" />
                 </svg>
-                <p class="mt-3 text-sm text-text-soft">Arrastra varias imágenes o haz clic para seleccionar</p>
-                <p class="mt-1 text-xs text-muted">Puedes agregar más sin perder la selección anterior</p>
-            </button>
-            <div data-preview="secondary" class="mt-4 hidden w-full grid grid-cols-2 gap-3 sm:grid-cols-4"></div>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm text-text font-semibold">Ficha técnica actual</p>
+                <a href="{{ $product->technical_sheet }}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-sky-700 hover:underline">
+                    Ver / descargar PDF
+                </a>
+            </div>
+            <label class="inline-flex items-center gap-2 text-xs text-red-600 cursor-pointer">
+                <input type="checkbox" name="remove_technical_sheet" value="1"
+                       class="rounded border-border-strong bg-surface text-red-500 focus:ring-red-500">
+                Eliminar
+            </label>
         </div>
+    @endif
+
+    <div>
+        <label for="technical_sheet" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
+            {{ $product?->technical_sheet ? 'Reemplazar PDF' : 'Subir PDF' }}
+        </label>
+        <input
+            id="technical_sheet"
+            type="file"
+            name="technical_sheet"
+            accept="application/pdf,.pdf"
+            class="block w-full text-sm text-text-soft file:mr-4 file:rounded file:border-0 file:bg-primary file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-wide file:text-white hover:file:bg-primary-hover"
+        >
     </div>
 </div>
 

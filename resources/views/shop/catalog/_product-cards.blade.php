@@ -8,6 +8,7 @@
         :image="$product->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
         :isSale="$product->is_on_sale"
         :discountPercent="$product->discount_percent"
+        :currency="$product->currency ?? 'PEN'"
         :href="route('shop.product.show', $product)"
         :cartQty="$cartQuantities[$product->id] ?? 0"
     />

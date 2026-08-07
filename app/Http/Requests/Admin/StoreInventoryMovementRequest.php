@@ -22,7 +22,7 @@ class StoreInventoryMovementRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(InventoryMovementType::class)],
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'quantity' => ['required', 'integer', 'min:1', 'max:100000'],
             'reason' => ['required', 'string'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -36,7 +36,7 @@ class StoreInventoryMovementRequest extends FormRequest
     {
         return [
             'type.required' => 'Selecciona el tipo de movimiento.',
-            'product_id.required' => 'Selecciona un producto.',
+            'product_variant_id.required' => 'Selecciona un color / SKU.',
             'quantity.required' => 'La cantidad es obligatoria.',
             'reason.required' => 'Selecciona un motivo.',
         ];
@@ -67,7 +67,7 @@ class StoreInventoryMovementRequest extends FormRequest
     }
 
     /**
-     * @return array{type: InventoryMovementType, product_id: int, quantity: int, reason: InventoryMovementReason, notes: string|null}
+     * @return array{type: InventoryMovementType, product_variant_id: int, quantity: int, reason: InventoryMovementReason, notes: string|null}
      */
     public function movementAttributes(): array
     {
@@ -75,7 +75,7 @@ class StoreInventoryMovementRequest extends FormRequest
 
         return [
             'type' => InventoryMovementType::from((string) $this->input('type')),
-            'product_id' => (int) $this->input('product_id'),
+            'product_variant_id' => (int) $this->input('product_variant_id'),
             'quantity' => (int) $this->input('quantity'),
             'reason' => InventoryMovementReason::from((string) $this->input('reason')),
             'notes' => $notes !== '' ? $notes : null,

@@ -50,7 +50,7 @@ class GetVehicleModelDetailsAction
         $productsCount = (clone $productsQuery)->count();
         $activeCount = (clone $productsQuery)->where('status', ProductStatus::Active)->count();
         $outOfStock = (clone $productsQuery)
-            ->whereDoesntHave('inventory', fn ($q) => $q->where('available_stock', '>', 0))
+            ->whereDoesntHave('inventories', fn ($q) => $q->where('available_stock', '>', 0))
             ->count();
 
         $stock = (clone $productsQuery)

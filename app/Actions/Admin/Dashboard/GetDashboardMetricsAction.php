@@ -99,7 +99,7 @@ class GetDashboardMetricsAction
                 ->limit(6)
                 ->get(),
             'lowStockProducts' => Inventory::query()
-                ->with('product')
+                ->with(['product', 'variant'])
                 ->where('available_stock', '<=', self::LOW_STOCK_THRESHOLD)
                 ->orderBy('available_stock')
                 ->limit(6)

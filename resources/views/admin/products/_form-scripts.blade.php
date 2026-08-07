@@ -442,4 +442,60 @@
         setupDropzone('primary');
         setupDropzone('secondary');
     })();
+
+    window.productVariantsForm = function (initialVariants, availableColors) {
+        return {
+            variants: (initialVariants || []).map((v, i) => ({
+                _key: v.id ? 'v-' + v.id : 'n-' + i + '-' + Date.now(),
+                id: v.id || null,
+                sku: v.sku || '',
+                color_ids: (v.color_ids || []).map(String),
+                new_colors: v.new_colors || [],
+                available_stock: Number(v.available_stock || 0),
+                images: v.images || [],
+                remove_image_ids: v.remove_image_ids || [],
+            })),
+            availableColors: availableColors || [],
+            removedVariantIds: [],
+            addVariant() {
+                this.variants.push({
+                    _key: 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+                    id: null,
+                    sku: '',
+                    color_ids: [],
+                    new_colors: [{ name: '', hex: '#FF6600' }],
+                    available_stock: 0,
+                    images: [],
+                    remove_image_ids: [],
+                });
+            },
+            removeVariant(index) {
+                const variant = this.variants[index];
+                if (variant?.id) {
+                    this.removedVariantIds.push(variant.id);
+                }
+                this.variants.splice(index, 1);
+            },
+            toggleColor(variant, colorId, checked) {
+                const id = String(colorId);
+                if (checked) {
+                    if (!variant.color_ids.includes(id)) variant.color_ids.push(id);
+                } else {
+                    variant.color_ids = variant.color_ids.filter((c) => c !== id);
+                }
+            },
+            addNewColor(variant) {
+                variant.new_colors.push({ name: '', hex: '#FF6600' });
+            },
+            toggleRemoveImage(variant, imageId, checked) {
+                if (!imageId) return;
+                const id = Number(imageId);
+                if (checked) {
+                    if (!variant.remove_image_ids.includes(id)) variant.remove_image_ids.push(id);
+                } else {
+                    variant.remove_image_ids = variant.remove_image_ids.filter((x) => x !== id);
+                }
+            },
+        };
+    };
 </script>

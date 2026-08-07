@@ -10,7 +10,7 @@ class CheckoutPayRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return true;
     }
 
     /**
@@ -18,18 +18,41 @@ class CheckoutPayRequest extends FormRequest
      */
     public function rules(): array
     {
+        $authenticated = $this->user() !== null;
+        $hasDocument = filled($this->user()?->customerProfile?->document);
+
         return [
             'payment_method' => ['required', 'string', Rule::in([
                 PaymentMethod::Card->value,
                 PaymentMethod::Yape->value,
             ])],
             'culqi_token' => ['nullable', 'string', 'max:64'],
-            'first_name' => ['nullable', 'string', 'max:80'],
-            'last_name' => ['nullable', 'string', 'max:80'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'customer_email' => [$authenticated ? 'nullable' : 'required', 'email', 'max:255'],
+            'customer_document' => [
+                $authenticated && $hasDocument ? 'nullable' : 'required',
+                'string',
+                'max:20',
+            ],
+            'first_name' => ['required', 'string', 'max:80'],
+            'last_name' => ['required', 'string', 'max:80'],
+            'phone' => ['required', 'string', 'max:20'],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_city' => ['nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'customer_email' => 'correo',
+            'customer_document' => 'documento',
+            'first_name' => 'nombre',
+            'last_name' => 'apellido',
+            'phone' => 'teléfono',
         ];
     }
 
@@ -56,6 +79,43 @@ class CheckoutPayRequest extends FormRequest
             'phone' => $this->nullableString('phone'),
             'address' => $this->nullableString('address_line1'),
             'city' => $this->nullableString('address_city'),
+        ];
+    }
+
+    /**
+     * Payload compatible con ResolveOrCreateCustomerAction.
+     *
+     * @return array{
+     *     customer_name: string,
+     *     customer_document: string,
+     *     customer_phone: string,
+     *     customer_email: string
+     * }
+     */
+    public function customerPayload(): array
+    {
+        $user = $this->user();
+        $profile = $user?->customerProfile;
+
+        $email = $this->nullableString('customer_email')
+            ?? ($user?->email ? strtolower($user->email) : null);
+
+        $document = $this->nullableString('customer_document')
+            ?? ($profile?->document ? trim((string) $profile->document) : null);
+
+        $firstName = trim((string) $this->input('first_name', ''));
+        $lastName = trim((string) $this->input('last_name', ''));
+        $fullName = trim($firstName.' '.$lastName);
+
+        if ($fullName === '') {
+            $fullName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+        }
+
+        return [
+            'customer_name' => $fullName !== '' ? $fullName : 'Cliente Motosworld',
+            'customer_document' => $document ?? '',
+            'customer_phone' => $this->nullableString('phone') ?? (string) ($profile?->phone ?? ''),
+            'customer_email' => $email ?? '',
         ];
     }
 
