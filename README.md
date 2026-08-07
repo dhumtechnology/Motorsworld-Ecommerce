@@ -15,7 +15,7 @@ No necesitas Node.js instalado en tu PC: el contenedor `node` compila a `public/
 
 ### Sin Docker (desarrollo local)
 
-- PHP 8.4 o superior
+- PHP 8.3 o superior
 - Composer 2.x
 - MySQL 8.0
 - Node.js 20+ y npm (para assets con Vite)

@@ -220,8 +220,7 @@
                 <div class="divide-y divide-border max-h-[34rem] overflow-y-auto">
                     @forelse ($dayAppointments as $appointment)
                         @php
-                            $profile = $appointment->user?->customerProfile;
-                            $fullName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+                            $fullName = $appointment->displayCustomerName();
                             $statusKey = $appointment->status instanceof \App\Enums\Appointments\AppointmentStatus
                                 ? $appointment->status->value
                                 : (string) $appointment->status;
@@ -234,7 +233,7 @@
                                         {{ $appointment->appointment_at?->format('H:i') }}
                                     </p>
                                     <p class="text-text font-semibold mt-1 truncate">
-                                        {{ $fullName !== '' ? $fullName : ($appointment->user?->email ?? 'Sin cliente') }}
+                                        {{ $fullName !== 'Sin nombre' ? $fullName : $appointment->displayCustomerEmail() }}
                                     </p>
                                     <p class="text-xs text-muted mt-0.5">
                                         {{ $appointment->serviceType?->name ?? 'Sin servicio' }}

@@ -6,8 +6,7 @@
 
 @section('content')
     @php
-        $profile = $appointment->user?->customerProfile;
-        $fullName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+        $fullName = $appointment->displayCustomerName();
 
         $statusLabels = [
             'pending' => 'Pendiente',
@@ -139,19 +138,19 @@
                 <dl class="space-y-3 text-sm">
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Nombre</dt>
-                        <dd class="text-text font-semibold mt-0.5">{{ $fullName !== '' ? $fullName : 'Sin nombre' }}</dd>
+                        <dd class="text-text font-semibold mt-0.5">{{ $fullName }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Email</dt>
-                        <dd class="text-text-soft mt-0.5 break-all">{{ $appointment->user?->email ?? '—' }}</dd>
+                        <dd class="text-text-soft mt-0.5 break-all">{{ $appointment->displayCustomerEmail() }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Documento</dt>
-                        <dd class="text-text-soft mt-0.5 font-mono">{{ $profile?->document ?: '—' }}</dd>
+                        <dd class="text-text-soft mt-0.5 font-mono">{{ $appointment->displayCustomerDocument() }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Teléfono</dt>
-                        <dd class="text-text-soft mt-0.5">{{ $profile?->phone ?: '—' }}</dd>
+                        <dd class="text-text-soft mt-0.5">{{ $appointment->displayCustomerPhone() }}</dd>
                     </div>
                 </dl>
             </div>

@@ -1,6 +1,5 @@
 @php
-    $profile = $appointment->user?->customerProfile;
-    $fullName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+    $fullName = $appointment->displayCustomerName();
     $statusKey = $appointment->status instanceof \App\Enums\Appointments\AppointmentStatus
         ? $appointment->status->value
         : (string) $appointment->status;
@@ -16,8 +15,8 @@
         <span class="text-xs text-primary font-mono">{{ $appointment->appointment_at?->format('H:i') }}</span>
     </td>
     <td class="px-5 py-3">
-        <p class="font-semibold text-text">{{ $fullName !== '' ? $fullName : 'Sin nombre' }}</p>
-        <p class="text-xs text-muted mt-0.5">{{ $appointment->user?->email ?? '—' }}</p>
+        <p class="font-semibold text-text">{{ $fullName }}</p>
+        <p class="text-xs text-muted mt-0.5">{{ $appointment->displayCustomerEmail() }}</p>
     </td>
     <td class="px-5 py-3 text-text-soft">{{ $appointment->serviceType?->name ?? '—' }}</td>
     <td class="px-5 py-3 text-text-soft">

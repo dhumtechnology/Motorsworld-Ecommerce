@@ -53,6 +53,10 @@ class AppointmentController extends Controller
                             ->where('plate', 'like', $like)
                             ->orWhere('comments', 'like', $like)
                             ->orWhere('id', 'like', $like)
+                            ->orWhere('customer_name', 'like', $like)
+                            ->orWhere('customer_email', 'like', $like)
+                            ->orWhere('customer_document', 'like', $like)
+                            ->orWhere('customer_phone', 'like', $like)
                             ->orWhereHas('user', function (Builder $userQuery) use ($like) {
                                 $userQuery
                                     ->where('email', 'like', $like)

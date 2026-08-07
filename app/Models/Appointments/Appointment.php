@@ -78,6 +78,41 @@ class Appointment extends Model
         return $this->hasMany(Service::class);
     }
 
+    public function displayCustomerName(): string
+    {
+        $profile = $this->user?->customerProfile;
+        $fromProfile = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+
+        if ($fromProfile !== '') {
+            return $fromProfile;
+        }
+
+        $fromAppointment = trim((string) ($this->customer_name ?? ''));
+
+        return $fromAppointment !== '' ? $fromAppointment : 'Sin nombre';
+    }
+
+    public function displayCustomerEmail(): string
+    {
+        return $this->user?->email
+            ?: (string) ($this->customer_email ?? '')
+            ?: '—';
+    }
+
+    public function displayCustomerDocument(): string
+    {
+        return $this->user?->customerProfile?->document
+            ?: (string) ($this->customer_document ?? '')
+            ?: '—';
+    }
+
+    public function displayCustomerPhone(): string
+    {
+        return $this->user?->customerProfile?->phone
+            ?: (string) ($this->customer_phone ?? '')
+            ?: '—';
+    }
+
     /**
      * @return array<string, string>
      */
