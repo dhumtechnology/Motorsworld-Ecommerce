@@ -141,8 +141,14 @@
     </div>
 
     <div>
-        <label for="currency" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Moneda</label>
-        <input id="currency" type="text" value="PEN" readonly class="{{ $readonlyClass }}">
+        <label for="currency" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Moneda *</label>
+        <select id="currency" name="currency" required class="{{ $fieldClass }}">
+            @foreach (['PEN' => 'PEN (Soles)', 'USD' => 'USD (Dólares)'] as $code => $label)
+                <option value="{{ $code }}" @selected(old('currency', $product?->currency ?? 'PEN') === $code)>
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
     </div>
 
     <div>
