@@ -408,21 +408,21 @@
             <div class="flex flex-wrap items-center gap-x-8">
                 <button type="button" 
                         @click="currentTab = 'description'"
-                        :class="currentTab === 'description' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
+                        :class="currentTab === 'description' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:color-secondary'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Descripción
                 </button>
 
                 <button type="button" 
                         @click="currentTab = 'info'"
-                        :class="currentTab === 'info' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
+                        :class="currentTab === 'info' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-secondary'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Información Adicional
                 </button>
 
                 <button type="button"
                         @click="currentTab = 'technical'"
-                        :class="currentTab === 'technical' ? 'text-primary border-[#f15a24]' : 'text-neutral-400 border-transparent hover:text-secondary'"
+                        :class="currentTab === 'technical' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-secondary'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Ficha técnica
                 </button>
@@ -450,19 +450,109 @@
                 </div>
 
                 {{-- Tab: Ficha técnica --}}
-                <div x-show="currentTab === 'technical'" class="space-y-4" style="display: none;">
+                <div x-show="currentTab === 'technical'" class="space-y-4" style="display: none;" x-data="{ openModal: false }">
                     @if($product->technical_sheet)
                         <p class="text-neutral-700">
-                            Descarga o visualiza la ficha técnica de este producto en formato PDF.
+                            Previsualiza la ficha técnica de este producto o descárgala directamente.
                         </p>
-                        <a
-                            href="{{ $product->technical_sheet }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-flex items-center gap-2 rounded bg-primary px-5 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-black transition-colors"
-                        >
-                            Ver ficha técnica (PDF)
-                        </a>
+
+                        <!-- Tarjeta de vista previa pequeña -->
+                        <div class="relative max-w-sm rounded-lg border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group bg-neutral-50">
+                            
+                            <!-- Marco / Preview miniatura -->
+                            <div class="h-64 w-full overflow-hidden relative">
+                                <!-- Mostramos la primera página del PDF en la vista previa -->
+                                <iframe 
+                                    src="{{ $product->technical_sheet }}#toolbar=0&navpanes=0&scrollbar=0" 
+                                    class="w-full h-full pointer-events-none select-none opacity-90 group-hover:opacity-100 transition-opacity"
+                                    title="Vista previa ficha técnica">
+                                </iframe>
+
+                                <!-- Capa interactiva para abrir el modal -->
+                                <button 
+                                    type="button"
+                                    @click="openModal = true"
+                                    class="absolute inset-0 w-full h-full bg-black/20 group-hover:bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                                >
+                                    <span class="bg-black/70 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 backdrop-blur-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        Ampliar vista previa
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- Botones de acción inferiores -->
+                            <div class="p-3 bg-white border-t border-neutral-200 flex items-center justify-between gap-2">
+                                <button 
+                                    type="button"
+                                    @click="openModal = true"
+                                    class="text-xs font-bold text-neutral-700 hover:text-black flex items-center gap-1"
+                                >
+                                    Ampliar
+                                </button>
+
+                                <a 
+                                    href="{{ $product->technical_sheet }}" 
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-black transition-colors"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    Descargar PDF
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Modal para vista ampliada -->
+                        <template x-teleport="body">
+                            <div 
+                                x-show="openModal" 
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100"
+                                x-transition:leave-end="opacity-0"
+                                class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+                                @keydown.escape.window="openModal = false"
+                            >
+                                <div class="relative w-full max-w-5xl h-[85vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                                    <!-- Cabecera del modal -->
+                                    <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-neutral-50">
+                                        <h3 class="font-bold text-neutral-800 text-lg">Ficha Técnica</h3>
+                                        <div class="flex items-center gap-3">
+                                            <a 
+                                                href="{{ $product->technical_sheet }}" 
+                                                download
+                                                target="_blank"
+                                                class="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-xs font-bold uppercase text-white hover:bg-black transition-colors"
+                                            >
+                                                Descargar
+                                            </a>
+                                            <button 
+                                                type="button"
+                                                @click="openModal = false"
+                                                class="text-neutral-500 hover:text-black text-2xl font-bold leading-none p-1"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cuerpo del modal con PDF legible -->
+                                    <div class="flex-1 w-full h-full bg-neutral-100">
+                                        <iframe 
+                                            src="{{ $product->technical_sheet }}" 
+                                            class="w-full h-full border-0"
+                                            title="Ficha técnica completa">
+                                        </iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
                     @else
                         <p class="text-black italic">No hay ficha técnica disponible para este artículo.</p>
                     @endif
