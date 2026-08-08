@@ -7,6 +7,11 @@
     $profile = $order->user?->customerProfile;
     $shipping = $order->shippingAddress;
     $customerName = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+    $isPickup = $order->fulfillment_method === \App\Enums\Orders\FulfillmentMethod::Pickup;
+    $storeAddress = config('shop.contact.address');
+    $mapEmbedUrl = config('shop.map_embed_url');
+    $mapsLink = 'https://maps.google.com/?q='.urlencode((string) $storeAddress);
+    $orderCurrencySymbol = \App\Support\Currency::symbol($order->currency ?? 'PEN');
 @endphp
 <div class="mx-auto max-w-3xl px-4 py-10 text-neutral-900 font-title">
     <h1 class="text-3xl font-black uppercase tracking-wide mb-6">Pedido #{{ $order->id }}</h1>
@@ -17,14 +22,6 @@
         </div>
     @endif
 
-    @guest
-        <div class="mb-6 rounded border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
-            Compra asociada a <strong>{{ $order->user?->email }}</strong>.
-            Si te registras después con ese correo, conservarás el historial de pedidos.
-            <a href="{{ route('register') }}" class="font-bold underline ml-1">Crear cuenta</a>
-        </div>
-    @endguest
-
     @if ($errors->any())
         <div class="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
@@ -33,6 +30,9 @@
 
     <div class="rounded-lg border border-neutral-200 bg-white divide-y divide-neutral-100 mb-6 shadow-sm">
         @foreach ($order->items as $item)
+            @php
+                $itemCurrencySymbol = \App\Support\Currency::symbol($item->currency ?? $order->currency ?? 'PEN');
+            @endphp
             <div class="flex justify-between gap-4 p-4 text-sm">
                 <div>
                     <p class="font-semibold text-neutral-900">{{ $item->product?->name ?? 'Producto' }}</p>
@@ -42,13 +42,13 @@
                     <p class="text-neutral-500 text-xs">x{{ $item->quantity }}</p>
                 </div>
                 <p class="font-bold text-orange-600">
-                    S/ {{ number_format((float) $item->unit_price * $item->quantity, 2) }}
+                    {{ $itemCurrencySymbol }} {{ number_format((float) $item->unit_price * $item->quantity, 2) }}
                 </p>
             </div>
         @endforeach
         <div class="flex justify-between p-4">
             <span class="text-neutral-500 uppercase text-xs font-bold tracking-widest">Total</span>
-            <span class="text-xl font-black text-neutral-900">S/ {{ number_format((float) $order->total_amount, 2) }}</span>
+            <span class="text-xl font-black text-neutral-900">{{ $orderCurrencySymbol }} {{ number_format((float) $order->total_amount, 2) }}</span>
         </div>
     </div>
 
@@ -80,8 +80,17 @@
             <p class="text-sm font-semibold text-neutral-900">
                 {{ $order->fulfillment_method?->label() ?? 'Delivery' }}
             </p>
-            @if ($order->fulfillment_method?->value === 'pickup')
-                <p class="text-sm text-neutral-600">Retiro en tienda Motosworld.</p>
+            @if ($isPickup)
+                <p class="text-sm text-neutral-600">Retira tu pedido en nuestra tienda:</p>
+                <p class="text-sm font-semibold text-neutral-900">{{ $storeAddress }}</p>
+                <a
+                    href="{{ $mapsLink }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex text-sm font-bold text-orange-600 hover:text-orange-500"
+                >
+                    Ver en Google Maps →
+                </a>
             @elseif ($shipping)
                 <p class="text-sm font-semibold text-neutral-900 mt-2">{{ $shipping->line1 }}</p>
                 <p class="text-sm text-neutral-600">
@@ -96,6 +105,25 @@
             @endif
         </div>
     </div>
+
+    @if ($isPickup && $mapEmbedUrl)
+        <div class="rounded-lg border border-neutral-200 bg-white overflow-hidden mb-6 shadow-sm">
+            <div class="px-5 py-4 border-b border-neutral-100">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-neutral-500">Ubicación de tienda</h2>
+                <p class="mt-1 text-sm text-neutral-600">{{ $storeAddress }}</p>
+            </div>
+            <div class="relative w-full aspect-[16/9] min-h-[220px]">
+                <iframe
+                    title="Mapa Motosworld — {{ $storeAddress }}"
+                    src="{{ $mapEmbedUrl }}"
+                    class="absolute inset-0 h-full w-full border-0"
+                    loading="lazy"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen
+                ></iframe>
+            </div>
+        </div>
+    @endif
 
     @if ($payment && $payment->status->value === 'pending')
         <div class="rounded-lg border border-neutral-200 bg-white p-5 space-y-3 mb-6 shadow-sm">

@@ -58,15 +58,21 @@ class CartController extends Controller
                     'image' => $variant->catalogImageUrl() ?? $product->catalogImageUrl(),
                     'max_quantity' => max(0, (int) ($variant->inventory?->available_stock ?? 0)),
                     'color_label' => $variant->colorLabel(),
+                    'currency' => strtoupper((string) ($product->currency ?: 'PEN')),
+                    'currency_symbol' => $product->currencySymbol(),
                 ];
             })
             ->values();
+
+        $totalCurrencySymbol = $lines->first()['currency_symbol']
+            ?? \App\Support\Currency::symbol('PEN');
 
         return view('shop.cart.index', [
             'cart' => $cart,
             'lines' => $lines,
             'total' => $lines->sum('line_total'),
             'itemCount' => (int) $lines->sum('quantity'),
+            'totalCurrencySymbol' => $totalCurrencySymbol,
         ]);
     }
 

@@ -9,10 +9,12 @@ use App\Enums\Payments\PaymentRecordStatus;
 use App\Enums\Products\ProductStatus;
 use App\Models\Appointments\Appointment;
 use App\Models\Auth\User;
+use App\Models\Finance\ExchangeRate;
 use App\Models\Orders\Order;
 use App\Models\Orders\Payment;
 use App\Models\Products\Inventory;
 use App\Models\Products\Product;
+use App\Support\Currency;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -26,7 +28,8 @@ class GetDashboardMetricsAction
     /**
      * @return array{
      *     kpis: array<string, mixed>,
-     *     revenueChart: array{labels: list<string>, values: list<float>},
+     *     exchangeRate: array<string, mixed>|null,
+     *     revenueChart: array{labels: list<string>, valuesPen: list<float>, valuesUsd: list<float>},
      *     appointmentStatusChart: array{labels: list<string>, values: list<int>, colors: list<string>},
      *     orderStatusChart: array{labels: list<string>, values: list<int>, colors: list<string>},
      *     upcomingAppointments: Collection,
@@ -41,12 +44,15 @@ class GetDashboardMetricsAction
         $prevMonthStart = $now->copy()->subMonth()->startOfMonth();
         $prevMonthEnd = $now->copy()->subMonth()->endOfMonth();
 
-        $revenueThisMonth = $this->paidRevenueBetween($monthStart, $now);
-        $revenuePrevMonth = $this->paidRevenueBetween($prevMonthStart, $prevMonthEnd);
+        $revenueThisMonthPen = $this->paidRevenueBetween($monthStart, $now, 'PEN');
+        $revenueThisMonthUsd = $this->paidRevenueBetween($monthStart, $now, 'USD');
+        $revenuePrevMonthPen = $this->paidRevenueBetween($prevMonthStart, $prevMonthEnd, 'PEN');
 
-        $revenueDeltaPercent = $revenuePrevMonth > 0
-            ? round((($revenueThisMonth - $revenuePrevMonth) / $revenuePrevMonth) * 100, 1)
-            : ($revenueThisMonth > 0 ? 100.0 : 0.0);
+        $revenueDeltaPercent = $revenuePrevMonthPen > 0
+            ? round((($revenueThisMonthPen - $revenuePrevMonthPen) / $revenuePrevMonthPen) * 100, 1)
+            : ($revenueThisMonthPen > 0 ? 100.0 : 0.0);
+
+        $latestRate = ExchangeRate::latestAvailable();
 
         return [
             'kpis' => [
@@ -56,8 +62,10 @@ class GetDashboardMetricsAction
                 'pendingAppointments' => Appointment::query()
                     ->where('status', AppointmentStatus::Pending)
                     ->count(),
-                'revenueThisMonth' => $revenueThisMonth,
-                'revenuePrevMonth' => $revenuePrevMonth,
+                'revenueThisMonth' => $revenueThisMonthPen,
+                'revenueThisMonthPen' => $revenueThisMonthPen,
+                'revenueThisMonthUsd' => $revenueThisMonthUsd,
+                'revenuePrevMonth' => $revenuePrevMonthPen,
                 'revenueDeltaPercent' => $revenueDeltaPercent,
                 'ordersThisMonth' => Order::query()
                     ->where('created_at', '>=', $monthStart)
@@ -79,6 +87,12 @@ class GetDashboardMetricsAction
                     ])
                     ->count(),
             ],
+            'exchangeRate' => $latestRate ? [
+                'buy' => (float) $latestRate->buy_price,
+                'sell' => (float) $latestRate->sell_price,
+                'date' => $latestRate->rate_date?->toDateString(),
+                'fetched_at' => $latestRate->fetched_at?->timezone('America/Lima')->format('d/m/Y H:i'),
+            ] : null,
             'revenueChart' => $this->revenueChart($now),
             'appointmentStatusChart' => $this->appointmentStatusChart(),
             'orderStatusChart' => $this->orderStatusChart(),
@@ -107,62 +121,101 @@ class GetDashboardMetricsAction
         ];
     }
 
-    private function paidRevenueBetween(Carbon $from, Carbon $to): float
+    private function paidRevenueBetween(Carbon $from, Carbon $to, string $displayCurrency): float
     {
-        $cents = (int) Payment::query()
+        $payments = Payment::query()
+            ->with(['order:id,currency,exchange_rate_sell,total_amount'])
             ->where('status', PaymentRecordStatus::Paid)
             ->whereBetween('paid_at', [$from, $to])
-            ->sum('amount_cents');
+            ->get();
 
-        if ($cents > 0) {
-            return round($cents / 100, 2);
+        if ($payments->isNotEmpty()) {
+            return round($payments->sum(function (Payment $payment) use ($displayCurrency): float {
+                $order = $payment->order;
+                $amount = ((int) $payment->amount_cents) / 100;
+                $fromCurrency = $payment->currency ?: ($order?->currency ?? 'PEN');
+                $sellRate = $order?->exchange_rate_sell !== null
+                    ? (float) $order->exchange_rate_sell
+                    : null;
+
+                return Currency::convert($amount, $fromCurrency, $displayCurrency, $sellRate);
+            }), 2);
         }
 
         // Fallback: órdenes marcadas como pagadas (seeders / datos sin payments).
         return round((float) Order::query()
             ->where('payment_status', PaymentStatus::Paid)
             ->whereBetween('updated_at', [$from, $to])
-            ->sum('total_amount'), 2);
+            ->get(['total_amount', 'currency', 'exchange_rate_sell'])
+            ->sum(fn (Order $order) => $order->amountIn($displayCurrency)), 2);
     }
 
     /**
-     * @return array{labels: list<string>, values: list<float>}
+     * @return array{labels: list<string>, valuesPen: list<float>, valuesUsd: list<float>}
      */
     private function revenueChart(Carbon $now): array
     {
         $start = $now->copy()->subMonths(self::REVENUE_MONTHS - 1)->startOfMonth();
 
-        $rows = Payment::query()
+        $payments = Payment::query()
+            ->with(['order:id,currency,exchange_rate_sell'])
             ->where('status', PaymentRecordStatus::Paid)
             ->where('paid_at', '>=', $start)
-            ->selectRaw("DATE_FORMAT(paid_at, '%Y-%m') as ym, SUM(amount_cents) as total_cents")
-            ->groupBy('ym')
-            ->pluck('total_cents', 'ym');
+            ->get();
 
-        if ($rows->isEmpty()) {
-            $rows = Order::query()
+        $byMonthPen = [];
+        $byMonthUsd = [];
+
+        if ($payments->isNotEmpty()) {
+            foreach ($payments as $payment) {
+                $key = optional($payment->paid_at)->format('Y-m');
+                if ($key === null) {
+                    continue;
+                }
+
+                $order = $payment->order;
+                $amount = ((int) $payment->amount_cents) / 100;
+                $fromCurrency = $payment->currency ?: ($order?->currency ?? 'PEN');
+                $sellRate = $order?->exchange_rate_sell !== null
+                    ? (float) $order->exchange_rate_sell
+                    : null;
+
+                $byMonthPen[$key] = ($byMonthPen[$key] ?? 0) + Currency::convert($amount, $fromCurrency, 'PEN', $sellRate);
+                $byMonthUsd[$key] = ($byMonthUsd[$key] ?? 0) + Currency::convert($amount, $fromCurrency, 'USD', $sellRate);
+            }
+        } else {
+            $orders = Order::query()
                 ->where('payment_status', PaymentStatus::Paid)
                 ->where('updated_at', '>=', $start)
-                ->selectRaw("DATE_FORMAT(updated_at, '%Y-%m') as ym, SUM(total_amount) as total_amount")
-                ->groupBy('ym')
-                ->pluck('total_amount', 'ym')
-                ->map(fn ($amount) => (float) $amount * 100);
+                ->get(['updated_at', 'total_amount', 'currency', 'exchange_rate_sell']);
+
+            foreach ($orders as $order) {
+                $key = optional($order->updated_at)->format('Y-m');
+                if ($key === null) {
+                    continue;
+                }
+
+                $byMonthPen[$key] = ($byMonthPen[$key] ?? 0) + $order->amountIn('PEN');
+                $byMonthUsd[$key] = ($byMonthUsd[$key] ?? 0) + $order->amountIn('USD');
+            }
         }
 
         $labels = [];
-        $values = [];
+        $valuesPen = [];
+        $valuesUsd = [];
 
         for ($i = self::REVENUE_MONTHS - 1; $i >= 0; $i--) {
             $month = $now->copy()->subMonths($i)->startOfMonth();
             $key = $month->format('Y-m');
             $labels[] = $month->locale('es')->translatedFormat('M Y');
-            $cents = (float) ($rows[$key] ?? 0);
-            $values[] = round($cents / 100, 2);
+            $valuesPen[] = round((float) ($byMonthPen[$key] ?? 0), 2);
+            $valuesUsd[] = round((float) ($byMonthUsd[$key] ?? 0), 2);
         }
 
         return [
             'labels' => $labels,
-            'values' => $values,
+            'valuesPen' => $valuesPen,
+            'valuesUsd' => $valuesUsd,
         ];
     }
 

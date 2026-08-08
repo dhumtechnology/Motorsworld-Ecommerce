@@ -17,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'payment_status',
     'total_amount',
     'currency',
+    'exchange_rate_buy',
+    'exchange_rate_sell',
+    'exchange_rate_date',
     'fulfillment_method',
     'shipping_address_id',
     'billing_address_id',
@@ -86,6 +89,19 @@ class Order extends Model
             'payment_status' => PaymentStatus::class,
             'fulfillment_method' => FulfillmentMethod::class,
             'total_amount' => 'decimal:2',
+            'exchange_rate_buy' => 'decimal:4',
+            'exchange_rate_sell' => 'decimal:4',
+            'exchange_rate_date' => 'date',
         ];
+    }
+
+    public function amountIn(string $targetCurrency): float
+    {
+        return \App\Support\Currency::convert(
+            (float) $this->total_amount,
+            $this->currency,
+            $targetCurrency,
+            $this->exchange_rate_sell !== null ? (float) $this->exchange_rate_sell : null,
+        );
     }
 }

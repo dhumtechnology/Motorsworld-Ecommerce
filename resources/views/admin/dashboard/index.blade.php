@@ -7,7 +7,8 @@
 @section('content')
     @php
         $kpis = $kpis ?? [];
-        $money = fn (float $amount): string => 'S/ '.number_format($amount, 2, '.', ',');
+        $exchangeRate = $exchangeRate ?? null;
+        $money = fn (float $amount, string $currency = 'PEN'): string => \App\Support\Currency::format($amount, $currency);
         $delta = (float) ($kpis['revenueDeltaPercent'] ?? 0);
         $deltaPositive = $delta >= 0;
 
@@ -72,10 +73,19 @@
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="admin-label mb-0">Ganancias del mes</p>
-                    <p class="text-3xl font-title text-text mt-2 tabular-nums">{{ $money((float) ($kpis['revenueThisMonth'] ?? 0)) }}</p>
+                    <p class="text-3xl font-title text-text mt-2 tabular-nums">{{ $money((float) ($kpis['revenueThisMonthPen'] ?? $kpis['revenueThisMonth'] ?? 0), 'PEN') }}</p>
+                    <p class="text-sm font-title text-text-soft mt-1 tabular-nums">
+                        {{ $money((float) ($kpis['revenueThisMonthUsd'] ?? 0), 'USD') }}
+                    </p>
                     <p class="text-xs mt-2 font-secondary {{ $deltaPositive ? 'text-emerald-600' : 'text-red-600' }}">
                         {{ $deltaPositive ? '+' : '' }}{{ number_format($delta, 1) }}% vs mes anterior
                     </p>
+                    @if ($exchangeRate)
+                        <p class="text-[11px] text-muted mt-2 font-secondary">
+                            TC venta {{ number_format((float) $exchangeRate['sell'], 3) }}
+                            · {{ $exchangeRate['date'] }}
+                        </p>
+                    @endif
                 </div>
                 <span class="admin-kpi-icon bg-emerald-50 text-emerald-700" aria-hidden="true">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.5 4.5L21.75 6M21.75 6H15.75M21.75 6v6"/></svg>
@@ -132,7 +142,9 @@
             <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
                 <div>
                     <h2 class="font-title text-lg text-text">Ganancias</h2>
-                    <p class="text-xs text-muted font-secondary mt-0.5">Ingresos por pagos confirmados · últimos 6 meses</p>
+                    <p class="text-xs text-muted font-secondary mt-0.5">
+                        Ingresos convertidos con el TC de cada compra · últimos 6 meses
+                    </p>
                 </div>
                 <a href="{{ route('admin.payments.index') }}" class="text-xs font-bold uppercase tracking-wider text-primary font-secondary hover:text-primary-hover">
                     Ver pagos →
@@ -248,7 +260,9 @@
                             <tr>
                                 <td class="px-5 py-3 font-mono font-semibold text-primary">#{{ $order->id }}</td>
                                 <td class="px-5 py-3 text-text-soft truncate max-w-[10rem]">{{ $customerName($order->user) }}</td>
-                                <td class="px-5 py-3 tabular-nums text-text">{{ $money((float) $order->total_amount) }}</td>
+                                <td class="px-5 py-3 tabular-nums text-text">
+                                    {{ $money((float) $order->total_amount, $order->currency ?? 'PEN') }}
+                                </td>
                                 <td class="px-5 py-3">
                                     <span class="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold {{ $statusMeta['class'] }}">
                                         {{ $statusMeta['label'] }}
@@ -324,23 +338,40 @@
                     type: 'bar',
                     data: {
                         labels: revenue.labels,
-                        datasets: [{
-                            label: 'Ingresos (S/)',
-                            data: revenue.values,
-                            backgroundColor: 'rgba(255, 102, 0, 0.85)',
-                            hoverBackgroundColor: '#e65c00',
-                            borderRadius: 6,
-                            maxBarThickness: 44,
-                        }],
+                        datasets: [
+                            {
+                                label: 'Ingresos (S/)',
+                                data: revenue.valuesPen ?? revenue.values ?? [],
+                                backgroundColor: 'rgba(255, 102, 0, 0.85)',
+                                hoverBackgroundColor: '#e65c00',
+                                borderRadius: 6,
+                                maxBarThickness: 36,
+                            },
+                            {
+                                label: 'Ingresos ($)',
+                                data: revenue.valuesUsd ?? [],
+                                backgroundColor: 'rgba(14, 165, 233, 0.75)',
+                                hoverBackgroundColor: '#0284c7',
+                                borderRadius: 6,
+                                maxBarThickness: 36,
+                            },
+                        ],
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: { boxWidth: 12, color: tickColor, font: { size: 11 } },
+                            },
                             tooltip: {
                                 callbacks: {
-                                    label: (ctx) => ' S/ ' + Number(ctx.raw ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2 }),
+                                    label: (ctx) => {
+                                        const prefix = (ctx.dataset.label || '').includes('$') ? ' $ ' : ' S/ ';
+                                        return prefix + Number(ctx.raw ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2 });
+                                    },
                                 },
                             },
                         },
@@ -355,7 +386,7 @@
                                 ticks: {
                                     color: tickColor,
                                     font: { size: 11 },
-                                    callback: (value) => 'S/ ' + Number(value).toLocaleString('es-PE'),
+                                    callback: (value) => Number(value).toLocaleString('es-PE'),
                                 },
                             },
                         },

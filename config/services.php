@@ -43,4 +43,10 @@ return [
         'order_expiration_hours' => (int) env('CULQI_ORDER_EXPIRATION_HOURS', 24),
     ],
 
+    'decolecta' => [
+        'token' => env('DECOLECTA_API_TOKEN'),
+        'base_url' => env('DECOLECTA_BASE_URL', 'https://api.decolecta.com/v1'),
+        'referer' => env('DECOLECTA_REFERER', 'https://apis.net.pe/tipo-de-cambio-sunat-api'),
+    ],
+
 ];

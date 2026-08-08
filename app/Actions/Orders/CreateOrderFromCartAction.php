@@ -12,11 +12,16 @@ use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
+use App\Services\Finance\DecolectaExchangeRateService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CreateOrderFromCartAction
 {
+    public function __construct(
+        private readonly DecolectaExchangeRateService $exchangeRates,
+    ) {}
+
     /**
      * Congela precios del carrito, crea el pedido y vacía el carrito.
      *
@@ -43,7 +48,9 @@ class CreateOrderFromCartAction
             ]);
         }
 
-        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod) {
+        $exchangeSnapshot = $this->exchangeRates->snapshotForOrder();
+
+        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod, $exchangeSnapshot) {
             $lines = [];
             $total = 0.0;
             $currency = 'PEN';
@@ -91,6 +98,9 @@ class CreateOrderFromCartAction
                 'payment_status' => PaymentStatus::Pending,
                 'total_amount' => round($total, 2),
                 'currency' => $currency,
+                'exchange_rate_buy' => $exchangeSnapshot['buy'] ?? null,
+                'exchange_rate_sell' => $exchangeSnapshot['sell'] ?? null,
+                'exchange_rate_date' => $exchangeSnapshot['date'] ?? null,
                 'fulfillment_method' => $fulfillmentMethod,
                 'shipping_address_id' => $fulfillmentMethod === FulfillmentMethod::Pickup
                     ? null

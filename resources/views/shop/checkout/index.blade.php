@@ -6,6 +6,7 @@
 @php
     $fieldClass = 'w-full rounded border border-neutral-300 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600';
     $labelClass = 'block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5';
+    $totalCurrencySymbol = \App\Support\Currency::symbol($currency ?? 'PEN');
 @endphp
 
 <div class="mx-auto max-w-6xl px-4 py-10 text-neutral-900 font-title">
@@ -184,7 +185,7 @@
 
                 <button type="submit" id="pay-button"
                         class="w-full rounded bg-orange-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-orange-700 transition-colors disabled:opacity-50">
-                    Pagar S/ {{ number_format($total, 2) }}
+                    Pagar {{ $totalCurrencySymbol }} {{ number_format($total, 2) }}
                 </button>
             </form>
         </div>
@@ -194,10 +195,11 @@
 
             <div class="rounded-lg border border-neutral-200 bg-white overflow-hidden divide-y divide-neutral-100 shadow-sm">
                 @foreach ($lines as $line)
+                    @php
+                        $lineCurrencySymbol = \App\Support\Currency::symbol($line['currency'] ?? 'PEN');
+                        $img = $line['product']->catalogImageUrl();
+                    @endphp
                     <div class="flex gap-4 p-4 items-center">
-                        @php
-                            $img = $line['product']->catalogImageUrl();
-                        @endphp
                         @if ($img)
                             <img src="{{ $img }}" alt="" class="h-16 w-16 rounded object-cover border border-neutral-200">
                         @else
@@ -212,11 +214,11 @@
                         </div>
                         <div class="text-right shrink-0 font-secondary text-orange-600">
                             <p class="font-bold">
-                                S/ {{ number_format($line['line_total'], 2) }}
+                                {{ $lineCurrencySymbol }} {{ number_format($line['line_total'], 2) }}
                             </p>
                             @if ($line['is_on_sale'])
                                 <p class="text-xs text-neutral-400 line-through">
-                                    S/ {{ number_format($line['list_unit_price'] * $line['quantity'], 2) }}
+                                    {{ $lineCurrencySymbol }} {{ number_format($line['list_unit_price'] * $line['quantity'], 2) }}
                                 </p>
                             @endif
                         </div>
@@ -226,7 +228,7 @@
 
             <div class="rounded-lg border border-neutral-200 bg-white p-5 flex items-center justify-between shadow-sm">
                 <span class="uppercase font-bold tracking-widest text-sm text-neutral-700">Total</span>
-                <span class="text-xl font-black text-neutral-900">S/ {{ number_format($total, 2) }}</span>
+                <span class="text-xl font-black text-neutral-900">{{ $totalCurrencySymbol }} {{ number_format($total, 2) }}</span>
             </div>
         </div>
     </div>

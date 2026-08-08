@@ -29,8 +29,8 @@
         badge.textContent = itemCount > 99 ? '99+' : String(itemCount);
     }
 
-    function formatMoney(amount) {
-        return 'S/ ' + Number(amount).toLocaleString('es-PE', {
+    function formatMoney(amount, symbol = 'S/') {
+        return String(symbol || 'S/') + ' ' + Number(amount).toLocaleString('es-PE', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         });
@@ -126,7 +126,12 @@
                 const incrementBtn = line.querySelector('[data-cart-action="increment"]');
 
                 if (qtyEl) qtyEl.textContent = String(quantity);
-                if (totalEl) totalEl.textContent = formatMoney(unitPrice * quantity);
+                if (totalEl) {
+                    totalEl.textContent = formatMoney(
+                        unitPrice * quantity,
+                        line.dataset.currencySymbol || 'S/',
+                    );
+                }
                 if (incrementBtn) incrementBtn.disabled = quantity >= maxStock;
             }
         }
@@ -145,7 +150,10 @@
         });
 
         if (totalEl) {
-            totalEl.textContent = formatMoney(grandTotal);
+            totalEl.textContent = formatMoney(
+                grandTotal,
+                page.dataset.currencySymbol || 'S/',
+            );
         }
 
         if (summaryText) {

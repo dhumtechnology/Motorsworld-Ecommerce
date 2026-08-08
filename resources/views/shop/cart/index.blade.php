@@ -3,7 +3,11 @@
 @section('title', 'Carrito — '.config('app.name'))
 
 @section('content')
-<div class="mx-auto max-w-5xl px-4 py-10" data-cart-page>
+<div
+    class="mx-auto max-w-5xl px-4 py-10"
+    data-cart-page
+    data-currency-symbol="{{ $totalCurrencySymbol }}"
+>
     <h1 class="text-3xl font-black uppercase tracking-wide mb-2">Tu carrito</h1>
     <p class="text-black text-sm mb-8" data-cart-summary-text>
         @if ($itemCount > 0)
@@ -33,6 +37,8 @@
                     data-variant-id="{{ $line['variant']->id }}"
                     data-unit-price="{{ $line['unit_price'] }}"
                     data-max-stock="{{ $line['max_quantity'] }}"
+                    data-currency="{{ $line['currency'] }}"
+                    data-currency-symbol="{{ $line['currency_symbol'] }}"
                     data-increment-url="{{ route('shop.cart.items.increment', $line['product'], false) }}"
                     data-decrement-url="{{ route('shop.cart.items.decrement', $line['product'], false) }}"
                 >
@@ -58,18 +64,18 @@
                             @endif
                         </p>
                     </div>
-                    
+
                     <div>
                         <p class="text-sm text-orange-500 font-bold mt-2">
-                            S/ {{ number_format($line['unit_price'], 2) }}
-                            @if ($line['is_on_sale'])   
+                            {{ $line['currency_symbol'] }} {{ number_format($line['unit_price'], 2) }}
+                            @if ($line['is_on_sale'])
                                 <span class="text-neutral-500 line-through font-normal ml-2">
-                                    S/ {{ number_format($line['list_unit_price'], 2) }}
+                                    {{ $line['currency_symbol'] }} {{ number_format($line['list_unit_price'], 2) }}
                                 </span>
                             @endif
                         </p>
                     </div>
-                     
+
                     <div class="flex items-center w-20 h-10 overflow-hidden rounded-sm shrink-0">
                         <button
                             type="button"
@@ -94,15 +100,17 @@
                     </div>
 
                     <div class="sm:text-right shrink-0">
-                        <p class="text-sm" data-line-total>S/ {{ number_format($line['line_total'], 2) }}</p>
+                        <p class="text-sm" data-line-total>
+                            {{ $line['currency_symbol'] }} {{ number_format($line['line_total'], 2) }}
+                        </p>
                     </div>
                 </div>
             @endforeach
         </div>
 
-        <div class="rounded-lg p-5 mb-8 flex justify-end gap-4te xt-xl font-secondary">
-            <span class="text-blackuppercase tracking-widest">Total</span>
-            <span class="" data-cart-grand-total>S/ {{ number_format($total, 2) }}</span>
+        <div class="rounded-lg p-5 mb-8 flex justify-end gap-4 text-xl font-secondary">
+            <span class="text-black uppercase tracking-widest">Total</span>
+            <span data-cart-grand-total>{{ $totalCurrencySymbol }} {{ number_format($total, 2) }}</span>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 font-title sm:justify-between px-6">
