@@ -149,6 +149,8 @@ class ProductController extends Controller
             $request->technicalSheet(),
             false,
             $request->variantsPayload(),
+            [],
+            $request->defaultGalleryPayload(),
         );
 
         return redirect()
@@ -166,6 +168,7 @@ class ProductController extends Controller
         $product->load([
             'category',
             'vehicleModel.brand',
+            'images',
             'variants.colors',
             'variants.inventory',
             'variants.images',
@@ -186,6 +189,7 @@ class ProductController extends Controller
             $request->shouldRemoveTechnicalSheet(),
             $request->variantsPayload(),
             $request->removeVariantIds(),
+            $request->defaultGalleryPayload(),
         );
 
         return redirect()

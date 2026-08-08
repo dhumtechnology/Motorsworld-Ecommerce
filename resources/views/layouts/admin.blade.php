@@ -11,12 +11,12 @@
     @endif
     @stack('styles')
 </head>
-<body class="admin-shell antialiased" style="--color-surface: #ffffff; background: #ffffff;">
+<body class="admin-shell antialiased">
     <div class="flex min-h-screen">
         @include('admin.partials.sidebar')
 
-        <div class="flex-1 flex flex-col min-w-0 bg-white">
-            <header class="bg-white border-b border-border px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20">
+        <div class="flex-1 flex flex-col min-w-0 bg-[#f5f5f5]">
+            <header class="bg-white/95 backdrop-blur border-b border-border px-6 py-4 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-sm">
                 <div class="min-w-0">
                     <h1 class="admin-page-title text-xl sm:text-2xl truncate">
                         @yield('page-title', 'Panel administrativo')

@@ -245,6 +245,10 @@ class CatalogController extends Controller
      */
     private function applySectionFilter(Builder $query, string $section, ?int $motosCategoryId): void
     {
+        if ($section === 'all') {
+            return;
+        }
+
         if ($section === 'motos') {
             if ($motosCategoryId !== null) {
                 $query->where('category_id', $motosCategoryId);
@@ -404,9 +408,11 @@ class CatalogController extends Controller
                         fn (Builder $q) => $motosCategoryId
                             ? $q->where('id', $motosCategoryId)
                             : $q->whereRaw('0 = 1'),
-                        fn (Builder $q) => $motosCategoryId
-                            ? $q->where('id', '!=', $motosCategoryId)
-                            : $q,
+                        fn (Builder $q) => $section === 'all'
+                            ? $q
+                            : ($motosCategoryId
+                                ? $q->where('id', '!=', $motosCategoryId)
+                                : $q),
                     )
                     ->orderBy('name')
                     ->get(['id', 'name']);

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\Products\ProductStatus;
+use App\Http\Requests\Admin\Concerns\ParsesProductVariantPayload;
 use App\Models\Products\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -10,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
+    use ParsesProductVariantPayload;
+
     public function authorize(): bool
     {
         return true;
@@ -42,6 +45,12 @@ class UpdateProductRequest extends FormRequest
             ],
             'technical_sheet' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
             'remove_technical_sheet' => ['nullable', 'boolean'],
+            'default_available_stock' => ['nullable', 'integer', 'min:0'],
+            'default_primary_image' => ['nullable', 'image', 'max:5120'],
+            'default_secondary_images' => ['nullable', 'array', 'max:12'],
+            'default_secondary_images.*' => ['image', 'max:5120'],
+            'default_remove_image_ids' => ['nullable', 'array'],
+            'default_remove_image_ids.*' => ['integer', 'exists:product_images,id'],
             'variants' => ['nullable', 'array'],
             'variants.*.id' => [
                 'nullable',
@@ -82,79 +91,6 @@ class UpdateProductRequest extends FormRequest
             'category_id' => (int) $this->input('category_id'),
             'model_id' => $this->filled('model_id') ? (int) $this->input('model_id') : null,
         ];
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    public function variantsPayload(): array
-    {
-        $rows = $this->input('variants', []);
-        if (! is_array($rows)) {
-            return [];
-        }
-
-        $payload = [];
-
-        foreach ($rows as $index => $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-
-            $colorIds = $row['color_ids'] ?? [];
-            if (! is_array($colorIds)) {
-                $colorIds = [];
-            }
-
-            $newColorsInput = $row['new_colors'] ?? [];
-            $newColors = [];
-            if (is_array($newColorsInput)) {
-                foreach ($newColorsInput as $newColor) {
-                    if (! is_array($newColor)) {
-                        continue;
-                    }
-                    $name = trim((string) ($newColor['name'] ?? ''));
-                    if ($name === '') {
-                        continue;
-                    }
-                    $newColors[] = [
-                        'name' => $name,
-                        'hex' => isset($newColor['hex']) ? trim((string) $newColor['hex']) : null,
-                    ];
-                }
-            }
-
-            if ($colorIds === [] && $newColors === []) {
-                continue;
-            }
-
-            $secondary = $this->file("variants.{$index}.secondary_images", []);
-            if (! is_array($secondary)) {
-                $secondary = [];
-            }
-
-            $removeImageIds = $row['remove_image_ids'] ?? [];
-            if (! is_array($removeImageIds)) {
-                $removeImageIds = [];
-            }
-
-            $primary = $this->file("variants.{$index}.primary_image");
-
-            $payload[] = [
-                'id' => isset($row['id']) && $row['id'] !== '' ? (int) $row['id'] : null,
-                'color_ids' => array_values(array_map('intval', $colorIds)),
-                'new_colors' => $newColors,
-                'available_stock' => (int) ($row['available_stock'] ?? 0),
-                'primary_image' => $primary instanceof UploadedFile ? $primary : null,
-                'secondary_images' => array_values(array_filter(
-                    $secondary,
-                    static fn ($file): bool => $file instanceof UploadedFile,
-                )),
-                'remove_image_ids' => array_values(array_unique(array_map('intval', $removeImageIds))),
-            ];
-        }
-
-        return $payload;
     }
 
     /**

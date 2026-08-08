@@ -99,7 +99,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">{{ $errors->first() }}</div>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
     @endif
 
     <form id="inventory-export-form" method="POST" action="{{ route('admin.inventory.export') }}" class="hidden">

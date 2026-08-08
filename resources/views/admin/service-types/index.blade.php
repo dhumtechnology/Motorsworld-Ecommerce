@@ -33,7 +33,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-300">{{ $errors->first() }}</div>
+        <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first() }}</div>
     @endif
 
     <div class="rounded-lg border border-border bg-surface overflow-hidden">
