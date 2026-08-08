@@ -63,7 +63,8 @@ class ServiceController extends Controller
                     'name' => $model->name,
                 ])->values()),
             'prefill' => [
-                'customer_name' => trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? '')),
+                'first_name' => $profile?->first_name ?? '',
+                'last_name' => $profile?->last_name ?? '',
                 'customer_document' => $profile?->document ?? '',
                 'customer_phone' => $profile?->phone ?? '',
                 'customer_email' => $user?->email ?? '',

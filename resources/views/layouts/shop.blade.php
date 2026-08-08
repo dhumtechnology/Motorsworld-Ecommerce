@@ -240,8 +240,9 @@
         @media (min-width: 768px) {
             #whatsapp-float { right:2rem; bottom:2rem; }
         }
+        [x-cloak] { display: none !important; }
     </style>
 
-    <script src="{{ asset('js/shop-cart.js') }}" defer></script>
+    <script src="{{ asset('js/shop-cart.js') }}?v={{ @filemtime(public_path('js/shop-cart.js')) ?: time() }}" defer></script>
 </body>
 </html>

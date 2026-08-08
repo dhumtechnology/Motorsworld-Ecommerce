@@ -56,6 +56,13 @@ class ProductController extends Controller
             ->map(fn ($qty) => (int) $qty)
             ->all();
 
+        $cartQuantitiesByProduct = $cart->items()
+            ->selectRaw('product_id, SUM(quantity) as quantity')
+            ->groupBy('product_id')
+            ->pluck('quantity', 'product_id')
+            ->map(fn ($qty) => (int) $qty)
+            ->all();
+
         $variantsPayload = $product->variants
             ->filter(fn ($variant) => (bool) $variant->is_active)
             ->values()
@@ -99,7 +106,7 @@ class ProductController extends Controller
             'relatedProducts' => $relatedProducts,
             'cartLineQuantity' => $cartLineQuantity,
             'popularProducts' => $this->popularProducts->execute(10),
-            'cartQuantities' => $cartQuantitiesByVariant,
+            'cartQuantities' => $cartQuantitiesByProduct,
             'variantsPayload' => $variantsPayload,
             'defaultVariantId' => $defaultVariantId,
         ]);

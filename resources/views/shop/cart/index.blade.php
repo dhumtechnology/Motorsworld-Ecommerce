@@ -33,8 +33,8 @@
                     data-variant-id="{{ $line['variant']->id }}"
                     data-unit-price="{{ $line['unit_price'] }}"
                     data-max-stock="{{ $line['max_quantity'] }}"
-                    data-increment-url="{{ route('shop.cart.items.increment', $line['product']) }}"
-                    data-decrement-url="{{ route('shop.cart.items.decrement', $line['product']) }}"
+                    data-increment-url="{{ route('shop.cart.items.increment', $line['product'], false) }}"
+                    data-decrement-url="{{ route('shop.cart.items.decrement', $line['product'], false) }}"
                 >
                     <a href="{{ route('shop.product.show', $line['product']) }}" class="shrink-0">
                         @if ($line['image'])

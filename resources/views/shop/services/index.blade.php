@@ -202,10 +202,16 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div class="sm:col-span-2">
-                        <label class="{{ $label }}">Nombres y apellidos *</label>
-                        <input type="text" name="customer_name" value="{{ old('customer_name', $prefill['customer_name']) }}" required maxlength="150"
-                            class="{{ $field }}">
+                    <div>
+                        <label class="{{ $label }}">Nombres *</label>
+                        <input type="text" name="first_name" value="{{ old('first_name', $prefill['first_name']) }}" required maxlength="100"
+                            class="{{ $field }}" placeholder="Tus nombres">
+                    </div>
+
+                    <div>
+                        <label class="{{ $label }}">Apellidos *</label>
+                        <input type="text" name="last_name" value="{{ old('last_name', $prefill['last_name']) }}" required maxlength="100"
+                            class="{{ $field }}" placeholder="Tus apellidos">
                     </div>
 
                     <div>

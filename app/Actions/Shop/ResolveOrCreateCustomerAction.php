@@ -15,7 +15,9 @@ class ResolveOrCreateCustomerAction
      * Si no existe, crea un usuario Pending (sin contraseña usable) con perfil.
      *
      * @param  array{
-     *     customer_name: string,
+     *     first_name?: string,
+     *     last_name?: string,
+     *     customer_name?: string,
      *     customer_document: string,
      *     customer_phone: string,
      *     customer_email: string
@@ -55,7 +57,9 @@ class ResolveOrCreateCustomerAction
 
     /**
      * @param  array{
-     *     customer_name: string,
+     *     first_name?: string,
+     *     last_name?: string,
+     *     customer_name?: string,
      *     customer_document: string,
      *     customer_phone: string,
      *     customer_email: string
@@ -65,7 +69,7 @@ class ResolveOrCreateCustomerAction
     {
         $email = strtolower(trim($data['customer_email']));
         $document = trim($data['customer_document']);
-        [$firstName, $lastName] = $this->splitName(trim($data['customer_name']));
+        [$firstName, $lastName] = $this->resolveNames($data);
 
         if (CustomerProfile::query()->where('document', $document)->exists()) {
             throw ValidationException::withMessages([
@@ -99,7 +103,9 @@ class ResolveOrCreateCustomerAction
 
     /**
      * @param  array{
-     *     customer_name: string,
+     *     first_name?: string,
+     *     last_name?: string,
+     *     customer_name?: string,
      *     customer_document: string,
      *     customer_phone: string,
      *     customer_email: string
@@ -108,7 +114,7 @@ class ResolveOrCreateCustomerAction
     private function ensureCustomerProfile(User $user, array $data): void
     {
         $profile = $user->customerProfile;
-        [$firstName, $lastName] = $this->splitName(trim($data['customer_name']));
+        [$firstName, $lastName] = $this->resolveNames($data);
         $document = trim($data['customer_document']);
         $phone = trim($data['customer_phone']);
 
@@ -154,6 +160,25 @@ class ResolveOrCreateCustomerAction
         if ($updates !== []) {
             $profile->forceFill($updates)->save();
         }
+    }
+
+    /**
+     * @param  array{first_name?: string, last_name?: string, customer_name?: string}  $data
+     * @return array{0: string, 1: string}
+     */
+    private function resolveNames(array $data): array
+    {
+        $firstName = trim((string) ($data['first_name'] ?? ''));
+        $lastName = trim((string) ($data['last_name'] ?? ''));
+
+        if ($firstName !== '' || $lastName !== '') {
+            return [
+                $firstName !== '' ? $firstName : 'Cliente',
+                $lastName !== '' ? $lastName : 'Motosworld',
+            ];
+        }
+
+        return $this->splitName(trim((string) ($data['customer_name'] ?? '')));
     }
 
     /**

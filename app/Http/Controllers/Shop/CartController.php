@@ -14,7 +14,6 @@ use App\Services\Cart\CartResolver;
 use App\Services\Orders\ProductPricingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -71,27 +70,27 @@ class CartController extends Controller
         ]);
     }
 
-    public function store(AddToCartRequest $request, Product $product): JsonResponse|RedirectResponse
+    public function store(AddToCartRequest $request, Product $product): JsonResponse
     {
         $cart = $this->resolveCart($request);
         $variant = $this->resolveVariant($request, $product);
 
         $this->addProduct->execute($cart, $variant, $request->quantity());
 
-        return $this->respond($request, $cart, $variant->id);
+        return $this->respond($cart, $variant->id);
     }
 
-    public function update(UpdateCartItemRequest $request, Product $product): JsonResponse|RedirectResponse
+    public function update(UpdateCartItemRequest $request, Product $product): JsonResponse
     {
         $cart = $this->resolveCart($request);
         $variant = $this->resolveVariant($request, $product);
 
         $this->updateQuantity->execute($cart, $variant, $request->quantity());
 
-        return $this->respond($request, $cart, $variant->id);
+        return $this->respond($cart, $variant->id);
     }
 
-    public function increment(Request $request, Product $product): JsonResponse|RedirectResponse
+    public function increment(Request $request, Product $product): JsonResponse
     {
         $cart = $this->resolveCart($request);
         $variant = $this->resolveVariant($request, $product);
@@ -102,10 +101,10 @@ class CartController extends Controller
 
         $this->updateQuantity->execute($cart, $variant, $currentQuantity + 1);
 
-        return $this->respond($request, $cart, $variant->id);
+        return $this->respond($cart, $variant->id);
     }
 
-    public function decrement(Request $request, Product $product): JsonResponse|RedirectResponse
+    public function decrement(Request $request, Product $product): JsonResponse
     {
         $cart = $this->resolveCart($request);
         $variant = $this->resolveVariant($request, $product);
@@ -116,7 +115,7 @@ class CartController extends Controller
 
         $this->updateQuantity->execute($cart, $variant, max(0, $currentQuantity - 1));
 
-        return $this->respond($request, $cart, $variant->id);
+        return $this->respond($cart, $variant->id);
     }
 
     private function resolveCart(Request $request): Cart
@@ -155,7 +154,8 @@ class CartController extends Controller
      */
     private function cartSummary(Cart $cart, ?int $variantId = null): array
     {
-        $cart->loadMissing(['items.product', 'items.variant.inventory']);
+        $cart->unsetRelation('items');
+        $cart->load(['items.product', 'items.variant.inventory']);
 
         $lineQuantity = 0;
 
@@ -181,14 +181,8 @@ class CartController extends Controller
         ];
     }
 
-    private function respond(Request $request, Cart $cart, int $variantId): JsonResponse|RedirectResponse
+    private function respond(Cart $cart, int $variantId): JsonResponse
     {
-        $summary = $this->cartSummary($cart, $variantId);
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json($summary);
-        }
-
-        return back()->with('cart_summary', $summary);
+        return response()->json($this->cartSummary($cart, $variantId));
     }
 }

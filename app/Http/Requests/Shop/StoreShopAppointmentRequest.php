@@ -26,7 +26,8 @@ class StoreShopAppointmentRequest extends FormRequest
             'vehicle_model_id' => ['required', 'integer', 'exists:models,id'],
             'plate' => ['required', 'string', 'max:20'],
             'km' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
-            'customer_name' => ['required', 'string', 'max:150'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
             'customer_document' => ['required', 'string', 'max:20'],
             'customer_phone' => ['required', 'string', 'max:30'],
             'service_type_id' => ['required', 'integer', 'exists:service_types,id'],
@@ -48,7 +49,8 @@ class StoreShopAppointmentRequest extends FormRequest
             'vehicle_model_id' => 'modelo',
             'plate' => 'placa',
             'km' => 'kilometraje',
-            'customer_name' => 'nombres y apellidos',
+            'first_name' => 'nombres',
+            'last_name' => 'apellidos',
             'customer_document' => 'DNI',
             'customer_phone' => 'teléfono',
             'service_type_id' => 'tipo de servicio',
@@ -113,12 +115,17 @@ class StoreShopAppointmentRequest extends FormRequest
      */
     public function appointmentData(): array
     {
+        $firstName = trim((string) $this->input('first_name'));
+        $lastName = trim((string) $this->input('last_name'));
+
         return [
             'brand_id' => (int) $this->input('brand_id'),
             'vehicle_model_id' => (int) $this->input('vehicle_model_id'),
             'plate' => (string) $this->input('plate'),
             'km' => $this->input('km'),
-            'customer_name' => (string) $this->input('customer_name'),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'customer_name' => trim($firstName.' '.$lastName),
             'customer_document' => (string) $this->input('customer_document'),
             'customer_phone' => (string) $this->input('customer_phone'),
             'service_type_id' => (int) $this->input('service_type_id'),

@@ -1,6 +1,6 @@
 {{--
     Carrusel productos populares (no motos).
-    Requiere: $popularProducts, $cartQuantities (opcional)
+    Requiere: $popularProducts, $cartQuantities (opcional, por product_id)
 --}}
 @if (($popularProducts ?? collect())->isNotEmpty())
     @php $carouselId = 'popular-'.uniqid(); @endphp
@@ -17,7 +17,7 @@
                     </h3>
                 </div>
 
-                <div class="flex gap-2 shrink-0">
+                <div class="flex gap-2 shrink-0" data-popular-controls>
                     <button
                         type="button"
                         data-popular-prev
@@ -43,7 +43,7 @@
 
             <div class="overflow-hidden">
                 <div data-popular-track class="flex">
-                    @foreach ($popularProducts->take(10) as $popularProduct)
+                    @foreach ($popularProducts->unique('id')->take(10) as $popularProduct)
                         <div class="popular-slide w-full sm:w-1/2 lg:w-1/4 shrink-0 px-2 md:px-4 flex justify-center" data-real="1">
                             <x-card
                                 class="max-w-[240px] w-full"
@@ -70,6 +70,7 @@
             const scope = document.getElementById(@json($carouselId));
             if (!scope) return;
             const track = scope.querySelector('[data-popular-track]');
+            const controls = scope.querySelector('[data-popular-controls]');
             const prevBtn = scope.querySelector('[data-popular-prev]');
             const nextBtn = scope.querySelector('[data-popular-next]');
             if (!track || !prevBtn || !nextBtn) return;
@@ -84,16 +85,31 @@
             }
 
             let perPage = itemsPerPage();
-            let buffer = perPage;
-            let currentIndex = buffer;
+            let buffer = 0;
+            let currentIndex = 0;
             let transitioning = false;
+            let loopEnabled = false;
+
+            function clearClones() {
+                track.querySelectorAll('.popular-slide[data-clone="1"]').forEach((el) => el.remove());
+            }
 
             function rebuild() {
+                clearClones();
                 const originals = Array.from(track.querySelectorAll('.popular-slide[data-real="1"]'));
-                track.querySelectorAll('.popular-slide[data-clone="1"]').forEach((el) => el.remove());
                 perPage = itemsPerPage();
-                buffer = Math.min(perPage, originals.length);
-                if (buffer === 0) return;
+                loopEnabled = originals.length > perPage;
+                buffer = loopEnabled ? perPage : 0;
+
+                if (controls) {
+                    controls.classList.toggle('hidden', originals.length <= perPage);
+                }
+
+                if (!loopEnabled) {
+                    currentIndex = 0;
+                    setTransform(false);
+                    return;
+                }
 
                 originals.slice(-buffer).reverse().forEach((el) => {
                     const clone = el.cloneNode(true);
@@ -122,25 +138,30 @@
             }
 
             track.addEventListener('transitionend', () => {
+                if (!loopEnabled) {
+                    transitioning = false;
+                    return;
+                }
+
                 const totalReal = track.querySelectorAll('.popular-slide[data-real="1"]').length;
                 if (currentIndex >= buffer + totalReal) {
                     currentIndex = buffer;
                     setTransform(false);
                 } else if (currentIndex < buffer) {
-                    currentIndex = buffer + totalReal - 1;
+                    currentIndex = buffer + totalReal - perPage;
                     setTransform(false);
                 }
                 transitioning = false;
             });
 
             nextBtn.addEventListener('click', () => {
-                if (transitioning) return;
+                if (transitioning || !loopEnabled) return;
                 transitioning = true;
                 currentIndex++;
                 setTransform(true);
             });
             prevBtn.addEventListener('click', () => {
-                if (transitioning) return;
+                if (transitioning || !loopEnabled) return;
                 transitioning = true;
                 currentIndex--;
                 setTransform(true);

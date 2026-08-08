@@ -24,6 +24,8 @@ class StoreShopAppointmentAction
      *     vehicle_model_id: int,
      *     plate: string,
      *     km: int|float|string|null,
+     *     first_name: string,
+     *     last_name: string,
      *     customer_name: string,
      *     customer_document: string,
      *     customer_phone: string,
@@ -68,15 +70,20 @@ class StoreShopAppointmentAction
 
         return DB::transaction(function () use ($data, $user, $appointmentAt): Appointment {
             $customer = $this->resolveOrCreateCustomer->execute([
-                'customer_name' => $data['customer_name'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
                 'customer_document' => $data['customer_document'],
                 'customer_phone' => $data['customer_phone'],
                 'customer_email' => $data['customer_email'],
             ], $user);
 
+            $fullName = trim($data['customer_name'] !== ''
+                ? $data['customer_name']
+                : trim($data['first_name'].' '.$data['last_name']));
+
             return Appointment::query()->create([
                 'user_id' => $customer->id,
-                'customer_name' => trim($data['customer_name']),
+                'customer_name' => $fullName,
                 'customer_document' => trim($data['customer_document']),
                 'customer_phone' => trim($data['customer_phone']),
                 'customer_email' => strtolower(trim($data['customer_email'])),

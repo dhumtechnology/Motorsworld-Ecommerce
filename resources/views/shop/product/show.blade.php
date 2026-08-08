@@ -194,7 +194,7 @@
 
         <div
             class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-8 select-none font-title"
-            x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }})"
+            x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }}, @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'))"
         >
             <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 h-fit">
                 <div class="flex flex-row px-4 sm:flex-col gap-3 py-1" x-show="galleryImages.length > 0">
@@ -244,7 +244,7 @@
                             <button
                                 type="button"
                                 @click="selectVariant(variant.id)"
-                                :class="selectedId === variant.id
+                                :class="Number(selectedId) === Number(variant.id)
                                     ? 'border-[#f15a24] bg-orange-50 ring-1 ring-[#f15a24]/40'
                                     : 'border-neutral-300 hover:border-neutral-500 bg-white'"
                                 class="w-full rounded border px-3 py-2.5 text-left transition-colors"
@@ -289,26 +289,25 @@
                     class="mt-2 space-y-3"
                     data-product-cart
                     data-product-id="{{ $product->id }}"
-                    data-store-url="{{ route('shop.cart.items.store', $product) }}"
-                    data-increment-url="{{ route('shop.cart.items.increment', $product) }}"
-                    data-decrement-url="{{ route('shop.cart.items.decrement', $product) }}"
-                    x-init="
-                        $el.dataset.variantId = String(selectedId || '');
-                        $el.dataset.maxStock = String(selectedStock || 0);
-                    "
+                    data-variant-id="{{ (int) ($defaultVariantId ?? 0) }}"
+                    data-max-stock="{{ (int) data_get(collect($variantsPayload ?? [])->firstWhere('id', (int) ($defaultVariantId ?? 0)), 'available_stock', 0) }}"
+                    data-store-url="{{ route('shop.cart.items.store', $product, false) }}"
+                    data-increment-url="{{ route('shop.cart.items.increment', $product, false) }}"
+                    data-decrement-url="{{ route('shop.cart.items.decrement', $product, false) }}"
                     x-effect="
                         $el.dataset.variantId = String(selectedId || '');
                         $el.dataset.maxStock = String(selectedStock || 0);
                     "
                 >
-                    <p data-cart-error class="hidden text-sm text-rose-400 font-semibold"></p>
+                    <p data-cart-error class="hidden text-sm text-rose-600 font-semibold" x-text="cartError" x-show="cartError" x-cloak></p>
 
-                    <div data-cart-add :class="cartQty > 0 ? 'hidden' : ''">
+                    <div data-cart-add x-show="cartQty <= 0" x-cloak>
                         <button
                             type="button"
                             data-cart-action="store"
+                            :disabled="cartBusy || !selectedId || selectedStock <= 0"
                             x-show="selectedId && selectedStock > 0"
-                            class="w-full sm:w-auto px-8 py-3 text-white font-title bold tracking-widest bg-primary rounded hover:bg-black cursor-pointer transition-colors uppercase"
+                            class="w-full sm:w-auto px-8 py-3 text-white font-title bold tracking-widest bg-primary rounded hover:bg-black cursor-pointer transition-colors uppercase disabled:opacity-60"
                         >
                             <span>Agregar al carrito</span>
                             <span class="normal-case tracking-normal font-semibold opacity-90" x-text="selected ? ' — ' + selected.label : ''"></span>
@@ -323,16 +322,16 @@
                         </button>
                     </div>
 
-                    <div data-cart-qty :class="cartQty > 0 ? '' : 'hidden'" class="space-y-2">
+                    <div data-cart-qty x-show="cartQty > 0" x-cloak class="space-y-2">
                         <p class="text-xs text-neutral-600">
                             En carrito (<span class="font-bold text-black" x-text="selected?.label"></span>):
                         </p>
                         <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm">
-                            <button type="button" data-cart-action="decrement" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors" aria-label="Disminuir">−</button>
+                            <button type="button" data-cart-action="decrement" :disabled="cartBusy" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Disminuir">−</button>
                             <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center text-white font-sans font-black text-lg">
-                                <span data-cart-qty-value x-text="Math.max(cartQty, 1)"></span>
+                                <span data-cart-qty-value x-text="cartQty"></span>
                             </div>
-                            <button type="button" data-cart-action="increment" :disabled="cartQty >= selectedStock" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Aumentar">+</button>
+                            <button type="button" data-cart-action="increment" :disabled="cartBusy || cartQty >= selectedStock" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Aumentar">+</button>
                         </div>
                         <p class="text-xs">
                             Puedes elegir otro color y agregarlo también.
@@ -344,54 +343,61 @@
         </div>
 
         <script>
-            window.productColorPicker = function (variants, defaultId) {
+            window.productColorPicker = function (variants, defaultId, fallbackImage) {
                 const list = Array.isArray(variants) ? variants : [];
-                const initial = list.find((v) => v.id === defaultId) || list[0] || null;
+                const initial = list.find((v) => Number(v.id) === Number(defaultId)) || list[0] || null;
                 return {
                     variants: list,
-                    selectedId: initial?.id || null,
-                    mainImage: initial?.images?.[0]?.path || @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'),
+                    selectedId: initial ? Number(initial.id) : null,
+                    cartQty: Number(initial?.cart_quantity || 0),
+                    cartBusy: false,
+                    cartError: '',
+                    mainImage: initial?.images?.[0]?.path || fallbackImage || 'https://via.placeholder.com/600?text=MotoWorld',
                     activeThumb: 0,
-                    get selected() { return this.variants.find((v) => v.id === this.selectedId) || null; },
+                    get selected() {
+                        return this.variants.find((v) => Number(v.id) === Number(this.selectedId)) || null;
+                    },
                     get selectedStock() { return Number(this.selected?.available_stock || 0); },
-                    get cartQty() { return Number(this.selected?.cart_quantity || 0); },
                     get galleryImages() { return this.selected?.images?.length ? this.selected.images : [{ path: this.mainImage }]; },
                     get stockLabel() {
                         if (!this.selected) return 'Sin colores';
                         return this.selectedStock > 0 ? `En Stock (${this.selectedStock} u.)` : 'Agotado';
                     },
+                    syncCartRoot() {
+                        const root = this.$root?.querySelector?.('[data-product-cart]')
+                            || document.querySelector('[data-product-cart]');
+                        if (!root) return;
+                        root.dataset.variantId = String(this.selectedId || '');
+                        root.dataset.maxStock = String(this.selectedStock || 0);
+                    },
+                    refreshCartQty() {
+                        this.cartQty = Number(this.selected?.cart_quantity || 0);
+                    },
+                    setCartQuantity(variantId, quantity) {
+                        const qty = Number(quantity) || 0;
+                        const variant = this.variants.find((item) => Number(item.id) === Number(variantId));
+                        if (variant) {
+                            variant.cart_quantity = qty;
+                        }
+                        if (Number(this.selectedId) === Number(variantId)) {
+                            this.cartQty = qty;
+                        }
+                        this.cartError = '';
+                        this.syncCartRoot();
+                    },
+                    setCartBusy(busy) {
+                        this.cartBusy = Boolean(busy);
+                    },
+                    setCartError(message) {
+                        this.cartError = message || '';
+                    },
                     selectVariant(id) {
-                        this.selectedId = id;
+                        this.selectedId = id == null ? null : Number(id);
                         this.activeThumb = 0;
                         this.mainImage = this.selected?.images?.[0]?.path || this.mainImage;
-
-                        this.$nextTick(() => {
-                            const root = this.$root.querySelector('[data-product-cart]')
-                                || document.querySelector('[data-product-cart]');
-                            if (!root) return;
-
-                            root.dataset.variantId = String(this.selectedId || '');
-                            root.dataset.maxStock = String(this.selectedStock || 0);
-
-                            const qty = this.cartQty;
-                            const addBlock = root.querySelector('[data-cart-add]');
-                            const qtyBlock = root.querySelector('[data-cart-qty]');
-                            const qtyValue = root.querySelector('[data-cart-qty-value]');
-                            const incrementBtn = root.querySelector('[data-cart-action="increment"]');
-                            const errorEl = root.querySelector('[data-cart-error]');
-
-                            errorEl?.classList.add('hidden');
-
-                            if (qty <= 0) {
-                                addBlock?.classList.remove('hidden');
-                                qtyBlock?.classList.add('hidden');
-                            } else {
-                                addBlock?.classList.add('hidden');
-                                qtyBlock?.classList.remove('hidden');
-                                if (qtyValue) qtyValue.textContent = String(qty);
-                                if (incrementBtn) incrementBtn.disabled = qty >= this.selectedStock;
-                            }
-                        });
+                        this.cartError = '';
+                        this.refreshCartQty();
+                        this.$nextTick(() => this.syncCartRoot());
                     },
                     init() {
                         this.$nextTick(() => this.selectVariant(this.selectedId));
