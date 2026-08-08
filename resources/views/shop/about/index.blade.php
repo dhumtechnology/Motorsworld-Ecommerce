@@ -49,7 +49,7 @@
 <section class="relative w-full overflow-hidden bg-neutral-900">
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
         <img
-            src="{{ $banner }}"
+            src="images/about/banner-servicios.png"
             alt="Nosotros Motosworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
@@ -74,7 +74,7 @@
         <h2 class="mt-3 text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
             Quiénes somos
         </h2>
-        <p class="mt-5 text-sm md:text-base leading-relaxed text-neutral-600">
+        <p class="mt-5 text-sm md:text-base leading-relaxed text-neutral-600 text-justify">
             Desde hace 3 años Moto World ha logrado posicionarse como uno de los talleres de motocicletas más
             importantes en Lima, brindando la confianza y seguridad al motociclista peruano. Contamos con el
             respaldo de sólidas marcas con representación a nivel internacional.
