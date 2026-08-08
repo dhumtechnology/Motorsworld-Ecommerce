@@ -61,12 +61,9 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <p id="filters-live-hint" class="text-xs text-muted">Los filtros se aplican automáticamente</p>
-                @if ($hasActiveFilters)
+            @if ($hasActiveFilters)
                     <a href="{{ route('admin.orders.index') }}" class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors">Limpiar</a>
                 @endif
-            </div>
         </form>
     </div>
     
@@ -178,22 +175,14 @@
 
             let submitTimer = null;
             let isSubmitting = false;
-
-            const setHint = (text) => {
-                const hint = document.getElementById('filters-live-hint');
-                if (hint) hint.textContent = text;
-            };
-
-            const submitFilters = () => {
+const submitFilters = () => {
                 if (isSubmitting) return;
                 isSubmitting = true;
-                setHint('Actualizando resultados…');
-                form.requestSubmit ? form.requestSubmit() : form.submit();
+                                form.requestSubmit ? form.requestSubmit() : form.submit();
             };
 
             const scheduleSubmit = (delay = 250) => {
                 clearTimeout(submitTimer);
-                setHint('Aplicando filtros…');
                 submitTimer = setTimeout(submitFilters, delay);
             };
 

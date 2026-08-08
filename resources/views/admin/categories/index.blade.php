@@ -34,11 +34,7 @@
                 >
             </div>
 
-            <div class="flex items-center gap-3">
-                <p id="filters-live-hint" class="text-xs text-muted">
-                    La búsqueda se aplica automáticamente
-                </p>
-                @if ($hasActiveFilters)
+            @if ($hasActiveFilters)
                     <a
                         href="{{ route('admin.categories.index') }}"
                         class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
@@ -46,7 +42,6 @@
                         Limpiar
                     </a>
                 @endif
-            </div>
         </form>
     </div>
 

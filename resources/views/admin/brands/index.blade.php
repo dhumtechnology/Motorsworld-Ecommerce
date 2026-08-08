@@ -39,12 +39,9 @@
                     class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
             </div>
-            <div class="flex items-center gap-3">
-                <p id="filters-live-hint" class="text-xs text-muted">La búsqueda se aplica automáticamente</p>
-                @if ($hasActiveFilters)
-                    <a href="{{ route('admin.brands.index') }}" class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors">Limpiar</a>
-                @endif
-            </div>
+            @if ($hasActiveFilters)
+                <a href="{{ route('admin.brands.index') }}" class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors">Limpiar</a>
+            @endif
         </form>
     </div>
 

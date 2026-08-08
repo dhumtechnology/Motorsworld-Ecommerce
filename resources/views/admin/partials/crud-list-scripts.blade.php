@@ -13,21 +13,14 @@
                 let submitTimer = null;
                 let isSubmitting = false;
 
-                const setHint = (text) => {
-                    const hint = document.getElementById('filters-live-hint');
-                    if (hint) hint.textContent = text;
-                };
-
                 const submitFilters = () => {
                     if (isSubmitting) return;
                     isSubmitting = true;
-                    setHint('Actualizando resultados…');
                     form.requestSubmit ? form.requestSubmit() : form.submit();
                 };
 
                 const scheduleSubmit = (delay = 250) => {
                     clearTimeout(submitTimer);
-                    setHint('Aplicando filtros…');
                     submitTimer = setTimeout(submitFilters, delay);
                 };
 

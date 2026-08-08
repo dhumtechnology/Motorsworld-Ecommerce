@@ -6,6 +6,13 @@
     $selectedIds = collect(old('permission_ids', $role?->permissions?->pluck('id')->all() ?? []))
         ->map(fn ($id) => (int) $id)
         ->all();
+
+    $groupLabels = [
+        'admin' => 'Panel administrativo',
+        'shop' => 'Tienda',
+        'orders' => 'Órdenes / pedidos',
+        ...\App\Support\Auth\PermissionCatalog::RESOURCES,
+    ];
 @endphp
 
 @if ($errors->any())
@@ -35,7 +42,7 @@
                   class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">{{ old('description', $role?->description) }}</textarea>
     </div>
 
-    <div>
+    <div data-permissions-root>
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <label class="block text-xs font-bold uppercase tracking-wider text-muted">Permisos</label>
             <div class="flex gap-2">
@@ -46,8 +53,25 @@
 
         <div class="max-h-[28rem] space-y-4 overflow-y-auto rounded border border-border bg-secondary/40 p-4">
             @forelse ($permissionGroups as $group => $permissions)
-                <div>
-                    <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted">{{ $group }}</p>
+                @php
+                    $groupLabel = $groupLabels[$group] ?? str_replace('_', ' ', $group);
+                    $groupPermissionIds = $permissions->pluck('id')->map(fn ($id) => (int) $id)->all();
+                    $selectedInGroup = count(array_intersect($groupPermissionIds, $selectedIds));
+                    $allGroupSelected = $selectedInGroup === count($groupPermissionIds) && count($groupPermissionIds) > 0;
+                    $someGroupSelected = $selectedInGroup > 0 && ! $allGroupSelected;
+                @endphp
+                <div data-permission-group>
+                    <label class="mb-2 flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            class="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                            data-permission-group-toggle
+                            @checked($allGroupSelected)
+                            @if ($someGroupSelected) data-indeterminate="1" @endif
+                        >
+                        <span class="text-[11px] font-bold uppercase tracking-widest text-text">{{ $groupLabel }}</span>
+                        <span class="text-[10px] font-semibold text-muted">({{ count($groupPermissionIds) }})</span>
+                    </label>
                     <div class="grid gap-2 sm:grid-cols-2">
                         @foreach ($permissions as $permission)
                             <label class="flex items-start gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-text hover:border-primary/40 cursor-pointer">
@@ -81,11 +105,53 @@
 
 @push('scripts')
 <script>
-    document.querySelector('[data-select-all-permissions]')?.addEventListener('click', () => {
-        document.querySelectorAll('[data-permission-checkbox]').forEach((el) => { el.checked = true; });
-    });
-    document.querySelector('[data-clear-permissions]')?.addEventListener('click', () => {
-        document.querySelectorAll('[data-permission-checkbox]').forEach((el) => { el.checked = false; });
-    });
+    (function () {
+        const root = document.querySelector('[data-permissions-root]');
+        if (!root) return;
+
+        const syncGroup = (group) => {
+            const toggle = group.querySelector('[data-permission-group-toggle]');
+            const boxes = group.querySelectorAll('[data-permission-checkbox]');
+            if (!toggle || boxes.length === 0) return;
+
+            const total = boxes.length;
+            const checked = Array.from(boxes).filter((el) => el.checked).length;
+
+            toggle.checked = checked === total;
+            toggle.indeterminate = checked > 0 && checked < total;
+        };
+
+        const syncAllGroups = () => {
+            root.querySelectorAll('[data-permission-group]').forEach(syncGroup);
+        };
+
+        root.querySelectorAll('[data-permission-group]').forEach((group) => {
+            const toggle = group.querySelector('[data-permission-group-toggle]');
+            if (toggle?.dataset.indeterminate === '1') {
+                toggle.indeterminate = true;
+            }
+
+            toggle?.addEventListener('change', () => {
+                group.querySelectorAll('[data-permission-checkbox]').forEach((el) => {
+                    el.checked = toggle.checked;
+                });
+                toggle.indeterminate = false;
+            });
+
+            group.querySelectorAll('[data-permission-checkbox]').forEach((el) => {
+                el.addEventListener('change', () => syncGroup(group));
+            });
+        });
+
+        root.querySelector('[data-select-all-permissions]')?.addEventListener('click', () => {
+            root.querySelectorAll('[data-permission-checkbox]').forEach((el) => { el.checked = true; });
+            syncAllGroups();
+        });
+
+        root.querySelector('[data-clear-permissions]')?.addEventListener('click', () => {
+            root.querySelectorAll('[data-permission-checkbox]').forEach((el) => { el.checked = false; });
+            syncAllGroups();
+        });
+    })();
 </script>
 @endpush
