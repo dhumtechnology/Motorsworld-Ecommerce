@@ -58,13 +58,22 @@ class Role extends Model
 
     public function hasPermission(Permission|string $permission): bool
     {
-        $name = $permission instanceof Permission ? $permission->name : $permission;
+        $value = $permission instanceof Permission ? $permission->slug : $permission;
 
         if ($this->relationLoaded('permissions')) {
-            return $this->permissions->contains('name', $name);
+            return $this->permissions->contains(
+                fn (Permission $item) => $item->slug === $value || $item->name === $value,
+            );
         }
 
-        return $this->permissions()->where('name', $name)->exists();
+        return $this->permissions()
+            ->where(fn ($query) => $query->where('slug', $value)->orWhere('name', $value))
+            ->exists();
+    }
+
+    public function isSystem(): bool
+    {
+        return in_array($this->slug, ['administrador', 'usuario'], true);
     }
 
     protected function resolvePermission(Permission|string $permission): Permission
@@ -73,6 +82,9 @@ class Role extends Model
             return $permission;
         }
 
-        return Permission::query()->where('name', $permission)->firstOrFail();
+        return Permission::query()
+            ->where('name', $permission)
+            ->orWhere('slug', $permission)
+            ->firstOrFail();
     }
 }

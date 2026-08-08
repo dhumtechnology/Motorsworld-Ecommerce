@@ -76,9 +76,14 @@
         </div>
 
         <div class="rounded-lg border border-neutral-200 bg-white p-5 space-y-2 shadow-sm">
-            <h2 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Dirección de envío</h2>
-            @if ($shipping)
-                <p class="text-sm font-semibold text-neutral-900">{{ $shipping->line1 }}</p>
+            <h2 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-3">Entrega</h2>
+            <p class="text-sm font-semibold text-neutral-900">
+                {{ $order->fulfillment_method?->label() ?? 'Delivery' }}
+            </p>
+            @if ($order->fulfillment_method?->value === 'pickup')
+                <p class="text-sm text-neutral-600">Retiro en tienda Motosworld.</p>
+            @elseif ($shipping)
+                <p class="text-sm font-semibold text-neutral-900 mt-2">{{ $shipping->line1 }}</p>
                 <p class="text-sm text-neutral-600">
                     {{ $shipping->city }}
                     @if ($shipping->postal_code)

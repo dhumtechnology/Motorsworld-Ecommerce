@@ -80,7 +80,7 @@
                         </th>
                         <th class="px-5 py-3 font-bold">ID</th>
                         <th class="px-5 py-3 font-bold">Email</th>
-                        <th class="px-5 py-3 font-bold">Rol</th>
+                        <th class="px-5 py-3 font-bold">Roles</th>
                         <th class="px-5 py-3 font-bold">Estado</th>
                         <th class="px-5 py-3 font-bold">Registro</th>
                         <th class="px-5 py-3 font-bold">Último acceso</th>
@@ -120,7 +120,7 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-text-soft">
-                                {{ $user->roles->pluck('name')->join(', ') ?: 'Administrador' }}
+                                {{ $user->roles->pluck('name')->join(', ') ?: '—' }}
                             </td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-bold uppercase {{ $statusMeta['class'] }}">
@@ -154,7 +154,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-12 text-center text-muted">No se encontraron usuarios administradores.</td>
+                            <td colspan="8" class="px-5 py-12 text-center text-muted">No se encontraron usuarios del panel.</td>
                         </tr>
                     @endforelse
                 </tbody>

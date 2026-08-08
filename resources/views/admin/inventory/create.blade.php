@@ -5,6 +5,29 @@
 @section('page-subtitle', 'Registrar entrada o salida de inventario')
 
 @section('content')
+    @php
+        $variantOptions = collect($variants)->map(function ($variant) {
+            $stock = (int) ($variant->inventory?->available_stock ?? 0);
+            $label = trim(sprintf(
+                '%s — %s (%s) · stock: %d',
+                $variant->sku,
+                $variant->product?->name ?? 'Producto',
+                $variant->colorLabel(),
+                $stock,
+            ));
+
+            return [
+                'id' => $variant->id,
+                'name' => $label,
+            ];
+        });
+
+        $selectedVariantId = old('product_variant_id', request('product_variant_id'));
+        $selectedVariantId = $selectedVariantId === null || $selectedVariantId === ''
+            ? null
+            : (int) $selectedVariantId;
+    @endphp
+
     <div class="rounded-lg border border-border bg-surface p-6 max-w-2xl">
         <form method="POST" action="{{ route('admin.inventory.store') }}" id="inventory-movement-form">
             @csrf
@@ -31,16 +54,16 @@
                 </div>
 
                 <div>
-                    <label for="product_variant_id" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Color / SKU *</label>
-                    <select id="product_variant_id" name="product_variant_id" required
-                            class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
-                        <option value="">Seleccionar color...</option>
-                        @foreach ($variants as $variant)
-                            <option value="{{ $variant->id }}" @selected((int) old('product_variant_id', request('product_variant_id')) === $variant->id)>
-                                {{ $variant->sku }} — {{ $variant->product?->name }} ({{ $variant->colorLabel() }}) · stock: {{ (int) ($variant->inventory?->available_stock ?? 0) }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-searchable-select
+                        name="product_variant_id"
+                        label="Producto / color / SKU"
+                        :options="$variantOptions"
+                        :selected="$selectedVariantId"
+                        placeholder="Buscar por SKU, nombre o color…"
+                        empty-label="Seleccionar…"
+                        :required="true"
+                    />
+                    <p class="mt-1.5 text-xs text-muted">Puedes buscar por SKU, nombre del producto o color.</p>
                 </div>
 
                 <div>
@@ -80,6 +103,8 @@
             </div>
         </form>
     </div>
+
+    @include('admin.partials.searchable-select-scripts')
 
     <script>
         (function () {

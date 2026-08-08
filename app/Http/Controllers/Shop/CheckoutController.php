@@ -6,6 +6,7 @@ use App\Actions\Orders\CreateOrderFromCartAction;
 use App\Actions\Orders\MarkOrderAsPaidAction;
 use App\Actions\Payments\ProcessCulqiPaymentAction;
 use App\Actions\Shop\ResolveOrCreateCustomerAction;
+use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\PaymentStatus;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Http\Controllers\Controller;
@@ -120,7 +121,7 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $shippingAddress = $this->resolveAddress($request, $customer->id);
+        $shippingAddress = $this->resolveAddress($request, $customer->id, $request->fulfillmentMethod());
         $this->syncCustomerProfile($customer, $request->customerDetails());
 
         $order = null;
@@ -131,6 +132,7 @@ class CheckoutController extends Controller
                 $cart,
                 $shippingAddress,
                 $shippingAddress,
+                $request->fulfillmentMethod(),
             );
 
             $this->rememberAccessibleOrder($request, $order);
@@ -305,14 +307,22 @@ class CheckoutController extends Controller
         }
     }
 
-    private function resolveAddress(CheckoutPayRequest $request, int $userId): ?Address
-    {
+    private function resolveAddress(
+        CheckoutPayRequest $request,
+        int $userId,
+        FulfillmentMethod $fulfillmentMethod,
+    ): ?Address {
+        if ($fulfillmentMethod === FulfillmentMethod::Pickup) {
+            return null;
+        }
+
         $line1 = trim((string) $request->input('address_line1', ''));
         $city = trim((string) $request->input('address_city', ''));
 
         if ($line1 === '' || $city === '') {
-            return $request->user()?->customerProfile?->defaultShippingAddress
-                ?? Address::query()->where('user_id', $userId)->latest('id')->first();
+            throw ValidationException::withMessages([
+                'address_line1' => 'La dirección y ciudad son obligatorias para delivery.',
+            ]);
         }
 
         return Address::query()->create([

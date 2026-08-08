@@ -80,6 +80,10 @@
                         </dd>
                     </div>
                     <div>
+                        <dt class="text-xs uppercase tracking-wider text-muted">Entrega</dt>
+                        <dd class="mt-1 text-text font-semibold">{{ $order->fulfillment_method?->label() ?? 'Delivery' }}</dd>
+                    </div>
+                    <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Ítems</dt>
                         <dd class="mt-1 text-text-soft">{{ $order->items->count() }}</dd>
                     </div>
@@ -230,7 +234,17 @@
                 </dl>
             </div>
 
-            @if ($order->shippingAddress)
+            <div class="rounded-lg border border-border bg-surface p-5">
+                <h2 class="text-sm font-title text-text mb-4">Entrega</h2>
+                <p class="text-sm font-semibold text-text">
+                    {{ $order->fulfillment_method?->label() ?? 'Delivery' }}
+                </p>
+                @if ($order->fulfillment_method?->value === 'pickup')
+                    <p class="mt-2 text-sm text-text-soft">El cliente retirará el pedido en tienda.</p>
+                @endif
+            </div>
+
+            @if ($order->fulfillment_method?->value !== 'pickup' && $order->shippingAddress)
                 <div class="rounded-lg border border-border bg-surface p-5">
                     <h2 class="text-sm font-title text-text mb-4">Dirección de envío</h2>
                     <p class="text-sm text-text-soft leading-relaxed">
@@ -241,6 +255,11 @@
                         @endif
                         <br>{{ $order->shippingAddress->country }}
                     </p>
+                </div>
+            @elseif ($order->fulfillment_method?->value !== 'pickup')
+                <div class="rounded-lg border border-border bg-surface p-5">
+                    <h2 class="text-sm font-title text-text mb-4">Dirección de envío</h2>
+                    <p class="text-sm text-muted">Sin dirección registrada.</p>
                 </div>
             @endif
 

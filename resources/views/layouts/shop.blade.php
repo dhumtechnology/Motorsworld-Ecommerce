@@ -98,7 +98,7 @@
                                     style="display: none;"
                                 >
                                     <div class="py-2">
-                                        @if (auth()->user()?->hasRole('Administrador'))
+                                        @if (auth()->user()?->canAccessAdmin())
                                             <a href="{{ route('admin.profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
                                                 Mi perfil
                                             </a>

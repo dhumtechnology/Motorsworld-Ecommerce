@@ -85,6 +85,7 @@
                     <tr>
                         <th scope="col" class="px-5 py-3 font-bold">Orden</th>
                         <th scope="col" class="px-5 py-3 font-bold">Cliente</th>
+                        <th scope="col" class="px-5 py-3 font-bold">Entrega</th>
                         <th scope="col" class="px-5 py-3 font-bold">Total</th>
                         <th scope="col" class="px-5 py-3 font-bold">Ítems</th>
                         <th scope="col" class="px-5 py-3 font-bold">Estado</th>
@@ -111,6 +112,15 @@
                             <td class="px-5 py-3">
                                 <p class="font-semibold text-text">{{ $fullName !== '' ? $fullName : 'Sin nombre' }}</p>
                                 <p class="text-xs text-muted mt-0.5">{{ $order->user?->email ?? '—' }}</p>
+                            </td>
+                            <td class="px-5 py-3">
+                                @php
+                                    $fulfillment = $order->fulfillment_method;
+                                    $isPickup = $fulfillment?->value === 'pickup';
+                                @endphp
+                                <span class="inline-flex items-center rounded border px-2 py-0.5 text-xs font-bold uppercase {{ $isPickup ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-sky-50 text-sky-700 border-sky-200' }}">
+                                    {{ $fulfillment?->label() ?? 'Delivery' }}
+                                </span>
                             </td>
                             <td class="px-5 py-3 text-text font-semibold whitespace-nowrap">
                                 {{ number_format((float) $order->total_amount, 2) }}

@@ -12,7 +12,7 @@ class LoginUserAction
     {
         $user = User::query()
             ->where('email', $email)
-            ->with('roles')
+            ->with('roles.permissions')
             ->first();
 
         if (

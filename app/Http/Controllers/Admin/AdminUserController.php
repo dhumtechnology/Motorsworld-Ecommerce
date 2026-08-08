@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\AdminUserIndexRequest;
 use App\Http\Requests\Admin\BulkDeleteAdminUsersRequest;
 use App\Http\Requests\Admin\StoreAdminUserRequest;
 use App\Http\Requests\Admin\UpdateAdminUserRequest;
+use App\Models\Auth\Role;
 use App\Models\Auth\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,7 +30,10 @@ class AdminUserController extends Controller
     public function index(AdminUserIndexRequest $request): View
     {
         $users = User::query()
-            ->whereHas('roles', fn (Builder $query) => $query->where('name', 'Administrador'))
+            ->whereHas(
+                'roles.permissions',
+                fn (Builder $query) => $query->where('slug', 'admin.access'),
+            )
             ->with('roles:id,name')
             ->when(
                 $request->status(),
@@ -58,6 +62,7 @@ class AdminUserController extends Controller
     {
         return view('admin.users.create', [
             'statuses' => UserStatus::cases(),
+            'roles' => $this->assignableRoles(),
         ]);
     }
 
@@ -72,24 +77,25 @@ class AdminUserController extends Controller
 
     public function show(User $user): View
     {
-        $this->ensureAdminUser($user);
+        $this->ensureStaffUser($user);
 
         return view('admin.users.show', $this->getAdminUserDetails->execute($user));
     }
 
     public function edit(User $user): View
     {
-        $this->ensureAdminUser($user);
+        $this->ensureStaffUser($user);
 
         return view('admin.users.edit', [
             'user' => $user->load('roles:id,name'),
             'statuses' => UserStatus::cases(),
+            'roles' => $this->assignableRoles(),
         ]);
     }
 
     public function update(UpdateAdminUserRequest $request, User $user): RedirectResponse
     {
-        $this->ensureAdminUser($user);
+        $this->ensureStaffUser($user);
 
         $user = $this->upsertAdminUser->execute(
             $request->adminUserAttributes(),
@@ -103,7 +109,7 @@ class AdminUserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        $this->ensureAdminUser($user);
+        $this->ensureStaffUser($user);
 
         $result = $this->deleteAdminUsers->execute(
             [$user->id],
@@ -145,9 +151,20 @@ class AdminUserController extends Controller
             ->with('status', $message);
     }
 
-    private function ensureAdminUser(User $user): void
+    private function ensureStaffUser(User $user): void
     {
-        abort_unless($user->hasRole('Administrador'), 404);
+        abort_unless($user->canAccessAdmin(), 404);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, Role>
+     */
+    private function assignableRoles()
+    {
+        return Role::query()
+            ->where('slug', '!=', 'usuario')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'description']);
     }
 
     private function currentUserId(): ?int

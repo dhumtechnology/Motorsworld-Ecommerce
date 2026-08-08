@@ -2,8 +2,8 @@
 
 namespace App\Models\Auth\Concerns;
 
-use App\Models\Auth\Role;
 use App\Models\Auth\Permission;
+use App\Models\Auth\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 
@@ -53,13 +53,15 @@ trait HasRoles
 
     public function hasRole(Role|string $role): bool
     {
-        $name = $role instanceof Role ? $role->name : $role;
+        $value = $role instanceof Role ? $role->name : $role;
 
         if ($this->relationLoaded('roles')) {
-            return $this->roles->contains('name', $name);
+            return $this->roles->contains(fn (Role $item) => $item->name === $value || $item->slug === $value);
         }
 
-        return $this->roles()->where('name', $name)->exists();
+        return $this->roles()
+            ->where(fn ($query) => $query->where('name', $value)->orWhere('slug', $value))
+            ->exists();
     }
 
     /**
@@ -92,10 +94,29 @@ trait HasRoles
 
     public function hasPermission(Permission|string $permission): bool
     {
-        $name = $permission instanceof Permission ? $permission->name : $permission;
+        $value = $permission instanceof Permission ? $permission->slug : $permission;
+
+        if ($this->relationLoaded('roles')) {
+            foreach ($this->roles as $role) {
+                if (! $role->relationLoaded('permissions')) {
+                    $role->load('permissions');
+                }
+
+                if ($role->permissions->contains(
+                    fn (Permission $item) => $item->slug === $value || $item->name === $value,
+                )) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         return $this->roles()
-            ->whereHas('permissions', fn ($query) => $query->where('name', $name))
+            ->whereHas(
+                'permissions',
+                fn ($query) => $query->where('slug', $value)->orWhere('name', $value),
+            )
             ->exists();
     }
 
@@ -113,11 +134,29 @@ trait HasRoles
         return false;
     }
 
+    public function canAccessAdmin(): bool
+    {
+        return $this->hasPermission('admin.access');
+    }
+
     /**
      * @return Collection<int, Permission>
      */
     public function getAllPermissions(): Collection
     {
+        if ($this->relationLoaded('roles')) {
+            return $this->roles
+                ->flatMap(function (Role $role) {
+                    if (! $role->relationLoaded('permissions')) {
+                        $role->load('permissions');
+                    }
+
+                    return $role->permissions;
+                })
+                ->unique('id')
+                ->values();
+        }
+
         return $this->roles()
             ->with('permissions')
             ->get()
@@ -133,6 +172,9 @@ trait HasRoles
             return $role;
         }
 
-        return Role::query()->where('name', $role)->firstOrFail();
+        return Role::query()
+            ->where('name', $role)
+            ->orWhere('slug', $role)
+            ->firstOrFail();
     }
 }

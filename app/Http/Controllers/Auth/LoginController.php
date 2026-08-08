@@ -34,7 +34,7 @@ class LoginController extends Controller
 
         $mergeGuestCart->execute($user, $sessionId);
 
-        if ($user->hasRole('Administrador')) {
+        if ($user->canAccessAdmin()) {
             return redirect()
                 ->intended(route('admin.dashboard'))
                 ->with('status', 'Sesión iniciada correctamente.');

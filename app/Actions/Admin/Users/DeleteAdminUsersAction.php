@@ -22,7 +22,10 @@ class DeleteAdminUsersAction
 
         return DB::transaction(function () use ($ids, $currentUserId) {
             $users = User::query()
-                ->whereHas('roles', fn ($query) => $query->where('name', 'Administrador'))
+                ->whereHas(
+                    'roles.permissions',
+                    fn ($query) => $query->where('slug', 'admin.access'),
+                )
                 ->whereIn('id', $ids)
                 ->get();
 

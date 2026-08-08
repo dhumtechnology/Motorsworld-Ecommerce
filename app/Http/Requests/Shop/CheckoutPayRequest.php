@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Shop;
 
+use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Payments\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -20,6 +21,7 @@ class CheckoutPayRequest extends FormRequest
     {
         $authenticated = $this->user() !== null;
         $hasDocument = filled($this->user()?->customerProfile?->document);
+        $isDelivery = $this->input('fulfillment_method') === FulfillmentMethod::Delivery->value;
 
         return [
             'payment_method' => ['required', 'string', Rule::in([
@@ -27,6 +29,7 @@ class CheckoutPayRequest extends FormRequest
                 PaymentMethod::Yape->value,
             ])],
             'culqi_token' => ['nullable', 'string', 'max:64'],
+            'fulfillment_method' => ['required', Rule::enum(FulfillmentMethod::class)],
             'customer_email' => [$authenticated ? 'nullable' : 'required', 'email', 'max:255'],
             'customer_document' => [
                 $authenticated && $hasDocument ? 'nullable' : 'required',
@@ -36,8 +39,8 @@ class CheckoutPayRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:80'],
             'last_name' => ['required', 'string', 'max:80'],
             'phone' => ['required', 'string', 'max:20'],
-            'address_line1' => ['nullable', 'string', 'max:255'],
-            'address_city' => ['nullable', 'string', 'max:100'],
+            'address_line1' => [$isDelivery ? 'required' : 'nullable', 'string', 'max:255'],
+            'address_city' => [$isDelivery ? 'required' : 'nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],
         ];
     }
@@ -48,17 +51,25 @@ class CheckoutPayRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'fulfillment_method' => 'método de entrega',
             'customer_email' => 'correo',
             'customer_document' => 'documento',
             'first_name' => 'nombre',
             'last_name' => 'apellido',
             'phone' => 'teléfono',
+            'address_line1' => 'dirección',
+            'address_city' => 'ciudad',
         ];
     }
 
     public function paymentMethod(): PaymentMethod
     {
         return PaymentMethod::from($this->string('payment_method')->toString());
+    }
+
+    public function fulfillmentMethod(): FulfillmentMethod
+    {
+        return FulfillmentMethod::from($this->string('fulfillment_method')->toString());
     }
 
     public function culqiToken(): ?string

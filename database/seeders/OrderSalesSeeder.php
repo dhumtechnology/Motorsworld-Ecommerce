@@ -61,6 +61,7 @@ class OrderSalesSeeder extends Seeder
                 'payment_status' => $definition['payment_status'],
                 'total_amount' => $totalAmount,
                 'currency' => 'PEN',
+                'fulfillment_method' => \App\Enums\Orders\FulfillmentMethod::Delivery,
                 'shipping_address_id' => $address->id,
                 'billing_address_id' => $address->id,
                 'created_at' => $placedAt,

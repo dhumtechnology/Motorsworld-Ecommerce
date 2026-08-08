@@ -74,13 +74,41 @@
                             <input id="phone" name="phone" required value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
                                    class="{{ $fieldClass }}">
                         </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900 mb-4">Entrega *</h2>
+                    <div class="space-y-2 mb-4">
+                        @foreach ([
+                            'pickup' => ['label' => 'Recojo en tienda', 'hint' => 'Retiras tu pedido en Motosworld.'],
+                            'delivery' => ['label' => 'Delivery', 'hint' => 'Enviamos a la dirección que indiques.'],
+                        ] as $value => $meta)
+                            <label class="flex items-start gap-3 rounded-md border border-neutral-300 bg-white px-3 py-3 cursor-pointer transition-colors hover:border-orange-500 has-[:checked]:border-orange-600 has-[:checked]:bg-orange-50">
+                                <input
+                                    type="radio"
+                                    name="fulfillment_method"
+                                    value="{{ $value }}"
+                                    class="mt-1 text-orange-600 focus:ring-orange-600"
+                                    data-fulfillment-option
+                                    @checked(old('fulfillment_method', 'delivery') === $value)
+                                >
+                                <span>
+                                    <span class="block text-sm font-semibold text-neutral-800">{{ $meta['label'] }}</span>
+                                    <span class="block text-xs text-neutral-500 mt-0.5">{{ $meta['hint'] }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <div id="delivery-address-fields" class="grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="address_line1">Dirección</label>
+                            <label class="{{ $labelClass }}" for="address_line1">Dirección *</label>
                             <input id="address_line1" name="address_line1" value="{{ old('address_line1') }}"
                                    class="{{ $fieldClass }}">
                         </div>
                         <div>
-                            <label class="{{ $labelClass }}" for="address_city">Ciudad</label>
+                            <label class="{{ $labelClass }}" for="address_city">Ciudad *</label>
                             <input id="address_city" name="address_city" value="{{ old('address_city', 'Lima') }}"
                                    class="{{ $fieldClass }}">
                         </div>
@@ -238,6 +266,28 @@
         el.addEventListener('change', toggleFields);
     });
     toggleFields();
+
+    const deliveryFields = document.getElementById('delivery-address-fields');
+    const addressLine = document.getElementById('address_line1');
+    const addressCity = document.getElementById('address_city');
+
+    function selectedFulfillment() {
+        return form.querySelector('input[name="fulfillment_method"]:checked')?.value || 'delivery';
+    }
+
+    function toggleFulfillment() {
+        const isDelivery = selectedFulfillment() === 'delivery';
+        if (deliveryFields) {
+            deliveryFields.classList.toggle('hidden', !isDelivery);
+        }
+        if (addressLine) addressLine.required = isDelivery;
+        if (addressCity) addressCity.required = isDelivery;
+    }
+
+    form.querySelectorAll('[data-fulfillment-option]').forEach((el) => {
+        el.addEventListener('change', toggleFulfillment);
+    });
+    toggleFulfillment();
 
     function showError(message) {
         errorEl.textContent = message;

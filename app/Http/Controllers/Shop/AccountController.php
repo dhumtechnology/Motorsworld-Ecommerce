@@ -17,7 +17,7 @@ class AccountController extends Controller
     {
         $user = $request->user();
 
-        if ($user->hasRole('Administrador') && ! $user->hasRole('Usuario')) {
+        if ($user->canAccessAdmin() && ! $user->hasRole('Usuario')) {
             return redirect()->route('admin.profile.show');
         }
 

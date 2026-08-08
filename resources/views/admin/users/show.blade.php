@@ -88,7 +88,7 @@
             <div>
                 <dt class="text-xs uppercase tracking-wider text-muted">Rol</dt>
                 <dd class="mt-1 text-text-soft">
-                    {{ $user->roles->pluck('name')->join(', ') ?: 'Administrador' }}
+                    {{ $user->roles->pluck('name')->join(', ') ?: '—' }}
                 </dd>
             </div>
             <div>

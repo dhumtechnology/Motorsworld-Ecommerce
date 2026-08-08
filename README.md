@@ -155,7 +155,7 @@ No uses el CDN de Tailwind: pisa los estilos del proyecto.
 - Email: `admin@motosworld.test`
 - Password: `password`
 
-Los seeders de catálogo/pedidos/reservas están desactivados en `DatabaseSeeder` (comentados). Para reactivarlos, descomenta las clases y ejecuta `php artisan db:seed`.
+**Seeders iniciales (`db:seed`):** permisos, rol Administrador (+ rol Usuario para clientes de tienda), superadmin, marcas (KTM, Husqvarna, Royal Enfield, CFMOTO, CFLITE), categorías (Motos, Accesorios, Baterías, Neumáticos, Repuestos) y servicios con sus paquetes.
 
 ### 4. Verificar la aplicación
 

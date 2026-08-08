@@ -33,7 +33,7 @@ class DeleteCustomersAction
             $deleted = 0;
 
             foreach ($customers as $customer) {
-                if ($customer->hasRole('Administrador')) {
+                if ($customer->canAccessAdmin()) {
                     $blocked[] = $customer->email;
 
                     continue;

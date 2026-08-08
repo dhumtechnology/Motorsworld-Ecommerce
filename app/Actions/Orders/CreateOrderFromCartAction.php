@@ -2,6 +2,7 @@
 
 namespace App\Actions\Orders;
 
+use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
 use App\Enums\Products\ProductStatus;
@@ -26,7 +27,10 @@ class CreateOrderFromCartAction
         Cart $cart,
         ?Address $shippingAddress = null,
         ?Address $billingAddress = null,
+        ?FulfillmentMethod $fulfillmentMethod = null,
     ): Order {
+        $fulfillmentMethod ??= FulfillmentMethod::Delivery;
+
         $cart->loadMissing([
             'items.product.activeOffer',
             'items.variant.inventory',
@@ -39,7 +43,7 @@ class CreateOrderFromCartAction
             ]);
         }
 
-        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress) {
+        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod) {
             $lines = [];
             $total = 0.0;
             $currency = 'PEN';
@@ -75,14 +79,25 @@ class CreateOrderFromCartAction
                 ]);
             }
 
+            if ($fulfillmentMethod === FulfillmentMethod::Delivery && $shippingAddress === null) {
+                throw ValidationException::withMessages([
+                    'address_line1' => 'La dirección es obligatoria para delivery.',
+                ]);
+            }
+
             $order = Order::query()->create([
                 'user_id' => $user->id,
                 'status' => OrderStatus::Created,
                 'payment_status' => PaymentStatus::Pending,
                 'total_amount' => round($total, 2),
                 'currency' => $currency,
-                'shipping_address_id' => $shippingAddress?->id,
-                'billing_address_id' => $billingAddress?->id ?? $shippingAddress?->id,
+                'fulfillment_method' => $fulfillmentMethod,
+                'shipping_address_id' => $fulfillmentMethod === FulfillmentMethod::Pickup
+                    ? null
+                    : $shippingAddress?->id,
+                'billing_address_id' => $fulfillmentMethod === FulfillmentMethod::Pickup
+                    ? null
+                    : ($billingAddress?->id ?? $shippingAddress?->id),
             ]);
 
             foreach ($lines as $line) {

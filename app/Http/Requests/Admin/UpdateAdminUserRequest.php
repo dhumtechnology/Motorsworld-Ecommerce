@@ -31,6 +31,8 @@ class UpdateAdminUserRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'status' => ['required', Rule::enum(UserStatus::class)],
+            'role_ids' => ['required', 'array', 'min:1'],
+            'role_ids.*' => ['integer', Rule::exists('roles', 'id')->whereNot('slug', 'usuario')],
         ];
     }
 
@@ -44,11 +46,13 @@ class UpdateAdminUserRequest extends FormRequest
             'email.email' => 'Ingresa un email válido.',
             'email.unique' => 'Ya existe un usuario con ese email.',
             'status.required' => 'El estado es obligatorio.',
+            'role_ids.required' => 'Debes asignar al menos un rol.',
+            'role_ids.min' => 'Debes asignar al menos un rol.',
         ];
     }
 
     /**
-     * @return array{email: string, status: UserStatus, password: null}
+     * @return array{email: string, status: UserStatus, password: null, role_ids: list<int>}
      */
     public function adminUserAttributes(): array
     {
@@ -56,6 +60,7 @@ class UpdateAdminUserRequest extends FormRequest
             'email' => $this->string('email')->lower()->value(),
             'status' => UserStatus::from((string) $this->input('status')),
             'password' => null,
+            'role_ids' => array_map('intval', $this->input('role_ids', [])),
         ];
     }
 }

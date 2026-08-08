@@ -47,7 +47,7 @@ class RelatedProductsResolver
         return Product::query()
             ->active()
             ->whereIn('id', $order)
-            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
+            ->with(['category', 'vehicleModel.brand', 'inventories', 'activeOffer', 'primaryImage', 'variants.images'])
             ->get()
             ->sortBy(fn (Product $related): int => array_search($related->id, $order, true))
             ->values();
@@ -162,7 +162,7 @@ class RelatedProductsResolver
             ->leftJoin('inventory', 'inventory.product_id', '=', 'products.id')
             ->groupBy('products.id')
             ->orderByRaw('COUNT(DISTINCT orders.id) DESC')
-            ->orderByRaw('CASE WHEN COALESCE(inventory.available_stock, 0) > 0 THEN 0 ELSE 1 END')
+            ->orderByRaw('CASE WHEN COALESCE(SUM(inventory.available_stock), 0) > 0 THEN 0 ELSE 1 END')
             ->orderBy('products.id')
             ->limit($limit)
             ->pluck('products.id');

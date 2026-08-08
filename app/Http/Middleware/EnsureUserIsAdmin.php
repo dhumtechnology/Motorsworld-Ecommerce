@@ -15,7 +15,7 @@ class EnsureUserIsAdmin
     {
         $user = $request->user();
 
-        if ($user === null || ! $user->hasRole('Administrador')) {
+        if ($user === null || ! $user->canAccessAdmin()) {
             abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para acceder al panel administrativo.');
         }
 

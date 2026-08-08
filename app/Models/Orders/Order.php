@@ -2,6 +2,7 @@
 
 namespace App\Models\Orders;
 
+use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
 use App\Models\Auth\User;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'payment_status',
     'total_amount',
     'currency',
+    'fulfillment_method',
     'shipping_address_id',
     'billing_address_id',
 ])]
@@ -82,6 +84,7 @@ class Order extends Model
         return [
             'status' => OrderStatus::class,
             'payment_status' => PaymentStatus::class,
+            'fulfillment_method' => FulfillmentMethod::class,
             'total_amount' => 'decimal:2',
         ];
     }

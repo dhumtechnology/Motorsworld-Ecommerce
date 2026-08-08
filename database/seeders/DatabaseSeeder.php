@@ -18,9 +18,6 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
             CatalogSeeder::class,
-            PaymentMethodSeeder::class,
-            InventoryMovementSeeder::class,
-            OrderSalesSeeder::class,
             AppointmentSeeder::class,
         ]);
     }

@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Auth\User;
 use App\Services\Cart\CartResolver;
 use App\Services\Payments\Culqi\CulqiClient;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +24,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::before(function ($user, string $ability) {
+            if (! $user instanceof User) {
+                return null;
+            }
+
+            return $user->hasPermission($ability) ? true : null;
+        });
+
+        View::composer('layouts.admin', function ($view): void {
+            $user = auth()->user();
+
+            if ($user instanceof User && ! $user->relationLoaded('roles')) {
+                $user->load('roles.permissions');
+            }
+        });
+
         View::composer('layouts.shop', function ($view): void {
             $request = request();
             $count = 0;

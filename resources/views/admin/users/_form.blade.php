@@ -109,11 +109,25 @@
     </div>
 
     <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Rol</label>
-        <div class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text-soft">
-            Administrador
+        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Roles *</label>
+        <div class="grid gap-2 sm:grid-cols-2">
+            @forelse ($roles as $role)
+                <label class="flex items-start gap-2 rounded border border-border bg-surface px-3 py-2 text-sm text-text hover:border-primary/40 cursor-pointer">
+                    <input type="checkbox" name="role_ids[]" value="{{ $role->id }}"
+                           class="mt-0.5 h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
+                           @checked(in_array((int) $role->id, collect(old('role_ids', $user?->roles?->pluck('id')->all() ?? []))->map(fn ($id) => (int) $id)->all(), true))>
+                    <span>
+                        <span class="font-semibold block">{{ $role->name }}</span>
+                        @if ($role->description)
+                            <span class="text-xs text-muted">{{ $role->description }}</span>
+                        @endif
+                    </span>
+                </label>
+            @empty
+                <p class="text-sm text-muted">No hay roles disponibles. Crea roles en la sección correspondiente.</p>
+            @endforelse
         </div>
-        <p class="mt-1.5 text-xs text-muted">Los usuarios creados aquí siempre tienen acceso al panel admin.</p>
+        <p class="mt-1.5 text-xs text-muted">Al menos un rol debe incluir acceso al panel administrativo.</p>
     </div>
 </div>
 

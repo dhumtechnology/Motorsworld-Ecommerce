@@ -4,55 +4,37 @@ namespace Database\Seeders;
 
 use App\Models\Auth\Permission;
 use App\Models\Auth\Role;
+use App\Support\Auth\PermissionCatalog;
 use Illuminate\Database\Seeder;
 
 class RoleAndPermissionSeeder extends Seeder
 {
     /**
-     * Seed roles and permissions for the application.
+     * Seed permissions and the administrator role.
      */
     public function run(): void
     {
-        $permissions = collect([
-            [
-                'name' => 'Acceder al panel admin',
-                'slug' => 'admin.view',
-                'description' => 'Permite iniciar sesión y acceder al panel administrativo',
-            ],
-            [
-                'name' => 'Gestionar usuarios',
-                'slug' => 'users.manage',
-                'description' => 'Crear, editar y eliminar usuarios del sistema',
-            ],
-            [
-                'name' => 'Gestionar roles',
-                'slug' => 'roles.manage',
-                'description' => 'Asignar roles y permisos',
-            ],
-            [
-                'name' => 'Gestionar productos',
-                'slug' => 'products.manage',
-                'description' => 'Administrar el catálogo de productos',
-            ],
-            [
-                'name' => 'Gestionar pedidos',
-                'slug' => 'orders.manage',
-                'description' => 'Administrar pedidos de clientes',
-            ],
-            [
-                'name' => 'Acceder a la tienda',
-                'slug' => 'shop.access',
-                'description' => 'Permite iniciar sesión en el ecommerce',
-            ],
-            [
-                'name' => 'Realizar pedidos',
-                'slug' => 'orders.place',
-                'description' => 'Comprar productos en la tienda online',
-            ],
-        ])->map(fn (array $data) => Permission::query()->updateOrCreate(
-            ['slug' => $data['slug']],
-            $data,
-        ));
+        $permissions = collect(PermissionCatalog::all())
+            ->map(function (array $data) {
+                $permission = Permission::query()
+                    ->where('slug', $data['slug'])
+                    ->orWhere('name', $data['name'])
+                    ->first();
+
+                if ($permission === null) {
+                    return Permission::query()->create($data);
+                }
+
+                $permission->update($data);
+
+                return $permission->fresh();
+            });
+
+        Permission::query()
+            ->whereNotIn('slug', PermissionCatalog::allSlugs())
+            ->delete();
+
+        $bySlug = $permissions->keyBy('slug');
 
         $administrador = Role::query()->updateOrCreate(
             ['slug' => 'administrador'],
@@ -62,6 +44,7 @@ class RoleAndPermissionSeeder extends Seeder
             ],
         );
 
+        // Rol de cliente de tienda (requerido por el registro / checkout).
         $usuario = Role::query()->updateOrCreate(
             ['slug' => 'usuario'],
             [
@@ -70,17 +53,12 @@ class RoleAndPermissionSeeder extends Seeder
             ],
         );
 
-        $administrador->syncPermissions([
-            'Acceder al panel admin',
-            'Gestionar usuarios',
-            'Gestionar roles',
-            'Gestionar productos',
-            'Gestionar pedidos',
-        ]);
+        $administrador->syncPermissions(
+            $bySlug->only(PermissionCatalog::adminCrudSlugs())->all(),
+        );
 
-        $usuario->syncPermissions([
-            'Acceder a la tienda',
-            'Realizar pedidos',
-        ]);
+        $usuario->syncPermissions(
+            $bySlug->only(['shop.access', 'orders.place'])->all(),
+        );
     }
 }
