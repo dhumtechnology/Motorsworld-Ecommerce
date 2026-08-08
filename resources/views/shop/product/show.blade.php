@@ -414,21 +414,21 @@
             <div class="flex flex-wrap items-center gap-x-8">
                 <button type="button" 
                         @click="currentTab = 'description'"
-                        :class="currentTab === 'description' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:color-secondary'"
+                        :class="currentTab === 'description' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-gray-700'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Descripción
                 </button>
 
                 <button type="button" 
                         @click="currentTab = 'info'"
-                        :class="currentTab === 'info' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-secondary'"
+                        :class="currentTab === 'info' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-gray-700'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Información Adicional
                 </button>
 
                 <button type="button"
                         @click="currentTab = 'technical'"
-                        :class="currentTab === 'technical' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-secondary'"
+                        :class="currentTab === 'technical' ? 'text-primary border-[#f15a24]' : 'border-transparent hover:text-gray-700'"
                         class="pb-3 text-2xl font-black uppercase tracking-wide border-b-2 focus:outline-none transition-all duration-150">
                     Ficha técnica
                 </button>
@@ -515,28 +515,22 @@
                             <div 
                                 x-show="openModal" 
                                 x-cloak
-                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter="transition ease-out duration-150"
                                 x-transition:enter-start="opacity-0"
                                 x-transition:enter-end="opacity-100"
-                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave="transition ease-in duration-100"
                                 x-transition:leave-start="opacity-100"
                                 x-transition:leave-end="opacity-0"
-                                class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+                                class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4"
                                 @keydown.escape.window="openModal = false"
                             >
-                                <div class="relative w-full max-w-5xl h-[85vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
-                                    <!-- Cabecera del modal -->
-                                    <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-neutral-50">
-                                        <h3 class="font-bold text-neutral-800 text-lg">Ficha Técnica</h3>
+                                <!-- Forzamos una altura exacta (92vh) y flexbox estricto -->
+                                <div class="relative w-full h-full max-h-[92vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                                    
+                                    <!-- Cabecera del modal (shrink-0 asegura que conserve su tamaño y no encoja el PDF) -->
+                                    <div class="flex items-center justify-between px-6 py-3 border-b border-neutral-200 bg-neutral-50 shrink-0 h-14">
+                                        <h3 class="font-bold text-neutral-800 text-base sm:text-lg">Ficha Técnica</h3>
                                         <div class="flex items-center gap-3">
-                                            <a 
-                                                href="{{ $product->technical_sheet }}" 
-                                                download
-                                                target="_blank"
-                                                class="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-xs font-bold uppercase text-white hover:bg-black transition-colors"
-                                            >
-                                                Descargar
-                                            </a>
                                             <button 
                                                 type="button"
                                                 @click="openModal = false"
@@ -547,14 +541,23 @@
                                         </div>
                                     </div>
 
-                                    <!-- Cuerpo del modal con PDF legible -->
-                                    <div class="flex-1 w-full h-full bg-neutral-100">
-                                        <iframe 
-                                            src="{{ $product->technical_sheet }}" 
-                                            class="w-full h-full border-0"
-                                            title="Ficha técnica completa">
-                                        </iframe>
+                                    <!-- Cuerpo del modal (h-[calc(100%-3.5rem)] calcula exactamente el alto disponible sin desbordar) -->
+                                    <div class="w-full h-[calc(100%-3.5rem)] bg-neutral-100 overflow-hidden relative" style="transform: translateZ(0);">
+                                        <object 
+                                            data="{{ $product->technical_sheet }}#toolbar=1&navpanes=0&scrollbar=1" 
+                                            type="application/pdf"
+                                            class="w-full h-full block border-0"
+                                            style="will-change: transform;"
+                                        >
+                                            <iframe 
+                                                src="{{ $product->technical_sheet }}" 
+                                                class="w-full h-full border-0"
+                                            >
+                                                <p>Tu navegador no soporta vista previa. <a href="{{ $product->technical_sheet }}" target="_blank">Haz clic aquí para descargar el PDF.</a></p>
+                                            </iframe>
+                                        </object>
                                     </div>
+
                                 </div>
                             </div>
                         </template>
