@@ -37,7 +37,23 @@ class GetHomePageDataAction
             'needLinks' => $this->needLinks(),
             'brands' => $this->brands(),
             'categories' => $this->categories(),
+            'tallerImages' => $this->tallerImages(),/**  */
         ];
+    }
+    /**
+    * @return array<int, string>
+     */
+    private function tallerImages(): array
+    {
+        $directoryPath = public_path('images/home/taller');
+        $imageUrls = [];
+        if (\Illuminate\Support\Facades\File::exists($directoryPath)) {
+            $files = \Illuminate\Support\Facades\File::files($directoryPath);
+            foreach ($files as $file) {
+                $imageUrls[] = asset('images/home/taller/' . $file->getFilename());
+            }
+        }
+        return $imageUrls;
     }
 
     /**

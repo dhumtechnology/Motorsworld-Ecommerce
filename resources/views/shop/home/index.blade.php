@@ -26,12 +26,6 @@
 @section('content')
 @php
     $heroImage = asset('images/home/banner-hero.png');
-    $tallerImages = [
-        asset('images/home/taller-1.png'),
-        asset('images/home/taller-2.png'),
-        asset('images/home/taller-3.png'),
-        asset('images/home/taller-4.png'),
-    ];
     $mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
@@ -58,7 +52,7 @@
             @foreach ([1, 2] as $loopCopy)
                 <div class="taller-marquee-set flex w-full shrink-0 gap-0">
                     @foreach ($tallerImages as $index => $image)
-                        <div class="taller-marquee-item relative aspect-[3/4] w-1/4 shrink-0 overflow-hidden bg-neutral-200">
+                    <div class="taller-marquee-item relative aspect-[1/1] w-1/5 shrink-0 overflow-hidden bg-neutral-200">
                             <img
                                 src="{{ $image }}"
                                 alt="Taller y distribuidor autorizado {{ $index + 1 }}"
@@ -66,7 +60,7 @@
                                 loading="lazy"
                                 onerror="this.classList.add('opacity-0');"
                             >
-                        </div>
+                    </div>
                     @endforeach
                 </div>
             @endforeach
