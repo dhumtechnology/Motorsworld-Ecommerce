@@ -442,11 +442,28 @@
             init() {
                 const form = this.$el.closest('form');
                 form?.addEventListener('submit', (event) => {
+                    // Evita crear el mismo producto dos veces (doble clic / Enter mientras sube).
+                    if (form.dataset.submitting === '1') {
+                        event.preventDefault();
+                        return;
+                    }
+
                     if (!this.validateBeforeSubmit()) {
                         event.preventDefault();
                         return;
                     }
+
                     this.syncAllImageInputs();
+                    form.dataset.submitting = '1';
+
+                    form.querySelectorAll('button[type="submit"]').forEach((btn) => {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-60', 'cursor-wait');
+                        if (!btn.dataset.originalLabel) {
+                            btn.dataset.originalLabel = btn.textContent.trim();
+                        }
+                        btn.textContent = 'Guardando…';
+                    });
                 });
             },
             setMode(mode) {
