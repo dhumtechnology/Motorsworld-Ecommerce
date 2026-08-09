@@ -11,7 +11,7 @@
     @endif
 </head>
 <body class="antialiased overflow-x-hidden">
-    <header class="sticky top-0 z-50 border-b border-gray-200 bg-black">
+    <header class="sticky top-0 z-50 border-gray-200 bg-black">
         <div class="mx-auto px-10 py-4 flex max-w-full items-center justify-between">
             <div class="logo h-12 w-48 flex items-center">
                 <x-logo href="{{ route('shop.home') }}" />
