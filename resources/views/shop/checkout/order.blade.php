@@ -114,7 +114,7 @@
             </div>
             <div class="relative w-full aspect-[16/9] min-h-[220px]">
                 <iframe
-                    title="Mapa Motosworld — {{ $storeAddress }}"
+                    title="Mapa Motoworld — {{ $storeAddress }}"
                     src="{{ $mapEmbedUrl }}"
                     class="absolute inset-0 h-full w-full border-0"
                     loading="lazy"

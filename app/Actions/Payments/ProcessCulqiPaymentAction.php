@@ -122,7 +122,7 @@ class ProcessCulqiPaymentAction
             'email' => $user->email,
             'source_id' => $culqiToken,
             'capture' => true,
-            'description' => 'Pedido #'.$order->id.' — Motosworld',
+            'description' => 'Pedido #'.$order->id.' — Motoworld',
             'metadata' => [
                 'order_id' => (string) $order->id,
                 'payment_id' => (string) $payment->id,
@@ -183,7 +183,7 @@ class ProcessCulqiPaymentAction
         $payload = [
             'amount' => $payment->amount_cents,
             'currency_code' => $order->currency,
-            'description' => 'Pedido #'.$order->id.' — Motosworld',
+            'description' => 'Pedido #'.$order->id.' — Motoworld',
             'order_number' => 'MW-'.$order->id.'-'.now()->timestamp,
             'client_details' => [
                 'first_name' => $firstName,

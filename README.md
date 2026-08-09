@@ -1,4 +1,4 @@
-# Motosworld E-Commerce
+# Motoworld E-Commerce
 
 Sistema monolítico de E-Commerce desarrollado con **Laravel 13**, **MySQL**, **Blade** y **Bootstrap** (frontend pendiente de implementación).
 
@@ -47,8 +47,8 @@ No necesitas Node.js instalado en tu PC: el contenedor `node` compila a `public/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <url-del-repositorio> Motosworld-Ecommerce
-cd Motosworld-Ecommerce
+git clone <url-del-repositorio> Motoworld-Ecommerce
+cd Motoworld-Ecommerce
 ```
 
 ### 2. Configurar variables de entorno
@@ -59,18 +59,18 @@ cp .env.example .env
 
 Las variables por defecto ya están configuradas para Docker:
 
-| Variable      | Valor por defecto | Descripción                    |
-|---------------|-------------------|--------------------------------|
-| `APP_URL`     | `http://localhost:8080` | URL de la aplicación       |
-| `DB_HOST`     | `mysql`           | Host de MySQL (nombre del servicio) |
-| `DB_DATABASE` | `motosworld`      | Nombre de la base de datos     |
-| `DB_USERNAME` | `motosworld`      | Usuario de MySQL               |
-| `DB_PASSWORD` | `secret`          | Contraseña de MySQL            |
-| `APP_PORT`          | `8080`                    | Puerto expuesto por Nginx      |
-| `DB_PORT_EXTERNAL`  | `3307`                    | Puerto MySQL en el host (evita conflicto con MySQL local) |
-| `ASSET_MODE`        | `watch`                   | `watch` = build rápido + recompilar al guardar; `dev` = HMR (:5173, más lento en Docker); `once` = una build |
-| `SKIP_ASSET_BUILD`  | `false`                   | `true` si usas `npm run dev` en el host en lugar del contenedor |
-| `VITE_PORT`         | `5173`                    | Solo relevante con `ASSET_MODE=dev` |
+| Variable           | Valor por defecto       | Descripción                                                                                                  |
+| ------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `APP_URL`          | `http://localhost:8080` | URL de la aplicación                                                                                         |
+| `DB_HOST`          | `mysql`                 | Host de MySQL (nombre del servicio)                                                                          |
+| `DB_DATABASE`      | `motoworld`             | Nombre de la base de datos                                                                                   |
+| `DB_USERNAME`      | `motoworld`             | Usuario de MySQL                                                                                             |
+| `DB_PASSWORD`      | `secret`                | Contraseña de MySQL                                                                                          |
+| `APP_PORT`         | `8080`                  | Puerto expuesto por Nginx                                                                                    |
+| `DB_PORT_EXTERNAL` | `3307`                  | Puerto MySQL en el host (evita conflicto con MySQL local)                                                    |
+| `ASSET_MODE`       | `watch`                 | `watch` = build rápido + recompilar al guardar; `dev` = HMR (:5173, más lento en Docker); `once` = una build |
+| `SKIP_ASSET_BUILD` | `false`                 | `true` si usas `npm run dev` en el host en lugar del contenedor                                              |
+| `VITE_PORT`        | `5173`                  | Solo relevante con `ASSET_MODE=dev`                                                                          |
 
 ### 3. Construir e iniciar los contenedores
 
@@ -152,7 +152,8 @@ No uses el CDN de Tailwind: pisa los estilos del proyecto.
 > Si tu `.env` aún tiene `SEED_ON_START=true`, cámbialo a `auto` (o `false`) para no reseedeár en cada reinicio.
 
 **Login admin (único usuario sembrado):**
-- Email: `admin@motosworld.test`
+
+- Email: `admin@motoworld.test`
 - Password: `password`
 
 **Seeders iniciales (`db:seed`):** permisos, rol Administrador (+ rol Usuario para clientes de tienda), superadmin, marcas (KTM, Husqvarna, Royal Enfield, CFMOTO, CFLITE), categorías (Motos, Accesorios, Baterías, Neumáticos, Repuestos) y servicios con sus paquetes.
@@ -219,12 +220,12 @@ El cuello de botella habitual es el bind mount del proyecto (`.:/var/www/html`):
 
 El `docker-compose.yml` ya monta volúmenes Linux para las rutas más costosas:
 
-| Volumen | Ruta en el contenedor | Efecto |
-|---------|----------------------|--------|
-| `app_vendor` | `vendor/` | Autoload de Composer en disco rápido |
-| `app_blade_cache` | `storage/framework/views/` | Vistas Blade compiladas sin tocar Windows |
-| `app_bootstrap_cache` | `bootstrap/cache/` | Caché de Laravel en disco rápido |
-| `app_file_cache` | `storage/framework/cache/` | Caché de archivos (`CACHE_STORE=file`) en disco rápido |
+| Volumen               | Ruta en el contenedor      | Efecto                                                 |
+| --------------------- | -------------------------- | ------------------------------------------------------ |
+| `app_vendor`          | `vendor/`                  | Autoload de Composer en disco rápido                   |
+| `app_blade_cache`     | `storage/framework/views/` | Vistas Blade compiladas sin tocar Windows              |
+| `app_bootstrap_cache` | `bootstrap/cache/`         | Caché de Laravel en disco rápido                       |
+| `app_file_cache`      | `storage/framework/cache/` | Caché de archivos (`CACHE_STORE=file`) en disco rápido |
 
 Tras actualizar `docker-compose.yml`, recrea los contenedores una vez:
 
@@ -245,12 +246,13 @@ SEED_ON_START=false   # tras el primer arranque, evita re-seed en cada restart
 
 Variables de rendimiento **globales** (no solo catálogo):
 
-| Variable | Efecto |
-|----------|--------|
-| Volúmenes Docker (`vendor`, vistas, bootstrap, file cache) | Menos I/O Windows en **toda** la app |
-| `QUERY_CACHE_TTL` | Cache de consultas repetidas en cualquier módulo vía `QueryResultCache` |
-| `LOG_LEVEL=warning` | Menos escritura a disco en logs |
-| `SEED_ON_START=false` | Arranque Docker más rápido |
+| Variable                                                   | Efecto                                                                  |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Volúmenes Docker (`vendor`, vistas, bootstrap, file cache) | Menos I/O Windows en **toda** la app                                    |
+| `QUERY_CACHE_TTL`                                          | Cache de consultas repetidas en cualquier módulo vía `QueryResultCache` |
+| `LOG_LEVEL=warning`                                        | Menos escritura a disco en logs                                         |
+| `SEED_ON_START=false`                                      | Arranque Docker más rápido                                              |
+
 - En Docker Desktop → Settings → General, activa **Use the WSL 2 based engine** (no requiere mover el repo a WSL) y, si aparece, **VirtioFS** para mejorar I/O de bind mounts.
 - Mantén el proyecto en un disco SSD local (no OneDrive/red).
 - Reconstruye contenedores tras cambios en `docker/php/php.ini` (OPcache):
@@ -270,8 +272,8 @@ docker compose exec app composer install
 ### 1. Clonar e instalar dependencias
 
 ```bash
-git clone <url-del-repositorio> Motosworld-Ecommerce
-cd Motosworld-Ecommerce
+git clone <url-del-repositorio> Motoworld-Ecommerce
+cd Motoworld-Ecommerce
 composer install
 cp .env.example .env
 ```
@@ -286,7 +288,7 @@ APP_URL=http://localhost:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=motosworld
+DB_DATABASE=motoworld
 DB_USERNAME=root
 DB_PASSWORD=tu_password
 ```
@@ -296,7 +298,7 @@ DB_PASSWORD=tu_password
 En MySQL:
 
 ```sql
-CREATE DATABASE motosworld CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE motoworld CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 4. Generar clave y migrar
@@ -331,14 +333,14 @@ composer run dev
 
 ## Stack tecnológico
 
-| Componente   | Tecnología                          |
-|--------------|-------------------------------------|
-| Framework    | Laravel 13                          |
-| Base de datos| MySQL 8.0                           |
-| ORM          | Eloquent                            |
-| Frontend     | Blade + Bootstrap (pendiente)       |
-| Assets       | Vite                                |
-| Contenedores | Docker + Nginx + PHP-FPM            |
+| Componente    | Tecnología                    |
+| ------------- | ----------------------------- |
+| Framework     | Laravel 13                    |
+| Base de datos | MySQL 8.0                     |
+| ORM           | Eloquent                      |
+| Frontend      | Blade + Bootstrap (pendiente) |
+| Assets        | Vite                          |
+| Contenedores  | Docker + Nginx + PHP-FPM      |
 
 ## Próximos pasos de desarrollo
 

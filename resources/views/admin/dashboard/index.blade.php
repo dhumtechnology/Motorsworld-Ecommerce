@@ -2,7 +2,7 @@
 
 @section('title', 'Dashboard — Admin')
 @section('page-title', 'Dashboard')
-@section('page-subtitle', 'Métricas y actividad de Motosworld')
+@section('page-subtitle', 'Métricas y actividad de Motoworld')
 
 @section('content')
     @php

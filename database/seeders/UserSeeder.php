@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $admin = User::query()->updateOrCreate(
-            ['email' => 'admin@motosworld.test'],
+            ['email' => 'admin@motoworld.test'],
             [
                 'password_hash' => Hash::make('password'),
                 'status' => UserStatus::Active,

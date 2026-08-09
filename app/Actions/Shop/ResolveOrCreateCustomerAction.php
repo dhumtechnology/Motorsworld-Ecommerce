@@ -174,7 +174,7 @@ class ResolveOrCreateCustomerAction
         if ($firstName !== '' || $lastName !== '') {
             return [
                 $firstName !== '' ? $firstName : 'Cliente',
-                $lastName !== '' ? $lastName : 'Motosworld',
+                $lastName !== '' ? $lastName : 'Motoworld',
             ];
         }
 
@@ -189,7 +189,7 @@ class ResolveOrCreateCustomerAction
         $parts = preg_split('/\s+/', $fullName, 2, PREG_SPLIT_NO_EMPTY) ?: [];
 
         $firstName = $parts[0] ?? 'Cliente';
-        $lastName = $parts[1] ?? 'Motosworld';
+        $lastName = $parts[1] ?? 'Motoworld';
 
         return [$firstName, $lastName];
     }

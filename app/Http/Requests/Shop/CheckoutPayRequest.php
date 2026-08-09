@@ -123,7 +123,7 @@ class CheckoutPayRequest extends FormRequest
         }
 
         return [
-            'customer_name' => $fullName !== '' ? $fullName : 'Cliente Motosworld',
+            'customer_name' => $fullName !== '' ? $fullName : 'Cliente Motoworld',
             'customer_document' => $document ?? '',
             'customer_phone' => $this->nullableString('phone') ?? (string) ($profile?->phone ?? ''),
             'customer_email' => $email ?? '',

@@ -65,8 +65,8 @@ run_seeders_if_needed() {
             has_users="$(php -r '
                 try {
                     $pdo = new PDO(
-                        sprintf("mysql:host=%s;port=%s;dbname=%s", getenv("DB_HOST") ?: "mysql", getenv("DB_PORT") ?: "3306", getenv("DB_DATABASE") ?: "motosworld"),
-                        getenv("DB_USERNAME") ?: "motosworld",
+                        sprintf("mysql:host=%s;port=%s;dbname=%s", getenv("DB_HOST") ?: "mysql", getenv("DB_PORT") ?: "3306", getenv("DB_DATABASE") ?: "motoworld"),
+                        getenv("DB_USERNAME") ?: "motoworld",
                         getenv("DB_PASSWORD") ?: "secret"
                     );
                     echo (int) $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();

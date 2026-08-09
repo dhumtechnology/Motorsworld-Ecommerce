@@ -19,13 +19,13 @@
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
         <img
             src="{{ $banner }}"
-            alt="Servicios Motosworld"
+            alt="Servicios Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
         >
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/20"></div>
         <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Taller Motosworld</p>
+            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Taller Motoworld</p>
             <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
                 Servicios de taller
             </h1>
@@ -44,7 +44,7 @@
                     Nuestros servicios
                 </h2>
                 <p class="mt-2 text-sm text-neutral-500">
-                    Conoce lo que hacemos en el taller Motosworld.
+                    Conoce lo que hacemos en el taller Motoworld.
                 </p>
             </div>
 
@@ -351,10 +351,10 @@
     </div>
 </section>
 
-<section class="w-full bg-neutral-200" aria-label="Ubicacion Motosworld">
+<section class="w-full bg-neutral-200" aria-label="Ubicacion Motoworld">
     <div class="relative w-full aspect-[21/9] min-h-[280px] max-h-[480px]">
         <iframe
-            title="Mapa Motosworld"
+            title="Mapa Motoworld"
             src="{{ $mapEmbedUrl }}"
             class="absolute inset-0 h-full w-full border-0"
             loading="lazy"

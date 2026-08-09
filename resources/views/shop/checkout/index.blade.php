@@ -82,7 +82,7 @@
                     <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900 mb-4">Entrega *</h2>
                     <div class="space-y-2 mb-4">
                         @foreach ([
-                            'pickup' => ['label' => 'Recojo en tienda', 'hint' => 'Retiras tu pedido en Motosworld.'],
+                            'pickup' => ['label' => 'Recojo en tienda', 'hint' => 'Retiras tu pedido en Motoworld.'],
                             'delivery' => ['label' => 'Delivery', 'hint' => 'Enviamos a la dirección que indiques.'],
                         ] as $value => $meta)
                             <label class="flex items-start gap-3 rounded-md border border-neutral-300 bg-white px-3 py-3 cursor-pointer transition-colors hover:border-orange-500 has-[:checked]:border-orange-600 has-[:checked]:bg-orange-50">
@@ -236,7 +236,7 @@
 
 @if ($culqiFake || $culqiPublicKey)
 <script>
-    window.MotosworldCheckout = {
+    window.MotoworldCheckout = {
         publicKey: @json($culqiPublicKey),
         amountCents: {{ $amountCents }},
         fake: @json((bool) $culqiFake),
@@ -250,9 +250,9 @@
     const yapeFields = document.getElementById('yape-fields');
     const errorEl = document.getElementById('payment-error');
     const payButton = document.getElementById('pay-button');
-    const publicKey = window.MotosworldCheckout.publicKey;
-    const amountCents = window.MotosworldCheckout.amountCents;
-    const fake = window.MotosworldCheckout.fake;
+    const publicKey = window.MotoworldCheckout.publicKey;
+    const amountCents = window.MotoworldCheckout.amountCents;
+    const fake = window.MotoworldCheckout.fake;
 
     function selectedMethod() {
         return form.querySelector('input[name="payment_method"]:checked')?.value || 'card';

@@ -1,5 +1,5 @@
 {{--
-    Home Motosworld
+    Home Motoworld
 
     Imágenes estáticas (copia tus archivos con estos nombres exactos):
     - public/images/home/banner-hero.png
@@ -33,7 +33,7 @@
 <section class="w-full max-w-[100%] overflow-hidden bg-neutral-900">
     <img
         src="{{ $heroImage }}"
-        alt="Motosworld"
+        alt="Motoworld"
         class="block h-auto w-full max-w-full object-contain"
         onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
     >
@@ -209,7 +209,7 @@
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($popularProducts as $product)
                     @php
-                        $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motosworld';
+                        $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motoworld';
                         $description = \Illuminate\Support\Str::limit(
                             trim((string) ($product->description ?: $product->name)),
                             90
@@ -253,10 +253,10 @@
 </section>
 
 {{-- Mapa a todo el ancho --}}
-<section class="w-full bg-neutral-200" aria-label="Ubicación Motosworld">
+<section class="w-full bg-neutral-200" aria-label="Ubicación Motoworld">
     <div class="relative w-full aspect-[21/9] min-h-[280px] max-h-[480px]">
         <iframe
-            title="Mapa Motosworld"
+            title="Mapa Motoworld"
             src="{{ $mapEmbedUrl }}"
             class="absolute inset-0 h-full w-full border-0"
             loading="lazy"
