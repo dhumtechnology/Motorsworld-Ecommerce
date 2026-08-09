@@ -50,13 +50,13 @@
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
         <img
             src="images/about/banner-servicios.png"
-            alt="Nosotros Motosworld"
+            alt="Nosotros Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
         >
         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
         <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motosworld</p>
+            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motoworld</p>
             <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
                 Nosotros
             </h1>
@@ -97,7 +97,7 @@
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
                         src="images/about/mision-motoworld.png"
-                        alt="Misión Motosworld"
+                        alt="Misión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
                     >
@@ -119,7 +119,7 @@
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
                         src="images/about/vision.png"
-                        alt="Visión Motosworld"
+                        alt="Visión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
                     >
@@ -153,7 +153,7 @@
     <div class="relative mx-auto max-w-[95%] px-4 md:px-8 py-12 md:py-16">
         <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12 items-start">
             <div class="lg:col-span-5">
-                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Compromiso Motosworld</p>
+                <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Compromiso Motoworld</p>
                 <h2 class="mt-2 text-xl md:text-3xl font-black uppercase tracking-[0.1em] text-neutral-900 font-title">
                     Políticas de calidad
                 </h2>
@@ -165,7 +165,7 @@
                 <div class="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white lg:hidden">
                     <img
                         src="{{ $calidadImage }}"
-                        alt="Calidad Motosworld"
+                        alt="Calidad Motoworld"
                         class="aspect-[16/10] w-full object-cover"
                         loading="lazy"
                     >
@@ -194,7 +194,7 @@
                 <div class="rounded-2xl border border-orange-200 bg-orange-50 p-5 md:p-6">
                     <p class="text-sm md:text-base leading-relaxed text-neutral-800">
                         Nuestro compromiso de calidad va dirigido a obtener la satisfacción total de nuestros clientes.
-                        En Motosworld nos comprometemos a cumplir con los compromisos adquiridos durante la venta de
+                        En Motoworld nos comprometemos a cumplir con los compromisos adquiridos durante la venta de
                         unidades, repuestos y servicio técnico de los rubros en los que participamos. Orientamos nuestra
                         gestión hacia la mejora continua de los procesos y el desarrollo integral de nuestros colaboradores.
                     </p>

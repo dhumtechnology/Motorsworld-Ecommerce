@@ -18,13 +18,13 @@
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[420px] w-full">
         <img
             src="{{ $banner }}"
-            alt="Blog Motosworld"
+            alt="Blog Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
         >
         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
         <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motosworld</p>
+            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motoworld</p>
             <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
                 Blog
             </h1>

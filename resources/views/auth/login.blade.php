@@ -9,7 +9,7 @@
                 Iniciar sesión
             </h1>
             <p class="text-sm text-neutral-400 text-center mb-8">
-                Accede con tu cuenta de Motosworld
+                Accede con tu cuenta de Motoworld
             </p>
 
             @if (session('status'))
@@ -99,7 +99,7 @@
                 <div class="mt-8 pt-6 border-t border-neutral-800 text-xs text-neutral-500 space-y-2">
                     <p class="font-bold uppercase tracking-wider text-neutral-400">Cuentas de prueba (seeders)</p>
                     <p><span class="text-neutral-300">Cliente:</span> test@example.com / password</p>
-                    <p><span class="text-neutral-300">Admin:</span> admin@motosworld.test / password</p>
+                    <p><span class="text-neutral-300">Admin:</span> admin@motoworld.test / password</p>
                 </div>
             @endif
         </div>

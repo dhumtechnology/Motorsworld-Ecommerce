@@ -10,7 +10,7 @@
         </a>
 
         <header class="mt-6 mb-8">
-            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-600">Blog Motosworld</p>
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-600">Blog Motoworld</p>
             <h1 class="mt-2 text-2xl md:text-4xl font-black uppercase tracking-wide text-neutral-900 font-title leading-tight">
                 {{ $post->title }}
             </h1>

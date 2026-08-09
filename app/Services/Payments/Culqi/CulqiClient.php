@@ -35,7 +35,7 @@ class CulqiClient
     public function publicKey(): string
     {
         if ($this->fake) {
-            return 'pk_test_fake_motosworld';
+            return 'pk_test_fake_motoworld';
         }
 
         $key = $this->publicKey ?? config('services.culqi.public_key');

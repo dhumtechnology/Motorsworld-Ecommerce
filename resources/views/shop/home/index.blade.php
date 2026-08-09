@@ -1,5 +1,5 @@
 {{--
-    Home Motosworld
+    Home Motoworld
 
     Imágenes estáticas (copia tus archivos con estos nombres exactos):
     - public/images/home/banner-hero.png
@@ -26,12 +26,6 @@
 @section('content')
 @php
     $heroImage = asset('images/home/banner-hero.png');
-    $tallerImages = [
-        asset('images/home/taller-1.png'),
-        asset('images/home/taller-2.png'),
-        asset('images/home/taller-3.png'),
-        asset('images/home/taller-4.png'),
-    ];
     $mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
@@ -39,7 +33,7 @@
 <section class="w-full max-w-[100%] overflow-hidden bg-neutral-900">
     <img
         src="{{ $heroImage }}"
-        alt="Motosworld"
+        alt="Motoworld"
         class="block h-auto w-full max-w-full object-contain"
         onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
     >
@@ -58,7 +52,7 @@
             @foreach ([1, 2] as $loopCopy)
                 <div class="taller-marquee-set flex w-full shrink-0 gap-0">
                     @foreach ($tallerImages as $index => $image)
-                        <div class="taller-marquee-item relative aspect-[3/4] w-1/4 shrink-0 overflow-hidden bg-neutral-200">
+                    <div class="taller-marquee-item relative aspect-[1/1] w-1/5 shrink-0 overflow-hidden bg-neutral-200">
                             <img
                                 src="{{ $image }}"
                                 alt="Taller y distribuidor autorizado {{ $index + 1 }}"
@@ -66,7 +60,7 @@
                                 loading="lazy"
                                 onerror="this.classList.add('opacity-0');"
                             >
-                        </div>
+                    </div>
                     @endforeach
                 </div>
             @endforeach
@@ -215,7 +209,7 @@
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($popularProducts as $product)
                     @php
-                        $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motosworld';
+                        $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motoworld';
                         $description = \Illuminate\Support\Str::limit(
                             trim((string) ($product->description ?: $product->name)),
                             90
@@ -259,10 +253,10 @@
 </section>
 
 {{-- Mapa a todo el ancho --}}
-<section class="w-full bg-neutral-200" aria-label="Ubicación Motosworld">
+<section class="w-full bg-neutral-200" aria-label="Ubicación Motoworld">
     <div class="relative w-full aspect-[21/9] min-h-[280px] max-h-[480px]">
         <iframe
-            title="Mapa Motosworld"
+            title="Mapa Motoworld"
             src="{{ $mapEmbedUrl }}"
             class="absolute inset-0 h-full w-full border-0"
             loading="lazy"

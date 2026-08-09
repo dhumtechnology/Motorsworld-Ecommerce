@@ -1,118 +1,127 @@
 services:
-  node:
-    image: node:22-alpine
-    container_name: motosworld_node
-    working_dir: /var/www/html
-    volumes:
-      - .:/var/www/html
-      - node_modules:/var/www/html/node_modules
-    ports:
-      # Solo necesario con ASSET_MODE=dev (HMR). En watch se ignora.
-      - "${VITE_PORT:-5173}:5173"
-    networks:
-      - motosworld
-    # watch (default): public/build + recompila al editar Blade (páginas rápidas).
-    # dev: HMR en :5173 (más lento en Docker). once: una sola build.
-    command: sh docker/node/dev-assets.sh
-    environment:
-      - SKIP_ASSET_BUILD=${SKIP_ASSET_BUILD:-false}
-      - ASSET_MODE=${ASSET_MODE:-watch}
-      - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=${CHOKIDAR_INTERVAL:-500}
-      - WATCHPACK_POLLING=true
-    restart: unless-stopped
+    node:
+        image: node:22-alpine
+        container_name: motoworld_node
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+            - node_modules:/var/www/html/node_modules
+        ports:
+            # Solo necesario con ASSET_MODE=dev (HMR). En watch se ignora.
+            - "${VITE_PORT:-5173}:5173"
+        networks:
+            - motoworld
+        # watch (default): public/build + recompila al editar Blade (páginas rápidas).
+        # dev: HMR en :5173 (más lento en Docker). once: una sola build.
+        command: sh docker/node/dev-assets.sh
+        environment:
+            - SKIP_ASSET_BUILD=${SKIP_ASSET_BUILD:-false}
+            - ASSET_MODE=${ASSET_MODE:-watch}
+            - CHOKIDAR_USEPOLLING=true
+            - CHOKIDAR_INTERVAL=${CHOKIDAR_INTERVAL:-500}
+            - WATCHPACK_POLLING=true
+        restart: unless-stopped
 
-  app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    container_name: motosworld_app
-    restart: unless-stopped
-    working_dir: /var/www/html
-    volumes:
-      - .:/var/www/html
-      - app_vendor:/var/www/html/vendor
-      - app_blade_cache:/var/www/html/storage/framework/views
-      - app_bootstrap_cache:/var/www/html/bootstrap/cache
-      - app_file_cache:/var/www/html/storage/framework/cache
-    networks:
-      - motosworld
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "php -r '$$s=@fsockopen(\"127.0.0.1\",9000); if(!$$s){exit(1);} fclose($$s);'",
-        ]
-      interval: 5s
-      timeout: 3s
-      retries: 36
-      start_period: 120s
-    environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=${DB_DATABASE:-motosworld}
-      - DB_USERNAME=${DB_USERNAME:-motosworld}
-      - DB_PASSWORD=${DB_PASSWORD:-secret}
-      - TMPDIR=/var/www/html/storage/framework/cache
-      # auto = roles+admin si BD vacía | true = siempre | false = nunca
-      - SEED_ON_START=${SEED_ON_START:-auto}
+    app:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        container_name: motoworld_app
+        restart: unless-stopped
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+            - app_vendor:/var/www/html/vendor
+            - app_blade_cache:/var/www/html/storage/framework/views
+            - app_bootstrap_cache:/var/www/html/bootstrap/cache
+            - app_file_cache:/var/www/html/storage/framework/cache
+        networks:
+            - motoworld
+        depends_on:
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    'php -r ''$$s=@fsockopen("127.0.0.1",9000); if(!$$s){exit(1);} fclose($$s);''',
+                ]
+            interval: 5s
+            timeout: 3s
+            retries: 36
+            start_period: 120s
+        environment:
+            - DB_HOST=mysql
+            - DB_PORT=3306
+            - DB_DATABASE=${DB_DATABASE:-motoworld}
+            - DB_USERNAME=${DB_USERNAME:-motoworld}
+            - DB_PASSWORD=${DB_PASSWORD:-secret}
+            - TMPDIR=/var/www/html/storage/framework/cache
+            # auto = roles+admin si BD vacía | true = siempre | false = nunca
+            - SEED_ON_START=${SEED_ON_START:-auto}
 
-  nginx:
-    build:
-      context: .
-      dockerfile: docker/nginx/Dockerfile
-    container_name: motosworld_nginx
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8080}:80"
-    volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - motosworld
-    depends_on:
-      app:
-        condition: service_healthy
+    nginx:
+        build:
+            context: .
+            dockerfile: docker/nginx/Dockerfile
+        container_name: motoworld_nginx
+        restart: unless-stopped
+        ports:
+            - "${APP_PORT:-8080}:80"
+        volumes:
+            - .:/var/www/html
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        networks:
+            - motoworld
+        depends_on:
+            app:
+                condition: service_healthy
 
-  mysql:
-    image: mysql:8.0
-    container_name: motosworld_mysql
-    restart: unless-stopped
-    ports:
-      - "${DB_PORT_EXTERNAL:-3306}:3306"
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-motosworld}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
-      MYSQL_USER: ${DB_USERNAME:-motosworld}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - motosworld
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD:-secret}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+    mysql:
+        image: mysql:8.0
+        container_name: motoworld_mysql
+        restart: unless-stopped
+        ports:
+            - "${DB_PORT_EXTERNAL:-3306}:3306"
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE:-motoworld}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+            MYSQL_USER: ${DB_USERNAME:-motoworld}
+            MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+        volumes:
+            - mysql_data:/var/lib/mysql
+        networks:
+            - motoworld
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "mysqladmin",
+                    "ping",
+                    "-h",
+                    "127.0.0.1",
+                    "-uroot",
+                    "-p${DB_PASSWORD:-secret}",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
 
 networks:
-  motosworld:
-    driver: bridge
+    motoworld:
+        driver: bridge
 
 volumes:
-  mysql_data:
-    driver: local
-  node_modules:
-    driver: local
-  app_vendor:
-    driver: local
-  app_blade_cache:
-    driver: local
-  app_bootstrap_cache:
-    driver: local
-  app_file_cache:
-    driver: local
+    mysql_data:
+        driver: local
+    node_modules:
+        driver: local
+    app_vendor:
+        driver: local
+    app_blade_cache:
+        driver: local
+    app_bootstrap_cache:
+        driver: local
+    app_file_cache:
+        driver: local

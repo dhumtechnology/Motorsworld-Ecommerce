@@ -21,7 +21,7 @@
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[420px] w-full">
         <img
             src="{{ $banner }}"
-            alt="Libro de reclamaciones Motosworld"
+            alt="Libro de reclamaciones Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
         >
@@ -220,7 +220,7 @@
             <aside class="lg:col-span-4 space-y-4">
                 <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
                     <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Proveedor</p>
-                    <h3 class="mt-2 text-lg font-black uppercase tracking-wide text-neutral-900 font-title">Motosworld</h3>
+                    <h3 class="mt-2 text-lg font-black uppercase tracking-wide text-neutral-900 font-title">Motoworld</h3>
                     <ul class="mt-3 space-y-2 text-sm text-neutral-600">
                         <li>
                             <span class="font-semibold text-neutral-800">Dirección:</span>
