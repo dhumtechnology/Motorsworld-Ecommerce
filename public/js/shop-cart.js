@@ -8,25 +8,24 @@
     }
 
     function updateBadge(itemCount) {
-        const link = document.querySelector('[data-cart-icon]');
-        if (!link) return;
+        document.querySelectorAll('[data-cart-icon]').forEach((link) => {
+            let badge = link.querySelector('[data-cart-badge]');
 
-        let badge = link.querySelector('[data-cart-badge]');
+            if (itemCount <= 0) {
+                badge?.remove();
+                return;
+            }
 
-        if (itemCount <= 0) {
-            badge?.remove();
-            return;
-        }
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.setAttribute('data-cart-badge', '');
+                badge.className =
+                    'absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black leading-[18px] text-center';
+                link.appendChild(badge);
+            }
 
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.setAttribute('data-cart-badge', '');
-            badge.className =
-                'absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black leading-[18px] text-center';
-            link.appendChild(badge);
-        }
-
-        badge.textContent = itemCount > 99 ? '99+' : String(itemCount);
+            badge.textContent = itemCount > 99 ? '99+' : String(itemCount);
+        });
     }
 
     function formatMoney(amount, symbol = 'S/') {

@@ -15,9 +15,8 @@
 
     Variables:
     - $popularProducts : Collection<Product> (top 4 por ventas, sin MOTOS)
-    - $needLinks       : enlaces de la sección "TENEMOS TODO LO QUE NECESITAS" (legacy/estáticos)
-    - $brands          : Collection<Brand> — todas las marcas (id, name, image)
-    - $categories      : Collection<Category> — TODAS las categorías incl. MOTOS (id, name, description, image)
+    - $brands          : Collection<Brand> — marcas con imagen (id, name, image)
+    - $categories      : Collection<Category> — categorías con imagen (id, name, description, image)
 --}}
 @extends('layouts.shop')
 
@@ -39,7 +38,7 @@
     >
 </section>
 
-{{-- Taller autorizado: 4 PNG verticales pegadas = 100% del ancho, carrusel infinito --}}
+{{-- Marcas: imágenes desde Brand (admin) --}}
 <section class="bg-white">
     <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
         <h2 class="text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
@@ -47,66 +46,120 @@
         </h2>
     </div>
 
-    <div class="w-full max-w-[100%] overflow-hidden bg-neutral-100" aria-label="Marcas y taller autorizado">
-        <div class="taller-marquee flex">
-            @foreach ([1, 2] as $loopCopy)
-                <div class="taller-marquee-set flex w-full shrink-0 gap-0">
-                    @foreach ($tallerImages as $index => $image)
-                    <div class="taller-marquee-item relative aspect-[1/1] w-1/5 shrink-0 overflow-hidden bg-neutral-200">
-                            <img
-                                src="{{ $image }}"
-                                alt="Taller y distribuidor autorizado {{ $index + 1 }}"
-                                class="h-full w-full object-cover"
-                                loading="lazy"
-                                onerror="this.classList.add('opacity-0');"
-                            >
-                    </div>
-                    @endforeach
-                </div>
-            @endforeach
+    @if ($brands->isEmpty())
+        <div class="w-full bg-neutral-100 px-4 py-10 text-center text-sm text-neutral-500">
+            Pronto verás aquí las marcas autorizadas.
         </div>
-    </div>
+    @else
+        @php
+            $brandStrip = $brands->values();
+            while ($brandStrip->isNotEmpty() && $brandStrip->count() < 5) {
+                $brandStrip = $brandStrip->concat($brands);
+            }
+            // Dos vueltas idénticas = loop circular sin salto.
+            $brandLoop = $brandStrip->concat($brandStrip);
+        @endphp
+        <div class="brands-marquee-viewport w-full overflow-hidden bg-neutral-100" aria-label="Marcas autorizadas">
+            <div class="brands-marquee-track">
+                @foreach ($brandLoop as $index => $brand)
+                    <div class="brands-marquee-item" @if ($index >= $brandStrip->count()) aria-hidden="true" @endif>
+                        <img
+                            src="{{ $brand->image }}"
+                            alt="{{ $brand->name }}"
+                            title="{{ $brand->name }}"
+                            class="brands-marquee-logo"
+                            loading="eager"
+                            onerror="this.classList.add('opacity-0');"
+                        >
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 </section>
 
 <style>
-    @keyframes taller-marquee-scroll {
-        from { transform: translateX(0); }
-        to { transform: translateX(-50%); }
+    @keyframes brands-marquee-scroll {
+        from { transform: translate3d(0, 0, 0); }
+        to { transform: translate3d(-50%, 0, 0); }
     }
 
-    .taller-marquee {
-        width: 200%;
-        animation: taller-marquee-scroll 48s linear infinite;
+    .brands-marquee-viewport {
+        width: 100%;
+    }
+
+    .brands-marquee-track {
+        display: flex;
+        width: max-content;
+        animation: brands-marquee-scroll 40s linear infinite;
         will-change: transform;
     }
 
-    .taller-marquee-set {
-        width: 50%;
-    }
-
-    .taller-marquee:hover {
+    /* Pausar solo al pasar sobre una marca (no al hover genérico del carril). */
+    .brands-marquee-track:has(.brands-marquee-item:hover) {
         animation-play-state: paused;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-        .taller-marquee {
-            width: 100%;
-            animation: none;
-        }
+    .brands-marquee-item {
+        position: relative;
+        z-index: 1;
+        flex: 0 0 20vw;
+        width: 20vw;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+        background: #fff;
+    }
 
-        .taller-marquee-set:nth-child(2) {
-            display: none;
-        }
+    .brands-marquee-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 1rem;
+        transform: scale(1);
+        transition: transform 0.25s ease;
+        pointer-events: none;
+    }
 
-        .taller-marquee-set {
-            width: 100%;
-            overflow-x: auto;
-        }
+    .brands-marquee-item:hover {
+        z-index: 5;
+    }
+
+    .brands-marquee-item:hover .brands-marquee-logo {
+        transform: scale(1.12);
     }
 
     @media (max-width: 639px) {
-        .taller-marquee {
-            animation-duration: 36s;
+        .brands-marquee-item {
+            flex-basis: 40vw;
+            width: 40vw;
+        }
+
+        .brands-marquee-track {
+            animation-duration: 28s;
+        }
+
+        .brands-marquee-logo {
+            padding: 0.85rem;
+        }
+    }
+
+    @media (min-width: 640px) and (max-width: 1023px) {
+        .brands-marquee-item {
+            flex-basis: 25vw;
+            width: 25vw;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .brands-marquee-track {
+            animation-duration: 80s;
+        }
+
+        .brands-marquee-item:hover .brands-marquee-logo {
+            transform: scale(1.06);
         }
     }
 </style>
@@ -174,22 +227,41 @@
                 x-ref="slider"
                 class="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth py-1"
             >
-                @foreach ($needLinks as $index => $link)
+                @forelse ($categories as $category)
+                    @php
+                        $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOS';
+                        $categoryHref = $isMotos
+                            ? route('shop.catalog', ['section' => 'motos'])
+                            : route('shop.catalog', [
+                                'section' => 'accesorios',
+                                'categories' => [$category->id],
+                            ]);
+                    @endphp
                     <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
                         <a
-                            href="{{ $link['href'] }}"
-                            class="group relative block overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                            href="{{ $categoryHref }}"
+                            class="group relative block aspect-[3/4] overflow-hidden bg-neutral-200 opacity-80 transition-opacity duration-300 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:opacity-100"
                         >
                             <img
-                                src="{{ $link['image'] }}"
-                                alt="{{ $link['label'] }}"
-                                class="block h-auto w-full transition-transform duration-500 ease-out group-hover:scale-105"
+                                src="{{ $category->image }}"
+                                alt="{{ $category->name }}"
+                                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                                loading="lazy"
                                 onerror="this.classList.add('opacity-0');"
                             >
-                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
+                            <div class="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-4">
+                                <p class="text-center text-sm font-black uppercase tracking-[0.12em] text-white font-title drop-shadow">
+                                    {{ $category->name }}
+                                </p>
+                            </div>
                         </a>
                     </div>
-                @endforeach
+                @empty
+                    <p class="w-full py-8 text-center text-sm text-neutral-500">
+                        Pronto verás aquí las categorías disponibles.
+                    </p>
+                @endforelse
             </div>
 
         </div>

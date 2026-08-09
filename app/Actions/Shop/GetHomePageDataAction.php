@@ -25,7 +25,6 @@ class GetHomePageDataAction
     /**
      * @return array{
      *     popularProducts: Collection<int, Product>,
-     *     needLinks: list<array{key: string, label: string, href: string, image: string}>,
      *     brands: Collection<int, Brand>,
      *     categories: Collection<int, Category>
      * }
@@ -34,26 +33,9 @@ class GetHomePageDataAction
     {
         return [
             'popularProducts' => $this->popularProducts(),
-            'needLinks' => $this->needLinks(),
             'brands' => $this->brands(),
             'categories' => $this->categories(),
-            'tallerImages' => $this->tallerImages(),/**  */
         ];
-    }
-    /**
-    * @return array<int, string>
-     */
-    private function tallerImages(): array
-    {
-        $directoryPath = public_path('images/home/taller');
-        $imageUrls = [];
-        if (\Illuminate\Support\Facades\File::exists($directoryPath)) {
-            $files = \Illuminate\Support\Facades\File::files($directoryPath);
-            foreach ($files as $file) {
-                $imageUrls[] = asset('images/home/taller/' . $file->getFilename());
-            }
-        }
-        return $imageUrls;
     }
 
     /**
@@ -62,18 +44,23 @@ class GetHomePageDataAction
     private function brands(): Collection
     {
         return Brand::query()
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
             ->orderBy('name')
             ->get(['id', 'name', 'image']);
     }
 
     /**
-     * All categories including MOTOS, with images for the home frontend.
+     * Categorías con imagen para el home (MOTOS primero).
      *
      * @return Collection<int, Category>
      */
     private function categories(): Collection
     {
         return Category::query()
+            ->whereNotNull('image')
+            ->where('image', '!=', '')
+            ->orderByRaw('CASE WHEN UPPER(name) = ? THEN 0 ELSE 1 END', [self::MOTOS_CATEGORY])
             ->orderBy('name')
             ->get(['id', 'name', 'description', 'image']);
     }
@@ -128,103 +115,6 @@ class GetHomePageDataAction
             ->sortBy(fn (Product $product): int => array_search($product->id, $orderById, true))
             ->values()
             ->map(fn (Product $product) => $this->offerPresenter->apply($product));
-    }
-
-    /**
-     * @return list<array{key: string, label: string, href: string, image: string}>
-     */
-    private function needLinks(): array
-    {
-        $categories = $this->categoryMap();
-
-        $definitions = [
-            [
-                'key' => 'motos',
-                'label' => 'Motos',
-                'image' => 'images/home/need-motos.png',
-                'href' => route('shop.catalog', ['section' => 'motos']),
-            ],
-            [
-                'key' => 'baterias',
-                'label' => 'Baterías',
-                'image' => 'images/home/need-baterias.png',
-                'names' => ['Baterías', 'Baterias'],
-            ],
-            [
-                'key' => 'accesorios',
-                'label' => 'Accesorios',
-                'image' => 'images/home/need-accesorios.png',
-                'names' => ['Accesorios'],
-            ],
-            [
-                'key' => 'neumaticos',
-                'label' => 'Neumáticos',
-                'image' => 'images/home/need-neumaticos.png',
-                'names' => ['Neumáticos', 'Neumaticos'],
-            ],
-            [
-                'key' => 'repuestos',
-                'label' => 'Repuestos generales',
-                'image' => 'images/home/need-repuestos.png',
-                'names' => ['Repuestos generales', 'Repuestos'],
-            ],
-        ];
-
-        $links = [];
-
-        foreach ($definitions as $definition) {
-            if ($definition['key'] === 'motos') {
-                $links[] = [
-                    'key' => $definition['key'],
-                    'label' => $definition['label'],
-                    'href' => $definition['href'],
-                    'image' => asset($definition['image']),
-                ];
-
-                continue;
-            }
-
-            $categoryId = null;
-            foreach ($definition['names'] as $name) {
-                if (isset($categories[$name])) {
-                    $categoryId = $categories[$name];
-                    break;
-                }
-            }
-
-            $links[] = [
-                'key' => $definition['key'],
-                'label' => $definition['label'],
-                'href' => $categoryId
-                    ? route('shop.catalog', [
-                        'section' => 'accesorios',
-                        'categories' => [$categoryId],
-                    ])
-                    : route('shop.catalog', [
-                        'section' => 'accesorios',
-                        'search' => $definition['label'],
-                    ]),
-                'image' => asset($definition['image']),
-            ];
-        }
-
-        return $links;
-    }
-
-    /**
-     * @return array<string, int> name => id
-     */
-    private function categoryMap(): array
-    {
-        return QueryResultCache::remember(
-            'home.category_name_to_id',
-            function (): array {
-                return Category::query()
-                    ->get(['id', 'name'])
-                    ->mapWithKeys(fn (Category $category) => [$category->name => $category->id])
-                    ->all();
-            },
-        );
     }
 
     private function motosCategoryId(): ?int

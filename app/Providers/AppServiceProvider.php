@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Actions\Shop\GetShopHeaderSearchDataAction;
 use App\Models\Auth\User;
 use App\Services\Cart\CartResolver;
 use App\Services\Payments\Culqi\CulqiClient;
@@ -53,7 +54,13 @@ class AppServiceProvider extends ServiceProvider
                 $count = (int) $cart->items()->sum('quantity');
             }
 
-            $view->with('cartItemCount', $count);
+            $searchData = app(GetShopHeaderSearchDataAction::class)->execute();
+
+            $view->with([
+                'cartItemCount' => $count,
+                'searchCategories' => $searchData['searchCategories'],
+                'searchRecommendedProducts' => $searchData['searchRecommendedProducts'],
+            ]);
         });
     }
 }

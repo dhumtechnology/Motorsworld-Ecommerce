@@ -11,13 +11,18 @@
     @endif
 </head>
 <body class="antialiased overflow-x-hidden">
-    <header class="sticky top-0 z-50 border-b border-gray-200 bg-black">
-        <div class="mx-auto px-10 py-4 flex max-w-full items-center justify-between">
-            <div class="logo h-12 w-48 flex items-center">
+    <header
+        class="sticky top-0 z-50 border-b border-gray-200 bg-black"
+        x-data="{ mobileOpen: false, storeOpen: false }"
+        @keydown.escape.window="mobileOpen = false"
+    >
+        <div class="mx-auto flex max-w-full items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-10 lg:py-4">
+            <div class="logo flex h-10 w-36 shrink-0 items-center sm:h-12 sm:w-48">
                 <x-logo href="{{ route('shop.home') }}" />
             </div>
-            <div class="flex items-center gap-6">
-                <nav>
+
+            <div class="flex items-center gap-2 sm:gap-3 lg:gap-6">
+                <nav class="hidden lg:block">
                     <ul class="flex items-center gap-3">
                         <li>
                             <a href="{{ route('shop.home') }}" class="px-3 py-2 text-white hover:text-orange-500">HOME</a>
@@ -50,86 +55,166 @@
                         </li>
                     </ul>
                 </nav>
+
                 <x-search
-                    name="search"
-                    placeholder="Producto, marca o categoría…"
+                    :categories="$searchCategories ?? []"
+                    :products="$searchRecommendedProducts ?? collect()"
                     value="{{ request('search') }}"
                     :action="route('shop.catalog')"
                 />
-                <div class="flex items-center gap-4">
-                    <a href="{{ route('shop.cart.index') }}" data-cart-icon class="relative inline-flex items-center justify-center" title="Ver carrito" aria-label="Ver carrito">
-                        <svg width="25" height="23" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9.33366 22C9.90896 22 10.3753 21.5523 10.3753 21C10.3753 20.4477 9.90896 20 9.33366 20C8.75836 20 8.29199 20.4477 8.29199 21C8.29199 21.5523 8.75836 22 9.33366 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M20.7917 22C21.367 22 21.8333 21.5523 21.8333 21C21.8333 20.4477 21.367 20 20.7917 20C20.2164 20 19.75 20.4477 19.75 21C19.75 21.5523 20.2164 22 20.7917 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" fill="#121212"/>
-                            <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        @if (($cartItemCount ?? 0) > 0)
-                            <span data-cart-badge class="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black leading-[18px] text-center">
-                                {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
-                            </span>
-                        @endif
-                    </a>
-                    <div>
-                        @auth
-                            <div
-                                x-data="{ open: false }"
-                                class="relative"
-                            >
-                                <button
-                                    type="button"
-                                    @click="open = !open"
-                                    @click.away="open = false"
-                                    class="inline-flex items-center justify-center text-white hover:text-orange-500 transition"
-                                    title="Mi cuenta"
-                                    aria-label="Mi cuenta"
-                                    aria-haspopup="true"
-                                    :aria-expanded="open.toString()"
-                                >
-                                    <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                        <path d="M8.125 15.0625H8.73633C9.893 15.5592 11.1613 15.8438 12.5 15.8438C13.8372 15.8438 15.1095 15.5595 16.2637 15.0625H16.875C19.9458 15.0625 22.4375 17.5542 22.4375 20.625V22.6562C22.4375 23.3979 21.8354 24 21.0938 24H3.90625C3.16459 24 2.5625 23.3979 2.5625 22.6562V20.625C2.5625 17.5542 5.05424 15.0625 8.125 15.0625ZM12.5 1C15.3999 1 17.75 3.35014 17.75 6.25C17.75 9.14986 15.3999 11.5 12.5 11.5C9.60014 11.5 7.25 9.14986 7.25 6.25C7.25 3.35014 9.60014 1 12.5 1Z" fill="black" stroke="white" stroke-width="2"/>
-                                    </svg>
-                                </button>
 
-                                <div
-                                    x-show="open"
-                                    x-transition
-                                    class="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 z-50"
-                                    style="display: none;"
-                                >
-                                    <div class="py-2">
-                                        @if (auth()->user()?->canAccessAdmin())
-                                            <a href="{{ route('admin.profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
-                                                Mi perfil
-                                            </a>
-                                            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
-                                                Panel admin
-                                            </a>
-                                        @else
-                                            <a href="{{ route('shop.account.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
-                                                Mi perfil
-                                            </a>
-                                        @endif
-                                        <form action="{{ route('logout') }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
-                                                Cerrar sesión
-                                            </button>
-                                        </form>
-                                    </div>
+                <a href="{{ route('shop.cart.index') }}" data-cart-icon class="relative inline-flex h-9 w-9 items-center justify-center text-white hover:text-orange-400 transition-colors" title="Ver carrito" aria-label="Ver carrito">
+                    <svg class="h-5 w-5" viewBox="0 0 25 23" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M9.33366 22C9.90896 22 10.3753 21.5523 10.3753 21C10.3753 20.4477 9.90896 20 9.33366 20C8.75836 20 8.29199 20.4477 8.29199 21C8.29199 21.5523 8.75836 22 9.33366 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20.7917 22C21.367 22 21.8333 21.5523 21.8333 21C21.8333 20.4477 21.367 20 20.7917 20C20.2164 20 19.75 20.4477 19.75 21C19.75 21.5523 20.2164 22 20.7917 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" fill="none"/>
+                        <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    @if (($cartItemCount ?? 0) > 0)
+                        <span data-cart-badge class="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center">
+                            {{ $cartItemCount > 99 ? '99+' : $cartItemCount }}
+                        </span>
+                    @endif
+                </a>
+
+                <div>
+                    @auth
+                        <div
+                            x-data="{ open: false }"
+                            class="relative"
+                        >
+                            <button
+                                type="button"
+                                @click="open = !open"
+                                @click.away="open = false"
+                                class="inline-flex h-9 w-9 items-center justify-center text-white hover:text-orange-400 transition-colors"
+                                title="Mi cuenta"
+                                aria-label="Mi cuenta"
+                                aria-haspopup="true"
+                                :aria-expanded="open.toString()"
+                            >
+                                <svg class="h-5 w-5" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M8.125 15.0625H8.73633C9.893 15.5592 11.1613 15.8438 12.5 15.8438C13.8372 15.8438 15.1095 15.5595 16.2637 15.0625H16.875C19.9458 15.0625 22.4375 17.5542 22.4375 20.625V22.6562C22.4375 23.3979 21.8354 24 21.0938 24H3.90625C3.16459 24 2.5625 23.3979 2.5625 22.6562V20.625C2.5625 17.5542 5.05424 15.0625 8.125 15.0625ZM12.5 1C15.3999 1 17.75 3.35014 17.75 6.25C17.75 9.14986 15.3999 11.5 12.5 11.5C9.60014 11.5 7.25 9.14986 7.25 6.25C7.25 3.35014 9.60014 1 12.5 1Z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </button>
+
+                            <div
+                                x-show="open"
+                                x-transition
+                                class="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-100 z-50"
+                                style="display: none;"
+                            >
+                                <div class="py-2">
+                                    @if (auth()->user()?->canAccessAdmin())
+                                        <a href="{{ route('admin.profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                            Mi perfil
+                                        </a>
+                                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                            Panel admin
+                                        </a>
+                                    @else
+                                        <a href="{{ route('shop.account.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                            Mi perfil
+                                        </a>
+                                    @endif
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600">
+                                            Cerrar sesión
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                        @else
-                            <a href="{{ route('login') }}" title="Iniciar sesión" class="block">
-                                <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M8.125 15.0625H8.73633C9.893 15.5592 11.1613 15.8438 12.5 15.8438C13.8372 15.8438 15.1095 15.5595 16.2637 15.0625H16.875C19.9458 15.0625 22.4375 17.5542 22.4375 20.625V22.6562C22.4375 23.3979 21.8354 24 21.0938 24H3.90625C3.16459 24 2.5625 23.3979 2.5625 22.6562V20.625C2.5625 17.5542 5.05424 15.0625 8.125 15.0625ZM12.5 1C15.3999 1 17.75 3.35014 17.75 6.25C17.75 9.14986 15.3999 11.5 12.5 11.5C9.60014 11.5 7.25 9.14986 7.25 6.25C7.25 3.35014 9.60014 1 12.5 1Z" fill="black" stroke="white" stroke-width="2"/>
-                                </svg>
-                            </a>
-                        @endauth
-                    </div>
-                    
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" title="Iniciar sesión" class="inline-flex h-9 w-9 items-center justify-center text-white hover:text-orange-400 transition-colors" aria-label="Iniciar sesión">
+                            <svg class="h-5 w-5" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M8.125 15.0625H8.73633C9.893 15.5592 11.1613 15.8438 12.5 15.8438C13.8372 15.8438 15.1095 15.5595 16.2637 15.0625H16.875C19.9458 15.0625 22.4375 17.5542 22.4375 20.625V22.6562C22.4375 23.3979 21.8354 24 21.0938 24H3.90625C3.16459 24 2.5625 23.3979 2.5625 22.6562V20.625C2.5625 17.5542 5.05424 15.0625 8.125 15.0625ZM12.5 1C15.3999 1 17.75 3.35014 17.75 6.25C17.75 9.14986 15.3999 11.5 12.5 11.5C9.60014 11.5 7.25 9.14986 7.25 6.25C7.25 3.35014 9.60014 1 12.5 1Z" fill="none" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </a>
+                    @endauth
                 </div>
+
+                <button
+                    type="button"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded text-white hover:text-orange-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 lg:hidden"
+                    @click="mobileOpen = !mobileOpen"
+                    :aria-expanded="mobileOpen.toString()"
+                    aria-controls="shop-mobile-menu"
+                    aria-label="Abrir menú"
+                >
+                    <svg x-show="!mobileOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+                    </svg>
+                    <svg x-show="mobileOpen" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
+        </div>
+
+        {{-- Mobile collapsible nav --}}
+        <div
+            id="shop-mobile-menu"
+            x-show="mobileOpen"
+            x-cloak
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-1"
+            class="lg:hidden border-t border-white/10 bg-black"
+        >
+            <nav class="mx-auto max-h-[min(70vh,28rem)] overflow-y-auto px-4 py-3 sm:px-6">
+                <ul class="flex flex-col gap-1">
+                    <li>
+                        <a href="{{ route('shop.home') }}" class="block rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Home</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('shop.services.index') }}" class="block rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Servicios</a>
+                    </li>
+                    <li>
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500"
+                            @click="storeOpen = !storeOpen"
+                            :aria-expanded="storeOpen.toString()"
+                        >
+                            <span>Tienda</span>
+                            <svg class="h-4 w-4 transition-transform" :class="storeOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="storeOpen" x-cloak class="ml-3 mb-1 space-y-1 border-l border-white/15 pl-3">
+                            <a href="{{ route('shop.catalog', ['section' => 'motos']) }}" class="block rounded px-3 py-2.5 text-sm text-neutral-300 hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Motos</a>
+                            <a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="block rounded px-3 py-2.5 text-sm text-neutral-300 hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Accesorios y más</a>
+                        </div>
+                    </li>
+                    <li>
+                        <a href="{{ route('shop.about') }}" class="block rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Nosotros</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('shop.blog.index') }}" class="block rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Blog</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('shop.contact') }}" class="block rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Contáctanos</a>
+                    </li>
+                    @auth
+                        <li class="mt-2 border-t border-white/10 pt-2">
+                            @if (auth()->user()?->canAccessAdmin())
+                                <a href="{{ route('admin.dashboard') }}" class="block rounded px-3 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Panel admin</a>
+                            @endif
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full rounded px-3 py-3 text-left text-sm font-bold uppercase tracking-wide text-white hover:bg-white/5 hover:text-orange-500">
+                                    Cerrar sesión
+                                </button>
+                            </form>
+                        </li>
+                    @endauth
+                </ul>
+            </nav>
         </div>
     </header>
 

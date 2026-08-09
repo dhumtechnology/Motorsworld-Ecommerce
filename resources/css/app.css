@@ -84,6 +84,27 @@
     [x-cloak] {
         display: none !important;
     }
+
+    /* Panel búsqueda: categorías con imagen solo en móvil; nombres en desktop */
+    .search-panel-cats-mobile {
+        display: flex;
+    }
+
+    .search-panel-cats-desktop {
+        display: none;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    @media (width >= 64rem) {
+        .search-panel-cats-mobile {
+            display: none !important;
+        }
+
+        .search-panel-cats-desktop {
+            display: flex !important;
+        }
+    }
 }
 
 @layer components {
