@@ -196,22 +196,51 @@
             class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-8 select-none font-title"
             x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }}, @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'), {{ ($hasColorChoices ?? false) ? 'true' : 'false' }})"
         >
-            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 h-fit">
-                <div class="flex flex-row px-4 sm:flex-col gap-3 py-1" x-show="galleryImages.length > 0">
-                    <template x-for="(image, index) in galleryImages" :key="image.path + '-' + index">
-                        <button
-                            type="button"
-                            @click="mainImage = image.path; activeThumb = index"
-                            :class="activeThumb === index ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500'"
-                            class="gallery-thumb w-20 h-20 sm:w-36 sm:h-32 aspect-square rounded-sm overflow-hidden cursor-pointer transition-all duration-150 shrink-0"
-                        >
-                            <img :src="image.path" class="w-full h-full object-cover" alt="{{ $product->name }}" loading="lazy">
-                        </button>
-                    </template>
+            <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 sm:h-96 lg:h-[480px]">
+                <div
+                    class="relative shrink-0 sm:h-full sm:w-36"
+                    x-show="galleryImages.length > 0"
+                    x-cloak
+                >
+                    <div
+                        x-ref="thumbsScroll"
+                        @scroll.passive="syncThumbScroll()"
+                        class="gallery-thumbs-scroll flex flex-row sm:flex-col gap-3 px-1 py-1 overflow-x-auto sm:overflow-x-hidden sm:overflow-y-auto sm:h-full sm:max-h-full overscroll-contain scroll-smooth"
+                    >
+                        <template x-for="(image, index) in galleryImages" :key="image.path + '-' + index">
+                            <button
+                                type="button"
+                                @click="mainImage = image.path; activeThumb = index"
+                                :class="activeThumb === index ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500'"
+                                class="gallery-thumb w-20 h-20 sm:w-full sm:h-28 aspect-square rounded-sm overflow-hidden cursor-pointer transition-all duration-150 shrink-0"
+                            >
+                                <img :src="image.path" class="w-full h-full object-cover" alt="{{ $product->name }}" loading="lazy">
+                            </button>
+                        </template>
+                    </div>
+
+                    <div
+                        class="pointer-events-none absolute inset-x-0 top-0 hidden sm:flex h-10 items-start justify-center bg-gradient-to-b from-white via-white/85 to-transparent transition-opacity duration-200"
+                        :class="thumbCanScrollUp ? 'opacity-100' : 'opacity-0'"
+                        aria-hidden="true"
+                    >
+                        <svg class="mt-1 h-4 w-4 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                        </svg>
+                    </div>
+                    <div
+                        class="pointer-events-none absolute inset-x-0 bottom-0 hidden sm:flex h-10 items-end justify-center bg-gradient-to-t from-white via-white/85 to-transparent transition-opacity duration-200"
+                        :class="thumbCanScrollDown ? 'opacity-100' : 'opacity-0'"
+                        aria-hidden="true"
+                    >
+                        <svg class="mb-1 h-4 w-4 text-neutral-500 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
                 </div>
 
-                <div class="flex justify-center w-80 h-80 sm:h-96 lg:h-[480px] rounded-sm overflow-hidden w-full">
-                    <img id="product-main-image" :src="mainImage" class="h-full object-cover transition-all duration-200" alt="{{ $product->name }}">
+                <div class="flex justify-center h-80 sm:h-full min-h-0 flex-1 rounded-sm overflow-hidden w-full">
+                    <img id="product-main-image" :src="mainImage" class="h-full w-full object-cover transition-all duration-200" alt="{{ $product->name }}">
                 </div>
             </div>
 
@@ -342,6 +371,27 @@
             </div>
         </div>
 
+        <style>
+            .gallery-thumbs-scroll {
+                scrollbar-width: thin;
+                scrollbar-color: #ff6600 #e5e5e5;
+            }
+            .gallery-thumbs-scroll::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            .gallery-thumbs-scroll::-webkit-scrollbar-track {
+                background: #e5e5e5;
+                border-radius: 9999px;
+            }
+            .gallery-thumbs-scroll::-webkit-scrollbar-thumb {
+                background: #ff6600;
+                border-radius: 9999px;
+            }
+            .gallery-thumbs-scroll::-webkit-scrollbar-thumb:hover {
+                background: #e65c00;
+            }
+        </style>
         <script>
             window.productColorPicker = function (variants, defaultId, fallbackImage, hasColorChoices) {
                 const list = Array.isArray(variants) ? variants : [];
@@ -355,6 +405,8 @@
                     cartError: '',
                     mainImage: initial?.images?.[0]?.path || fallbackImage || 'https://via.placeholder.com/600?text=MotoWorld',
                     activeThumb: 0,
+                    thumbCanScrollUp: false,
+                    thumbCanScrollDown: false,
                     get selected() {
                         return this.variants.find((v) => Number(v.id) === Number(this.selectedId)) || null;
                     },
@@ -363,6 +415,17 @@
                     get stockLabel() {
                         if (!this.selected) return 'No disponible';
                         return this.selectedStock > 0 ? `En Stock (${this.selectedStock} u.)` : 'Agotado';
+                    },
+                    syncThumbScroll() {
+                        const el = this.$refs.thumbsScroll;
+                        if (!el) {
+                            this.thumbCanScrollUp = false;
+                            this.thumbCanScrollDown = false;
+                            return;
+                        }
+                        const max = el.scrollHeight - el.clientHeight;
+                        this.thumbCanScrollUp = el.scrollTop > 4;
+                        this.thumbCanScrollDown = max > 8 && el.scrollTop < max - 4;
                     },
                     syncCartRoot() {
                         const root = this.$root?.querySelector?.('[data-product-cart]')
@@ -398,10 +461,21 @@
                         this.mainImage = this.selected?.images?.[0]?.path || this.mainImage;
                         this.cartError = '';
                         this.refreshCartQty();
-                        this.$nextTick(() => this.syncCartRoot());
+                        this.$nextTick(() => {
+                            this.syncCartRoot();
+                            const el = this.$refs.thumbsScroll;
+                            if (el) el.scrollTop = 0;
+                            this.syncThumbScroll();
+                        });
                     },
                     init() {
-                        this.$nextTick(() => this.selectVariant(this.selectedId));
+                        this.$nextTick(() => {
+                            this.selectVariant(this.selectedId);
+                            const el = this.$refs.thumbsScroll;
+                            if (el && typeof ResizeObserver !== 'undefined') {
+                                new ResizeObserver(() => this.syncThumbScroll()).observe(el);
+                            }
+                        });
                     },
                 };
             };

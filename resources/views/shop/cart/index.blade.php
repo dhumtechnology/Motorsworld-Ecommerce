@@ -7,6 +7,8 @@
     class="mx-auto max-w-5xl px-4 py-10"
     data-cart-page
     data-currency-symbol="{{ $totalCurrencySymbol }}"
+    data-sell-rate="{{ $totals->hasRate ? number_format((float) $totals->sellRate, 4, '.', '') : '' }}"
+    data-rate-date="{{ $totals->rateDate ?? '' }}"
 >
     <h1 class="text-3xl font-black uppercase tracking-wide mb-2">Tu carrito</h1>
     <p class="text-black text-sm mb-8" data-cart-summary-text>
@@ -108,9 +110,46 @@
             @endforeach
         </div>
 
-        <div class="rounded-lg p-5 mb-8 flex justify-end gap-4 text-xl font-secondary">
-            <span class="text-black uppercase tracking-widest">Total</span>
-            <span data-cart-grand-total>{{ $totalCurrencySymbol }} {{ number_format($total, 2) }}</span>
+        <div class="rounded-lg p-5 mb-8 space-y-3 font-secondary" data-cart-totals>
+            <div class="space-y-1 text-sm" data-cart-subtotals>
+                <div class="flex justify-end gap-4 {{ $totals->hasPen() ? '' : 'hidden' }}" data-subtotal-pen>
+                    <span class="text-neutral-600">Subtotal en soles</span>
+                    <span data-subtotal-pen-amount>S/ {{ number_format($totals->totalPen, 2) }}</span>
+                </div>
+                <div class="flex justify-end gap-4 {{ $totals->hasUsd() ? '' : 'hidden' }}" data-subtotal-usd>
+                    <span class="text-neutral-600">Subtotal en dólares</span>
+                    <span data-subtotal-usd-amount>$ {{ number_format($totals->totalUsd, 2) }}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-2">
+                @if ($totals->hasRate)
+                    <div class="inline-flex rounded border border-neutral-300 p-0.5 text-xs font-bold uppercase tracking-wide">
+                        <button type="button" data-cart-total-currency="PEN" class="rounded px-2.5 py-1 bg-orange-600 text-white">Soles</button>
+                        <button type="button" data-cart-total-currency="USD" class="rounded px-2.5 py-1 text-neutral-600">Dólares</button>
+                    </div>
+                    <div class="flex justify-end gap-4 text-xl">
+                        <span class="text-black uppercase tracking-widest">Total</span>
+                        <span
+                            data-cart-grand-total
+                            data-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
+                            data-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}"
+                        >S/ {{ number_format($totals->grandPen, 2) }}</span>
+                    </div>
+                    <p class="text-xs text-neutral-500" data-cart-rate-note>
+                        TC venta SUNAT:
+                        <span class="font-mono">{{ number_format((float) $totals->sellRate, 4) }}</span>
+                        @if ($totals->rateDate)
+                            · {{ $totals->rateDate }}
+                        @endif
+                    </p>
+                @else
+                    <div class="flex justify-end gap-4 text-xl">
+                        <span class="text-black uppercase tracking-widest">Total</span>
+                        <span data-cart-grand-total>{{ $totalCurrencySymbol }} {{ number_format($total, 2) }}</span>
+                    </div>
+                @endif
+            </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 font-title sm:justify-between px-6">

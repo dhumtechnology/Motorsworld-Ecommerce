@@ -16,12 +16,6 @@
         $selectedCategories = $filters['categories'] ?? [];
         $selectedBrands = $filters['brands'] ?? [];
         $selectedModels = $filters['models'] ?? [];
-        $boundMin = (float) $priceBounds['min'];
-        $boundMax = (float) $priceBounds['max'];
-        $step = $boundMax > 1000 ? 10 : ($boundMax > 100 ? 1 : 0.5);
-        if ($boundMax <= $boundMin) {
-            $boundMax = $boundMin + 1;
-        }
     @endphp
 
     <div class="rounded-lg border border-border bg-surface p-5 mb-6">
@@ -51,7 +45,7 @@
                     />
                 </div>
 
-                <div class="lg:col-span-3">
+                <div class="lg:col-span-2">
                     <x-multi-select
                         name="brands"
                         label="Marcas"
@@ -61,7 +55,7 @@
                     />
                 </div>
 
-                <div class="lg:col-span-3">
+                <div class="lg:col-span-2">
                     <x-multi-select
                         name="models"
                         label="Modelos"
@@ -81,7 +75,7 @@
                         name="status"
                         class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                        <option value="">Todos los estados</option>
+                        <option value="">Todos</option>
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>
                                 {{ $statusLabels[$status->value]['label'] ?? $status->value }}
@@ -89,68 +83,16 @@
                         @endforeach
                     </select>
                 </div>
-
-                <div class="lg:col-span-4 relative z-0">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-muted">
-                            Rango de precio
-                        </label>
-                        <p class="text-xs text-muted font-mono">
-                            <span id="price-min-label">{{ number_format($filters['price_min'], 2) }}</span>
-                            —
-                            <span id="price-max-label">{{ number_format($filters['price_max'], 2) }}</span>
-                        </p>
-                    </div>
-
-                    <div
-                        class="relative z-0 h-10 rounded border border-border bg-secondary px-3 flex items-center"
-                        data-dual-range
-                        data-min="{{ $boundMin }}"
-                        data-max="{{ $boundMax }}"
-                    >
-                        <div class="absolute inset-x-3 top-1/2 h-1.5 -translate-y-1/2">
-                            <div class="relative w-full h-full rounded-full bg-border-strong">
-                                <div
-                                    id="price-range-fill"
-                                    class="absolute top-0 h-full rounded-full bg-primary"
-                                ></div>
-                            </div>
-                        </div>
-
-                        <input
-                            type="range"
-                            id="price_min"
-                            name="price_min"
-                            min="{{ $boundMin }}"
-                            max="{{ $boundMax }}"
-                            step="{{ $step }}"
-                            value="{{ $filters['price_min'] }}"
-                            class="dual-range-thumb absolute inset-x-3 top-0 h-10 w-[calc(100%-1.5rem)] appearance-none bg-transparent pointer-events-none"
-                            aria-label="Precio mínimo"
-                        >
-                        <input
-                            type="range"
-                            id="price_max"
-                            name="price_max"
-                            min="{{ $boundMin }}"
-                            max="{{ $boundMax }}"
-                            step="{{ $step }}"
-                            value="{{ $filters['price_max'] }}"
-                            class="dual-range-thumb absolute inset-x-3 top-0 h-10 w-[calc(100%-1.5rem)] appearance-none bg-transparent pointer-events-none"
-                            aria-label="Precio máximo"
-                        >
-                    </div>
-                </div>
             </div>
 
             @if ($hasActiveFilters)
-                    <a
-                        href="{{ route('admin.products.index') }}"
-                        class="rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
-                    >
-                        Limpiar
-                    </a>
-                @endif
+                <a
+                    href="{{ route('admin.products.index') }}"
+                    class="inline-flex rounded border border-border px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
+                >
+                    Limpiar
+                </a>
+            @endif
         </form>
     </div>
 
@@ -372,41 +314,6 @@
         :action="route('admin.products.bulk-destroy')"
     />
 
-    <style>
-        .dual-range-thumb::-webkit-slider-runnable-track {
-            background: transparent;
-            height: 0.375rem;
-        }
-        .dual-range-thumb::-moz-range-track {
-            background: transparent;
-            height: 0.375rem;
-        }
-        .dual-range-thumb::-webkit-slider-thumb {
-            appearance: none;
-            pointer-events: auto;
-            width: 1rem;
-            height: 1rem;
-            border-radius: 9999px;
-            background: #ea580c;
-            border: 2px solid #fff;
-            cursor: pointer;
-            margin-top: -0.3rem;
-            position: relative;
-            z-index: 20;
-        }
-        .dual-range-thumb::-moz-range-thumb {
-            pointer-events: auto;
-            width: 1rem;
-            height: 1rem;
-            border-radius: 9999px;
-            background: #ea580c;
-            border: 2px solid #fff;
-            cursor: pointer;
-            position: relative;
-            z-index: 20;
-        }
-    </style>
-
     <script>
         (function () {
             const form = document.getElementById('admin-products-filters');
@@ -414,10 +321,11 @@
 
             let submitTimer = null;
             let isSubmitting = false;
-const submitFilters = () => {
+
+            const submitFilters = () => {
                 if (isSubmitting) return;
                 isSubmitting = true;
-                                form.requestSubmit ? form.requestSubmit() : form.submit();
+                form.requestSubmit ? form.requestSubmit() : form.submit();
             };
 
             const scheduleSubmit = (delay = 250) => {
@@ -616,62 +524,6 @@ const submitFilters = () => {
             const statusSelect = document.getElementById('status');
             if (statusSelect) {
                 statusSelect.addEventListener('change', () => scheduleSubmit(150));
-            }
-
-            const minInput = document.getElementById('price_min');
-            const maxInput = document.getElementById('price_max');
-            const minLabel = document.getElementById('price-min-label');
-            const maxLabel = document.getElementById('price-max-label');
-            const fill = document.getElementById('price-range-fill');
-            const wrapper = document.querySelector('[data-dual-range]');
-
-            if (minInput && maxInput && wrapper && fill && minLabel && maxLabel) {
-                const boundMin = Number(wrapper.dataset.min);
-                const boundMax = Number(wrapper.dataset.max);
-                const span = Math.max(boundMax - boundMin, 0.0001);
-
-                const format = (value) => Number(value).toLocaleString('es-PE', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                });
-
-                const sync = (source) => {
-                    let min = Number(minInput.value);
-                    let max = Number(maxInput.value);
-
-                    if (min > max) {
-                        if (source === minInput) {
-                            min = max;
-                            minInput.value = String(min);
-                        } else {
-                            max = min;
-                            maxInput.value = String(max);
-                        }
-                    }
-
-                    minLabel.textContent = format(min);
-                    maxLabel.textContent = format(max);
-
-                    const left = ((min - boundMin) / span) * 100;
-                    const right = ((max - boundMin) / span) * 100;
-
-                    fill.style.left = left + '%';
-                    fill.style.width = Math.max(right - left, 0) + '%';
-
-                    minInput.style.zIndex = source === minInput ? '30' : '20';
-                    maxInput.style.zIndex = source === maxInput ? '30' : '20';
-                };
-
-                const onPriceInput = (source) => {
-                    sync(source);
-                    scheduleSubmit(500);
-                };
-
-                minInput.addEventListener('input', () => onPriceInput(minInput));
-                maxInput.addEventListener('input', () => onPriceInput(maxInput));
-                minInput.addEventListener('change', () => scheduleSubmit(100));
-                maxInput.addEventListener('change', () => scheduleSubmit(100));
-                sync(maxInput);
             }
         })();
 

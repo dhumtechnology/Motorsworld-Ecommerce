@@ -6,7 +6,7 @@
 @php
     $fieldClass = 'w-full rounded border border-neutral-300 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600';
     $labelClass = 'block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5';
-    $totalCurrencySymbol = \App\Support\Currency::symbol($currency ?? 'PEN');
+    $chargeCurrencySymbol = \App\Support\Currency::symbol($currency ?? 'PEN');
 @endphp
 
 <div class="mx-auto max-w-6xl px-4 py-10 text-neutral-900 font-title">
@@ -185,7 +185,7 @@
 
                 <button type="submit" id="pay-button"
                         class="w-full rounded bg-orange-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-orange-700 transition-colors disabled:opacity-50">
-                    Pagar {{ $totalCurrencySymbol }} {{ number_format($total, 2) }}
+                    Pagar {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}
                 </button>
             </form>
         </div>
@@ -226,13 +226,109 @@
                 @endforeach
             </div>
 
-            <div class="rounded-lg border border-neutral-200 bg-white p-5 flex items-center justify-between shadow-sm">
-                <span class="uppercase font-bold tracking-widest text-sm text-neutral-700">Total</span>
-                <span class="text-xl font-black text-neutral-900">{{ $totalCurrencySymbol }} {{ number_format($total, 2) }}</span>
+            <div class="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm space-y-4" data-checkout-totals>
+                @if ($totals->hasPen() || $totals->hasUsd())
+                    <div class="space-y-2">
+                        @if ($totals->hasPen())
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-neutral-600">Subtotal en soles</span>
+                                <span class="font-semibold text-neutral-900">S/ {{ number_format($totals->totalPen, 2) }}</span>
+                            </div>
+                        @endif
+                        @if ($totals->hasUsd())
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-neutral-600">Subtotal en dólares</span>
+                                <span class="font-semibold text-neutral-900">$ {{ number_format($totals->totalUsd, 2) }}</span>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                @if ($totals->hasRate)
+                    <div class="border-t border-neutral-100 pt-4 space-y-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="uppercase font-bold tracking-widest text-sm text-neutral-700">Total</span>
+                            <div class="inline-flex rounded border border-neutral-200 p-0.5 text-xs font-bold uppercase tracking-wide">
+                                <button
+                                    type="button"
+                                    data-total-currency="PEN"
+                                    class="rounded px-2.5 py-1 transition-colors bg-orange-600 text-white"
+                                >
+                                    Soles
+                                </button>
+                                <button
+                                    type="button"
+                                    data-total-currency="USD"
+                                    class="rounded px-2.5 py-1 transition-colors text-neutral-600 hover:text-neutral-900"
+                                >
+                                    Dólares
+                                </button>
+                            </div>
+                        </div>
+
+                        <p
+                            class="text-right text-xl font-black text-neutral-900"
+                            data-grand-total
+                            data-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
+                            data-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}"
+                        >
+                            S/ {{ number_format($totals->grandPen, 2) }}
+                        </p>
+
+                        <p class="text-xs text-neutral-500 text-right">
+                            TC venta SUNAT:
+                            <span class="font-mono text-neutral-700">{{ number_format((float) $totals->sellRate, 4) }}</span>
+                            @if ($totals->rateDate)
+                                <span class="text-neutral-400">· {{ $totals->rateDate }}</span>
+                            @endif
+                        </p>
+                    </div>
+                @else
+                    <div class="border-t border-neutral-100 pt-4 flex items-center justify-between">
+                        <span class="uppercase font-bold tracking-widest text-sm text-neutral-700">Total</span>
+                        <span class="text-xl font-black text-neutral-900">
+                            {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}
+                        </span>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
+
+@if ($totals->hasRate)
+<script>
+(function () {
+    const root = document.querySelector('[data-checkout-totals]');
+    if (!root) return;
+
+    const totalEl = root.querySelector('[data-grand-total]');
+    const buttons = root.querySelectorAll('[data-total-currency]');
+    if (!totalEl || !buttons.length) return;
+
+    const format = (value) => Number(value).toLocaleString('es-PE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+
+    const setCurrency = (currency) => {
+        const isPen = currency === 'PEN';
+        totalEl.textContent = (isPen ? 'S/ ' : '$ ') + format(totalEl.dataset[isPen ? 'pen' : 'usd']);
+
+        buttons.forEach((button) => {
+            const active = button.dataset.totalCurrency === currency;
+            button.classList.toggle('bg-orange-600', active);
+            button.classList.toggle('text-white', active);
+            button.classList.toggle('text-neutral-600', !active);
+        });
+    };
+
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => setCurrency(button.dataset.totalCurrency));
+    });
+})();
+</script>
+@endif
 
 @if ($culqiFake || $culqiPublicKey)
 <script>

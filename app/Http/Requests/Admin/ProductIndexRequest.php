@@ -27,8 +27,6 @@ class ProductIndexRequest extends FormRequest
             'models' => ['nullable', 'array'],
             'models.*' => ['integer', 'exists:models,id'],
             'status' => ['nullable', 'string', Rule::enum(ProductStatus::class)],
-            'price_min' => ['nullable', 'numeric', 'min:0'],
-            'price_max' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 
@@ -74,29 +72,13 @@ class ProductIndexRequest extends FormRequest
         return ProductStatus::tryFrom((string) $status);
     }
 
-    public function priceMin(): ?float
-    {
-        $value = $this->input('price_min');
-
-        return $value === null || $value === '' ? null : (float) $value;
-    }
-
-    public function priceMax(): ?float
-    {
-        $value = $this->input('price_max');
-
-        return $value === null || $value === '' ? null : (float) $value;
-    }
-
     public function hasActiveFilters(): bool
     {
         return $this->searchTerm() !== null
             || $this->categoryIds() !== []
             || $this->brandIds() !== []
             || $this->modelIds() !== []
-            || $this->status() !== null
-            || $this->priceMin() !== null
-            || $this->priceMax() !== null;
+            || $this->status() !== null;
     }
 
     /**

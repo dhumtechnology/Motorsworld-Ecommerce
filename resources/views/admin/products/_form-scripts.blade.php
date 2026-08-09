@@ -299,182 +299,292 @@
     })();
 
     (function () {
-        const section = document.querySelector('[data-product-images]');
+        const section = document.querySelector('[data-product-technical-sheet]');
         if (!section) return;
 
-        const isImageFile = (file) => file && file.type && file.type.startsWith('image/');
+        const zone = section.querySelector('[data-dropzone="technical"]');
+        const input = section.querySelector('[data-file-input="technical"]');
+        const preview = section.querySelector('[data-preview="technical"]');
+        const empty = section.querySelector('[data-dropzone-empty]');
+        if (!zone || !input || !preview) return;
 
-        const setFilesOnInput = (input, files, append) => {
-            const transfer = new DataTransfer();
-            const incoming = Array.from(files).filter(isImageFile);
-
-            if (append) {
-                Array.from(input.files || []).forEach((file) => transfer.items.add(file));
-            }
-
-            incoming.forEach((file) => transfer.items.add(file));
-            input.files = transfer.files;
+        const highlight = (on) => {
+            zone.classList.toggle('border-primary', on);
+            zone.classList.toggle('bg-primary-soft/20', on);
         };
 
-        const renderPrimaryPreview = (input, container) => {
-            container.innerHTML = '';
+        const renderPreview = () => {
             const file = input.files?.[0];
+            preview.innerHTML = '';
 
             if (!file) {
-                container.classList.add('hidden');
+                preview.classList.add('hidden');
+                empty?.classList.remove('hidden');
                 return;
             }
 
-            const url = URL.createObjectURL(file);
-            container.classList.remove('hidden');
-            container.innerHTML =
-                '<div class="inline-flex items-center gap-3 rounded-lg border border-border bg-surface p-2">' +
-                '<img src="' + url + '" alt="" class="h-16 w-16 rounded object-cover">' +
-                '<div class="text-left"><p class="text-sm text-text font-semibold truncate max-w-[14rem]">' + file.name + '</p>' +
-                '<button type="button" data-clear-primary class="mt-1 text-xs font-bold uppercase tracking-wide text-red-600 hover:text-red-700">Quitar</button></div></div>';
+            empty?.classList.add('hidden');
+            preview.classList.remove('hidden');
+            preview.innerHTML =
+                '<div class="inline-flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2 text-left">' +
+                '<div class="flex h-10 w-10 items-center justify-center rounded bg-red-50 text-red-600 shrink-0">' +
+                '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5"/></svg>' +
+                '</div>' +
+                '<div class="min-w-0"><p class="text-sm font-semibold text-text truncate max-w-[16rem]">' + file.name + '</p>' +
+                '<p class="text-xs text-muted">' + Math.max(1, Math.round(file.size / 1024)) + ' KB</p></div>' +
+                '<button type="button" data-clear-tech class="ml-2 text-xs font-bold uppercase tracking-wide text-red-600 hover:underline">Quitar</button></div>';
 
-            container.querySelector('[data-clear-primary]')?.addEventListener('click', (event) => {
+            preview.querySelector('[data-clear-tech]')?.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 input.value = '';
-                renderPrimaryPreview(input, container);
+                renderPreview();
             });
         };
 
-        const renderSecondaryPreview = (input, container) => {
-            container.innerHTML = '';
-            const files = Array.from(input.files || []);
-
-            if (files.length === 0) {
-                container.classList.add('hidden');
-                return;
+        zone.addEventListener('click', (event) => {
+            if (event.target.closest('[data-clear-tech]')) return;
+            if (event.target.closest('[data-dropzone-trigger]') || event.target === zone || empty?.contains(event.target) || preview.contains(event.target)) {
+                if (!event.target.closest('[data-clear-tech]')) input.click();
             }
+        });
 
-            container.classList.remove('hidden');
+        zone.querySelector('[data-dropzone-trigger]')?.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            input.click();
+        });
 
-            files.forEach((file, index) => {
-                const url = URL.createObjectURL(file);
-                const card = document.createElement('div');
-                card.className = 'relative overflow-hidden rounded-lg border border-border bg-surface';
-                card.innerHTML =
-                    '<img src="' + url + '" alt="" class="h-28 w-full object-cover">' +
-                    '<button type="button" data-remove-index="' + index + '" class="absolute inset-x-0 bottom-0 bg-black/70 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-200 hover:text-red-100">Quitar</button>';
-                container.appendChild(card);
+        ['dragenter', 'dragover'].forEach((eventName) => {
+            zone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                highlight(true);
             });
+        });
 
-            container.querySelectorAll('[data-remove-index]').forEach((button) => {
-                button.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const removeIndex = Number(button.getAttribute('data-remove-index'));
-                    const transfer = new DataTransfer();
-                    Array.from(input.files || []).forEach((file, index) => {
-                        if (index !== removeIndex) transfer.items.add(file);
-                    });
-                    input.files = transfer.files;
-                    renderSecondaryPreview(input, container);
-                });
+        ['dragleave', 'drop'].forEach((eventName) => {
+            zone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                highlight(false);
             });
-        };
+        });
 
-        const setupDropzone = (type) => {
-            const zone = section.querySelector('[data-dropzone="' + type + '"]');
-            const input = section.querySelector('[data-file-input="' + type + '"]');
-            const preview = section.querySelector('[data-preview="' + type + '"]');
-            if (!zone || !input || !preview) return;
+        zone.addEventListener('drop', (event) => {
+            const file = Array.from(event.dataTransfer?.files || []).find(
+                (item) => item.type === 'application/pdf' || /\.pdf$/i.test(item.name)
+            );
+            if (!file) return;
 
-            let stashedFiles = [];
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            input.files = transfer.files;
+            renderPreview();
+        });
 
-            const highlight = (on) => {
-                zone.classList.toggle('border-primary', on);
-                zone.classList.toggle('bg-primary-soft/20', on);
-            };
-
-            const refresh = () => {
-                if (type === 'primary') renderPrimaryPreview(input, preview);
-                else renderSecondaryPreview(input, preview);
-            };
-
-            zone.querySelector('[data-dropzone-trigger]')?.addEventListener('click', () => {
-                if (type === 'secondary') stashedFiles = Array.from(input.files || []);
-                input.click();
-            });
-
-            ['dragenter', 'dragover'].forEach((eventName) => {
-                zone.addEventListener(eventName, (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    highlight(true);
-                });
-            });
-
-            ['dragleave', 'drop'].forEach((eventName) => {
-                zone.addEventListener(eventName, (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    highlight(false);
-                });
-            });
-
-            zone.addEventListener('drop', (event) => {
-                const files = event.dataTransfer?.files;
-                if (!files?.length) return;
-
-                if (type === 'primary') setFilesOnInput(input, [files[0]], false);
-                else setFilesOnInput(input, files, true);
-
-                refresh();
-            });
-
-            input.addEventListener('change', () => {
-                if (type === 'secondary' && stashedFiles.length > 0) {
-                    const next = Array.from(input.files || []);
-                    const transfer = new DataTransfer();
-                    stashedFiles.concat(next).filter(isImageFile).forEach((file) => transfer.items.add(file));
-                    input.files = transfer.files;
-                    stashedFiles = [];
-                }
-
-                refresh();
-            });
-        };
-
-        setupDropzone('primary');
-        setupDropzone('secondary');
+        input.addEventListener('change', renderPreview);
     })();
 
-    window.productVariantsForm = function (initialVariants, availableColors, defaultImages, defaultStock) {
+    window.productVariantsForm = function (config) {
+        const isImageFile = (file) => file && file.type && file.type.startsWith('image/');
+        const pendingKey = () => 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+        const normalizeName = (value) => String(value || '').trim().toLowerCase();
+
+        const toPending = (file) => ({
+            key: pendingKey(),
+            file,
+            name: file.name,
+            url: URL.createObjectURL(file),
+        });
+
+        const syncInputFiles = (input, pendingList) => {
+            if (!input) return;
+            const transfer = new DataTransfer();
+            (pendingList || []).forEach((item) => {
+                if (item?.file) transfer.items.add(item.file);
+            });
+            input.files = transfer.files;
+        };
+
+        const mapVariant = (v, i) => ({
+            _key: v.id ? 'v-' + v.id : 'n-' + i + '-' + Date.now(),
+            id: v.id || null,
+            sku: v.sku || '',
+            color_ids: (v.color_ids || []).map(String),
+            new_colors: Array.isArray(v.new_colors) ? v.new_colors.filter((c) => (c.name || '').trim()) : [],
+            available_stock: Number(v.available_stock || 0),
+            images: v.images || [],
+            remove_image_ids: v.remove_image_ids || [],
+            pendingImages: [],
+            dropActive: false,
+            colorQuery: '',
+            colorPickerOpen: false,
+            newColorHex: '#FF6600',
+        });
+
+        const initialVariants = (config.variants || []).map(mapVariant);
+        const initialMode = config.mode === 'variants' ? 'variants' : 'unique';
+
         return {
-            variants: (initialVariants || []).map((v, i) => ({
-                _key: v.id ? 'v-' + v.id : 'n-' + i + '-' + Date.now(),
-                id: v.id || null,
-                sku: v.sku || '',
-                color_ids: (v.color_ids || []).map(String),
-                new_colors: v.new_colors || [],
-                available_stock: Number(v.available_stock || 0),
-                images: v.images || [],
-                remove_image_ids: v.remove_image_ids || [],
-            })),
-            availableColors: availableColors || [],
-            defaultImages: defaultImages || [],
+            productMode: initialMode,
+            variants: initialMode === 'variants'
+                ? (initialVariants.length ? initialVariants : [mapVariant({ available_stock: config.defaultStock || 0 }, 0)])
+                : initialVariants,
+            availableColors: config.colors || [],
+            defaultImages: config.defaultImages || [],
             defaultRemoveImageIds: [],
-            defaultStock: Number(defaultStock || 0),
+            pendingDefaultImages: [],
+            defaultDropActive: false,
+            defaultStock: Number(config.defaultStock || 0),
             removedVariantIds: [],
+            initialColoredVariantIds: (config.coloredVariantIds || []).map(Number),
+            init() {
+                const form = this.$el.closest('form');
+                form?.addEventListener('submit', (event) => {
+                    if (!this.validateBeforeSubmit()) {
+                        event.preventDefault();
+                        return;
+                    }
+                    this.syncAllImageInputs();
+                });
+            },
+            setMode(mode) {
+                if (mode === this.productMode) return;
+                this.productMode = mode;
+                if (mode === 'variants' && this.variants.length === 0) {
+                    this.addVariant(true);
+                }
+            },
+            validateBeforeSubmit() {
+                if (this.productMode !== 'variants') return true;
+                if (this.variants.length === 0) {
+                    alert('Agrega al menos una variante.');
+                    return false;
+                }
+                const invalid = this.variants.some((variant) => !this.hasColors(variant));
+                if (invalid) {
+                    alert('Cada variante debe tener al menos un color.');
+                    return false;
+                }
+                return true;
+            },
+            syncAllImageInputs() {
+                if (this.productMode === 'unique') {
+                    syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages);
+                    return;
+                }
+                this.variants.forEach((variant) => {
+                    const input = this.$el.querySelector(`[data-variant-key="${variant._key}"] input[type="file"]`);
+                    syncInputFiles(input, variant.pendingImages);
+                });
+            },
             colorById(colorId) {
                 const id = String(colorId);
                 return this.availableColors.find((c) => String(c.id) === id) || null;
             },
-            addVariant() {
-                const carryStock = this.variants.length === 0 ? Number(this.defaultStock || 0) : 0;
+            hasColors(variant) {
+                return (variant.color_ids || []).length > 0 || (variant.new_colors || []).length > 0;
+            },
+            variantLabel(variant) {
+                const names = (variant.color_ids || [])
+                    .map((id) => this.colorById(id)?.name)
+                    .filter(Boolean);
+                const newNames = (variant.new_colors || [])
+                    .map((c) => (c.name || '').trim())
+                    .filter(Boolean);
+                return [...names, ...newNames].join(' / ');
+            },
+            filteredColors(variant) {
+                const q = normalizeName(variant.colorQuery);
+                const selected = new Set((variant.color_ids || []).map(String));
+                return (this.availableColors || []).filter((color) => {
+                    if (selected.has(String(color.id))) return false;
+                    if (!q) return true;
+                    return normalizeName(color.name).includes(q);
+                });
+            },
+            canCreateFromQuery(variant) {
+                const name = (variant.colorQuery || '').trim();
+                if (!name) return false;
+                const q = normalizeName(name);
+                const existsAvailable = (this.availableColors || []).some((c) => normalizeName(c.name) === q);
+                const existsSelected = (variant.new_colors || []).some((c) => normalizeName(c.name) === q);
+                const existsIdSelected = (variant.color_ids || []).some((id) => normalizeName(this.colorById(id)?.name) === q);
+                return !existsAvailable && !existsSelected && !existsIdSelected;
+            },
+            selectExistingColor(variant, color) {
+                const id = String(color.id);
+                if (!variant.color_ids.includes(id)) variant.color_ids.push(id);
+                variant.colorQuery = '';
+                variant.colorPickerOpen = false;
+            },
+            createColorFromQuery(variant) {
+                const name = (variant.colorQuery || '').trim();
+                if (!name || !this.canCreateFromQuery(variant)) return;
+                variant.new_colors.push({
+                    name,
+                    hex: variant.newColorHex || '#FF6600',
+                });
+                variant.colorQuery = '';
+                variant.colorPickerOpen = false;
+                variant.newColorHex = '#FF6600';
+            },
+            commitColorQuery(variant) {
+                const q = normalizeName(variant.colorQuery);
+                if (!q) return;
+                const exact = (this.availableColors || []).find((c) => normalizeName(c.name) === q);
+                if (exact && !variant.color_ids.includes(String(exact.id))) {
+                    this.selectExistingColor(variant, exact);
+                    return;
+                }
+                const partial = this.filteredColors(variant);
+                if (partial.length === 1) {
+                    this.selectExistingColor(variant, partial[0]);
+                    return;
+                }
+                if (this.canCreateFromQuery(variant)) {
+                    this.createColorFromQuery(variant);
+                }
+            },
+            removeColorFromVariant(variant, colorId) {
+                variant.color_ids = variant.color_ids.filter((c) => c !== String(colorId));
+            },
+            removeNewColor(variant, index) {
+                variant.new_colors.splice(index, 1);
+            },
+            visibleDefaultImages() {
+                return (this.defaultImages || []).filter(
+                    (img) => !this.defaultRemoveImageIds.includes(Number(img.id))
+                );
+            },
+            visibleVariantImages(variant) {
+                return (variant.images || []).filter(
+                    (img) => !variant.remove_image_ids.includes(Number(img.id))
+                );
+            },
+            addVariant(fromModeSwitch = false) {
+                const carryStock = fromModeSwitch || this.variants.length === 0
+                    ? Number(this.defaultStock || 0)
+                    : 0;
+                const carryPending = (fromModeSwitch || this.variants.length === 0)
+                    ? this.pendingDefaultImages.splice(0)
+                    : [];
+
                 this.variants.push({
                     _key: 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
                     id: null,
                     sku: '',
                     color_ids: [],
-                    new_colors: [{ name: '', hex: '#FF6600' }],
+                    new_colors: [],
                     available_stock: carryStock,
                     images: [],
                     remove_image_ids: [],
+                    pendingImages: carryPending,
+                    dropActive: false,
+                    colorQuery: '',
+                    colorPickerOpen: false,
+                    newColorHex: '#FF6600',
                 });
             },
             removeVariant(index) {
@@ -483,20 +593,6 @@
                     this.removedVariantIds.push(variant.id);
                 }
                 this.variants.splice(index, 1);
-            },
-            toggleColor(variant, colorId, checked) {
-                const id = String(colorId);
-                if (checked) {
-                    if (!variant.color_ids.includes(id)) variant.color_ids.push(id);
-                } else {
-                    variant.color_ids = variant.color_ids.filter((c) => c !== id);
-                }
-            },
-            removeColorFromVariant(variant, colorId) {
-                this.toggleColor(variant, colorId, false);
-            },
-            addNewColor(variant) {
-                variant.new_colors.push({ name: '', hex: '#FF6600' });
             },
             toggleRemoveImage(variant, imageId, checked) {
                 if (!imageId) return;
@@ -515,6 +611,45 @@
                 } else {
                     this.defaultRemoveImageIds = this.defaultRemoveImageIds.filter((x) => x !== id);
                 }
+            },
+            appendPending(list, fileList) {
+                Array.from(fileList || [])
+                    .filter(isImageFile)
+                    .forEach((file) => list.push(toPending(file)));
+            },
+            onDefaultDrop(event) {
+                this.defaultDropActive = false;
+                this.appendPending(this.pendingDefaultImages, event.dataTransfer?.files);
+                this.$nextTick(() => syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages));
+            },
+            onDefaultInputChange(event) {
+                this.appendPending(this.pendingDefaultImages, event.target.files);
+                this.$nextTick(() => syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages));
+            },
+            removePendingDefaultImage(index) {
+                const [removed] = this.pendingDefaultImages.splice(index, 1);
+                if (removed?.url) URL.revokeObjectURL(removed.url);
+                this.$nextTick(() => syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages));
+            },
+            onVariantDrop(variant, event) {
+                variant.dropActive = false;
+                this.appendPending(variant.pendingImages, event.dataTransfer?.files);
+                this.$nextTick(() => {
+                    const input = this.$el.querySelector(`[data-variant-key="${variant._key}"] input[type="file"]`);
+                    syncInputFiles(input, variant.pendingImages);
+                });
+            },
+            onVariantInputChange(variant, event) {
+                this.appendPending(variant.pendingImages, event.target.files);
+                this.$nextTick(() => syncInputFiles(event.target, variant.pendingImages));
+            },
+            removePendingVariantImage(variant, index) {
+                const [removed] = variant.pendingImages.splice(index, 1);
+                if (removed?.url) URL.revokeObjectURL(removed.url);
+                this.$nextTick(() => {
+                    const input = this.$el.querySelector(`[data-variant-key="${variant._key}"] input[type="file"]`);
+                    syncInputFiles(input, variant.pendingImages);
+                });
             },
         };
     };

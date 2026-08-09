@@ -33,24 +33,6 @@ class ProductController extends Controller
 
     public function index(ProductIndexRequest $request): View
     {
-        $priceBounds = Product::query()
-            ->selectRaw('COALESCE(MIN(price_amount), 0) as min_price, COALESCE(MAX(price_amount), 0) as max_price')
-            ->first();
-
-        $boundMin = (float) ($priceBounds->min_price ?? 0);
-        $boundMax = (float) ($priceBounds->max_price ?? 0);
-
-        if ($boundMax < $boundMin) {
-            $boundMax = $boundMin;
-        }
-
-        $priceMin = $request->priceMin() ?? $boundMin;
-        $priceMax = $request->priceMax() ?? $boundMax;
-
-        if ($priceMin > $priceMax) {
-            [$priceMin, $priceMax] = [$priceMax, $priceMin];
-        }
-
         $products = Product::query()
             ->with(['category', 'inventories', 'primaryImage', 'vehicleModel.brand', 'variants.colors'])
             ->when(
@@ -71,16 +53,6 @@ class ProductController extends Controller
             ->when(
                 $request->status(),
                 fn (Builder $query, ProductStatus $status) => $query->where('status', $status),
-            )
-            ->when(
-                $request->priceMin() !== null || $request->priceMax() !== null,
-                function (Builder $query) use ($priceMin, $priceMax, $boundMin, $boundMax) {
-                    if (abs($priceMin - $boundMin) > 0.0001 || abs($priceMax - $boundMax) > 0.0001) {
-                        $query
-                            ->where('price_amount', '>=', $priceMin)
-                            ->where('price_amount', '<=', $priceMax);
-                    }
-                },
             )
             ->when(
                 $request->searchTerm(),
@@ -110,26 +82,14 @@ class ProductController extends Controller
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'models' => VehicleModel::query()->orderBy('name')->get(['id', 'name', 'brand_id']),
             'statuses' => ProductStatus::cases(),
-            'priceBounds' => [
-                'min' => $boundMin,
-                'max' => $boundMax,
-            ],
             'filters' => [
                 'search' => $request->searchTerm(),
                 'categories' => $request->categoryIds(),
                 'brands' => $request->brandIds(),
                 'models' => $request->modelIds(),
                 'status' => $request->status()?->value,
-                'price_min' => $priceMin,
-                'price_max' => $priceMax,
             ],
-            'hasActiveFilters' => $request->searchTerm() !== null
-                || $request->categoryIds() !== []
-                || $request->brandIds() !== []
-                || $request->modelIds() !== []
-                || $request->status() !== null
-                || abs($priceMin - $boundMin) > 0.0001
-                || abs($priceMax - $boundMax) > 0.0001,
+            'hasActiveFilters' => $request->hasActiveFilters(),
         ]);
     }
 

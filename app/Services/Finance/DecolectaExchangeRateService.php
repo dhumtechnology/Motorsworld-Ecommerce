@@ -76,24 +76,38 @@ class DecolectaExchangeRateService
     }
 
     /**
+     * Lee el TC de BD; solo si no hay ninguno, consulta la API una vez y lo persiste.
+     */
+    public function currentOrFetch(): ?ExchangeRate
+    {
+        $rate = $this->current();
+
+        if ($rate !== null) {
+            return $rate;
+        }
+
+        try {
+            return $this->fetchAndStore();
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo obtener tipo de cambio (fallback API)', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Snapshot para congelar en un pedido.
      *
      * @return array{buy: float, sell: float, date: string}|null
      */
     public function snapshotForOrder(): ?array
     {
-        $rate = $this->current();
+        $rate = $this->currentOrFetch();
 
         if ($rate === null) {
-            try {
-                $rate = $this->fetchAndStore();
-            } catch (\Throwable $e) {
-                Log::warning('No se pudo obtener tipo de cambio al crear pedido', [
-                    'message' => $e->getMessage(),
-                ]);
-
-                return null;
-            }
+            return null;
         }
 
         return [

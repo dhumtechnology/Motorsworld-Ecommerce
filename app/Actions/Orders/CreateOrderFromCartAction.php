@@ -12,6 +12,7 @@ use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
+use App\Services\Cart\CartTotalsService;
 use App\Services\Finance\DecolectaExchangeRateService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +21,7 @@ class CreateOrderFromCartAction
 {
     public function __construct(
         private readonly DecolectaExchangeRateService $exchangeRates,
+        private readonly CartTotalsService $cartTotals,
     ) {}
 
     /**
@@ -52,8 +54,6 @@ class CreateOrderFromCartAction
 
         return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod, $exchangeSnapshot) {
             $lines = [];
-            $total = 0.0;
-            $currency = 'PEN';
 
             foreach ($cart->items as $item) {
                 $product = $item->product;
@@ -74,11 +74,20 @@ class CreateOrderFromCartAction
                 }
 
                 $pricing = OrderItem::pricingAttributesFor($product, $item->quantity, null, $variant);
-                $lineTotal = (float) $pricing['unit_price'] * $pricing['quantity'];
-                $total += $lineTotal;
-                $currency = $pricing['currency'];
                 $lines[] = $pricing;
             }
+
+            $totals = $this->cartTotals->summarize(
+                collect($lines)->map(fn (array $line) => [
+                    'line_total' => (float) $line['unit_price'] * (int) $line['quantity'],
+                    'currency' => $line['currency'] ?? 'PEN',
+                ]),
+                isset($exchangeSnapshot['sell']) ? (float) $exchangeSnapshot['sell'] : null,
+                $exchangeSnapshot['date'] ?? null,
+            );
+
+            $total = $totals->chargeAmount();
+            $currency = $totals->chargeCurrency();
 
             if ($total < 1) {
                 throw ValidationException::withMessages([

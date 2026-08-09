@@ -36,6 +36,79 @@
         });
     }
 
+    function cartDisplayCurrency(page) {
+        return page?.dataset?.displayCurrency === 'USD' ? 'USD' : 'PEN';
+    }
+
+    function setCartDisplayCurrency(page, currency) {
+        if (!page) return;
+        page.dataset.displayCurrency = currency === 'USD' ? 'USD' : 'PEN';
+
+        page.querySelectorAll('[data-cart-total-currency]').forEach((button) => {
+            const active = button.dataset.cartTotalCurrency === page.dataset.displayCurrency;
+            button.classList.toggle('bg-orange-600', active);
+            button.classList.toggle('text-white', active);
+            button.classList.toggle('text-neutral-600', !active);
+        });
+
+        const totalEl = page.querySelector('[data-cart-grand-total]');
+        if (!totalEl) return;
+
+        const isPen = page.dataset.displayCurrency !== 'USD';
+        const amount = Number(totalEl.dataset[isPen ? 'pen' : 'usd'] || 0);
+        totalEl.textContent = formatMoney(amount, isPen ? 'S/' : '$');
+    }
+
+    function computeCartTotals(page) {
+        let totalPen = 0;
+        let totalUsd = 0;
+
+        page.querySelectorAll('[data-cart-line]').forEach((row) => {
+            const qty = Number(row.querySelector('[data-line-qty]')?.textContent || 0);
+            const unit = Number(row.dataset.unitPrice || 0);
+            const amount = qty * unit;
+            if (String(row.dataset.currency || 'PEN').toUpperCase() === 'USD') {
+                totalUsd += amount;
+            } else {
+                totalPen += amount;
+            }
+        });
+
+        const sellRate = Number(page.dataset.sellRate || 0);
+        const hasRate = sellRate > 0;
+        const grandPen = hasRate ? totalPen + totalUsd * sellRate : totalPen;
+        const grandUsd = hasRate ? totalUsd + (totalPen > 0 ? totalPen / sellRate : 0) : totalUsd;
+
+        return {
+            totalPen: Math.round(totalPen * 100) / 100,
+            totalUsd: Math.round(totalUsd * 100) / 100,
+            grandPen: Math.round(grandPen * 100) / 100,
+            grandUsd: Math.round(grandUsd * 100) / 100,
+            hasRate,
+        };
+    }
+
+    function renderCartTotals(page) {
+        const totals = computeCartTotals(page);
+        const penRow = page.querySelector('[data-subtotal-pen]');
+        const usdRow = page.querySelector('[data-subtotal-usd]');
+        const penAmount = page.querySelector('[data-subtotal-pen-amount]');
+        const usdAmount = page.querySelector('[data-subtotal-usd-amount]');
+        const totalEl = page.querySelector('[data-cart-grand-total]');
+
+        if (penRow) penRow.classList.toggle('hidden', totals.totalPen <= 0);
+        if (usdRow) usdRow.classList.toggle('hidden', totals.totalUsd <= 0);
+        if (penAmount) penAmount.textContent = formatMoney(totals.totalPen, 'S/');
+        if (usdAmount) usdAmount.textContent = formatMoney(totals.totalUsd, '$');
+
+        if (totalEl) {
+            totalEl.dataset.pen = String(totals.grandPen.toFixed(2));
+            totalEl.dataset.usd = String(totals.grandUsd.toFixed(2));
+        }
+
+        setCartDisplayCurrency(page, cartDisplayCurrency(page));
+    }
+
     function showError(root, message) {
         const alpineData = getAlpineData(root);
         if (alpineData && typeof alpineData.setCartError === 'function') {
@@ -138,23 +211,10 @@
 
         const remaining = page.querySelectorAll('[data-cart-line]');
         const summaryText = page.querySelector('[data-cart-summary-text]');
-        const totalEl = page.querySelector('[data-cart-grand-total]');
         const content = page.querySelector('[data-cart-content]');
         const empty = page.querySelector('[data-cart-empty]');
 
-        let grandTotal = 0;
-        remaining.forEach((row) => {
-            const qty = Number(row.querySelector('[data-line-qty]')?.textContent || 0);
-            const unit = Number(row.dataset.unitPrice || 0);
-            grandTotal += qty * unit;
-        });
-
-        if (totalEl) {
-            totalEl.textContent = formatMoney(
-                grandTotal,
-                page.dataset.currencySymbol || 'S/',
-            );
-        }
+        renderCartTotals(page);
 
         if (summaryText) {
             const count = Number(data.item_count || 0);
@@ -315,10 +375,26 @@
     }
 
     document.addEventListener('click', (event) => {
+        const currencyButton = event.target.closest('[data-cart-total-currency]');
+        if (currencyButton) {
+            const page = currencyButton.closest('[data-cart-page]');
+            if (page) {
+                event.preventDefault();
+                setCartDisplayCurrency(page, currencyButton.dataset.cartTotalCurrency);
+            }
+            return;
+        }
+
         const button = event.target.closest('[data-cart-action]');
         if (!button) return;
 
         event.preventDefault();
         handleAction(button);
     });
+
+    const cartPage = document.querySelector('[data-cart-page]');
+    if (cartPage) {
+        cartPage.dataset.displayCurrency = 'PEN';
+        setCartDisplayCurrency(cartPage, 'PEN');
+    }
 })();

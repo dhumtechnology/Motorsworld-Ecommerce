@@ -11,6 +11,7 @@ use App\Models\Cart\Cart;
 use App\Models\Products\Product;
 use App\Models\Products\ProductVariant;
 use App\Services\Cart\CartResolver;
+use App\Services\Cart\CartTotalsService;
 use App\Services\Orders\ProductPricingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,8 @@ class CartController extends Controller
         private readonly CartResolver $cartResolver,
         private readonly AddProductToCartAction $addProduct,
         private readonly UpdateCartItemQuantityAction $updateQuantity,
+        private readonly CartTotalsService $cartTotals,
+        private readonly ProductPricingService $pricing,
     ) {}
 
     public function index(Request $request): View
@@ -37,14 +40,12 @@ class CartController extends Controller
             'items.variant.colors',
         ]);
 
-        $pricing = app(ProductPricingService::class);
-
         $lines = $cart->items
             ->filter(fn ($item) => $item->product !== null && $item->variant !== null)
-            ->map(function ($item) use ($pricing) {
+            ->map(function ($item) {
                 $product = $item->product;
                 $variant = $item->variant;
-                $price = $pricing->resolve($product);
+                $price = $this->pricing->resolve($product);
 
                 return [
                     'item' => $item,
@@ -58,21 +59,21 @@ class CartController extends Controller
                     'image' => $variant->catalogImageUrl() ?? $product->catalogImageUrl(),
                     'max_quantity' => max(0, (int) ($variant->inventory?->available_stock ?? 0)),
                     'color_label' => $variant->colorLabel(),
-                    'currency' => strtoupper((string) ($product->currency ?: 'PEN')),
-                    'currency_symbol' => $product->currencySymbol(),
+                    'currency' => strtoupper((string) ($price->currency ?: 'PEN')),
+                    'currency_symbol' => \App\Support\Currency::symbol($price->currency ?: 'PEN'),
                 ];
             })
             ->values();
 
-        $totalCurrencySymbol = $lines->first()['currency_symbol']
-            ?? \App\Support\Currency::symbol('PEN');
+        $totals = $this->cartTotals->summarize($lines);
 
         return view('shop.cart.index', [
             'cart' => $cart,
             'lines' => $lines,
-            'total' => $lines->sum('line_total'),
+            'totals' => $totals,
+            'total' => $totals->chargeAmount(),
             'itemCount' => (int) $lines->sum('quantity'),
-            'totalCurrencySymbol' => $totalCurrencySymbol,
+            'totalCurrencySymbol' => \App\Support\Currency::symbol($totals->chargeCurrency()),
         ]);
     }
 

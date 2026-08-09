@@ -15,6 +15,7 @@ use App\Models\Auth\User;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Services\Cart\CartResolver;
+use App\Services\Cart\CartTotalsService;
 use App\Services\Orders\ProductPricingService;
 use App\Services\Payments\Culqi\Exceptions\CulqiApiException;
 use Illuminate\Contracts\View\View;
@@ -31,6 +32,7 @@ class CheckoutController extends Controller
     public function __construct(
         private readonly CartResolver $cartResolver,
         private readonly ProductPricingService $pricing,
+        private readonly CartTotalsService $cartTotals,
         private readonly CreateOrderFromCartAction $createOrderFromCart,
         private readonly ProcessCulqiPaymentAction $processPayment,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
@@ -78,20 +80,21 @@ class CheckoutController extends Controller
                 ];
             });
 
-        $total = $lines->sum('line_total');
+        $totals = $this->cartTotals->summarize($lines);
         $user = $request->user();
         $profile = $user?->customerProfile;
 
         return view('shop.checkout.index', [
             'cart' => $cart,
             'lines' => $lines,
-            'total' => $total,
-            'currency' => $lines->first()['currency'] ?? 'PEN',
+            'totals' => $totals,
+            'total' => $totals->chargeAmount(),
+            'currency' => $totals->chargeCurrency(),
             'culqiPublicKey' => config('services.culqi.public_key'),
             'culqiFake' => (bool) config('services.culqi.fake'),
             'profile' => $profile,
             'user' => $user,
-            'amountCents' => (int) round($total * 100),
+            'amountCents' => $totals->amountCents(),
         ]);
     }
 
