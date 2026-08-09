@@ -27,6 +27,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'comments',
     'cancellation_reason',
     'status',
+    'charged_amount',
+    'charged_currency',
+    'exchange_rate_buy',
+    'exchange_rate_sell',
+    'exchange_rate_date',
+    'attended_at',
 ])]
 class Appointment extends Model
 {
@@ -113,6 +119,42 @@ class Appointment extends Model
             ?: '—';
     }
 
+    public function revenueAmount(): float
+    {
+        if ($this->charged_amount !== null) {
+            return (float) $this->charged_amount;
+        }
+
+        if ($this->relationLoaded('services') && $this->services->isNotEmpty()) {
+            return round((float) $this->services->sum('price'), 2);
+        }
+
+        return (float) ($this->servicePackage?->price ?? 0);
+    }
+
+    public function revenueCurrency(): string
+    {
+        if (filled($this->charged_currency)) {
+            return \App\Support\Currency::normalize($this->charged_currency);
+        }
+
+        if ($this->relationLoaded('services') && $this->services->isNotEmpty()) {
+            return \App\Support\Currency::normalize($this->services->first()?->currency);
+        }
+
+        return \App\Support\Currency::normalize($this->servicePackage?->currency);
+    }
+
+    public function amountIn(string $targetCurrency): float
+    {
+        return \App\Support\Currency::convert(
+            $this->revenueAmount(),
+            $this->revenueCurrency(),
+            $targetCurrency,
+            $this->exchange_rate_sell !== null ? (float) $this->exchange_rate_sell : null,
+        );
+    }
+
     /**
      * @return array<string, string>
      */
@@ -122,6 +164,11 @@ class Appointment extends Model
             'appointment_at' => 'datetime',
             'km' => 'decimal:2',
             'status' => AppointmentStatus::class,
+            'charged_amount' => 'decimal:2',
+            'exchange_rate_buy' => 'decimal:4',
+            'exchange_rate_sell' => 'decimal:4',
+            'exchange_rate_date' => 'date',
+            'attended_at' => 'datetime',
         ];
     }
 }

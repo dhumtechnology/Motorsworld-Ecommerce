@@ -143,7 +143,7 @@
                 <div>
                     <h2 class="font-title text-lg text-text">Ganancias</h2>
                     <p class="text-xs text-muted font-secondary mt-0.5">
-                        Ingresos convertidos con el TC de cada compra · últimos 6 meses
+                        Pedidos pagados + servicios atendidos (TC de cada operación) · últimos 6 meses
                     </p>
                 </div>
                 <a href="{{ route('admin.payments.index') }}" class="text-xs font-bold uppercase tracking-wider text-primary font-secondary hover:text-primary-hover">

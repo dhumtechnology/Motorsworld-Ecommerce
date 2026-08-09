@@ -10,6 +10,9 @@
         <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <x-breadcrumb :items="[
                 ['label' => 'NUESTRA TIENDA', 'url' => null],
+                ...(($section ?? '') === 'all' && ! empty($filters['search'])
+                    ? [['label' => 'Búsqueda', 'url' => null]]
+                    : []),
             ]" />
 
             <form
@@ -17,8 +20,8 @@
                 method="GET"
                 class="flex w-full sm:w-auto sm:min-w-[280px] items-center gap-1 rounded-full border border-neutral-300 bg-white pl-4 pr-1 py-1 shadow-sm"
             >
-                @if (request('section'))
-                    <input type="hidden" name="section" value="{{ request('section') }}">
+                @if (request('section') || ($section ?? null) === 'all')
+                    <input type="hidden" name="section" value="{{ request('section', $section) }}">
                 @endif
 
                 <input
@@ -45,8 +48,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-8">
             <div class="lg:col-span-2">
                 <form action="{{ url()->current() }}" method="GET" class="flex flex-col gap-6 sticky top-4 h-fit">
-                    @if (request('section'))
-                        <input type="hidden" name="section" value="{{ request('section') }}">
+                    @if (request('section') || ($section ?? null) === 'all')
+                        <input type="hidden" name="section" value="{{ request('section', $section) }}">
                     @endif
 
                     @if (! empty($filters['search']))
@@ -84,7 +87,9 @@
                     @endif
 
                     <a
-                        href="{{ route('shop.catalog', array_filter(['section' => request('section')])) }}"
+                        href="{{ route('shop.catalog', array_filter([
+                            'section' => in_array($section ?? '', ['motos', 'accesorios'], true) ? $section : null,
+                        ])) }}"
                         class="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 transition-colors hover:border-orange-500 hover:text-orange-600"
                     >
                         Limpiar filtros

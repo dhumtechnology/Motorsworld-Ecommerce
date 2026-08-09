@@ -44,9 +44,9 @@ class GetDashboardMetricsAction
         $prevMonthStart = $now->copy()->subMonth()->startOfMonth();
         $prevMonthEnd = $now->copy()->subMonth()->endOfMonth();
 
-        $revenueThisMonthPen = $this->paidRevenueBetween($monthStart, $now, 'PEN');
-        $revenueThisMonthUsd = $this->paidRevenueBetween($monthStart, $now, 'USD');
-        $revenuePrevMonthPen = $this->paidRevenueBetween($prevMonthStart, $prevMonthEnd, 'PEN');
+        $revenueThisMonthPen = $this->totalRevenueBetween($monthStart, $now, 'PEN');
+        $revenueThisMonthUsd = $this->totalRevenueBetween($monthStart, $now, 'USD');
+        $revenuePrevMonthPen = $this->totalRevenueBetween($prevMonthStart, $prevMonthEnd, 'PEN');
 
         $revenueDeltaPercent = $revenuePrevMonthPen > 0
             ? round((($revenueThisMonthPen - $revenuePrevMonthPen) / $revenuePrevMonthPen) * 100, 1)
@@ -121,7 +121,16 @@ class GetDashboardMetricsAction
         ];
     }
 
-    private function paidRevenueBetween(Carbon $from, Carbon $to, string $displayCurrency): float
+    private function totalRevenueBetween(Carbon $from, Carbon $to, string $displayCurrency): float
+    {
+        return round(
+            $this->orderRevenueBetween($from, $to, $displayCurrency)
+            + $this->attendedServiceRevenueBetween($from, $to, $displayCurrency),
+            2,
+        );
+    }
+
+    private function orderRevenueBetween(Carbon $from, Carbon $to, string $displayCurrency): float
     {
         $payments = Payment::query()
             ->with(['order:id,currency,exchange_rate_sell,total_amount'])
@@ -150,6 +159,36 @@ class GetDashboardMetricsAction
             ->sum(fn (Order $order) => $order->amountIn($displayCurrency)), 2);
     }
 
+    private function attendedServiceRevenueBetween(Carbon $from, Carbon $to, string $displayCurrency): float
+    {
+        $fallbackSell = ExchangeRate::latestAvailable()?->sell_price;
+        $fallbackSell = $fallbackSell !== null ? (float) $fallbackSell : null;
+
+        return round((float) Appointment::query()
+            ->with(['servicePackage:id,price,currency', 'services:id,appointment_id,price,currency'])
+            ->where('status', AppointmentStatus::Attended)
+            ->where(function (Builder $query) use ($from, $to): void {
+                $query->whereBetween('attended_at', [$from, $to])
+                    ->orWhere(function (Builder $inner) use ($from, $to): void {
+                        $inner->whereNull('attended_at')
+                            ->whereBetween('updated_at', [$from, $to]);
+                    });
+            })
+            ->get()
+            ->sum(function (Appointment $appointment) use ($displayCurrency, $fallbackSell): float {
+                $sellRate = $appointment->exchange_rate_sell !== null
+                    ? (float) $appointment->exchange_rate_sell
+                    : $fallbackSell;
+
+                return Currency::convert(
+                    $appointment->revenueAmount(),
+                    $appointment->revenueCurrency(),
+                    $displayCurrency,
+                    $sellRate,
+                );
+            }), 2);
+    }
+
     /**
      * @return array{labels: list<string>, valuesPen: list<float>, valuesUsd: list<float>}
      */
@@ -157,14 +196,19 @@ class GetDashboardMetricsAction
     {
         $start = $now->copy()->subMonths(self::REVENUE_MONTHS - 1)->startOfMonth();
 
+        $byMonthPen = [];
+        $byMonthUsd = [];
+
+        $add = function (string $key, float $pen, float $usd) use (&$byMonthPen, &$byMonthUsd): void {
+            $byMonthPen[$key] = ($byMonthPen[$key] ?? 0) + $pen;
+            $byMonthUsd[$key] = ($byMonthUsd[$key] ?? 0) + $usd;
+        };
+
         $payments = Payment::query()
             ->with(['order:id,currency,exchange_rate_sell'])
             ->where('status', PaymentRecordStatus::Paid)
             ->where('paid_at', '>=', $start)
             ->get();
-
-        $byMonthPen = [];
-        $byMonthUsd = [];
 
         if ($payments->isNotEmpty()) {
             foreach ($payments as $payment) {
@@ -180,8 +224,11 @@ class GetDashboardMetricsAction
                     ? (float) $order->exchange_rate_sell
                     : null;
 
-                $byMonthPen[$key] = ($byMonthPen[$key] ?? 0) + Currency::convert($amount, $fromCurrency, 'PEN', $sellRate);
-                $byMonthUsd[$key] = ($byMonthUsd[$key] ?? 0) + Currency::convert($amount, $fromCurrency, 'USD', $sellRate);
+                $add(
+                    $key,
+                    Currency::convert($amount, $fromCurrency, 'PEN', $sellRate),
+                    Currency::convert($amount, $fromCurrency, 'USD', $sellRate),
+                );
             }
         } else {
             $orders = Order::query()
@@ -195,9 +242,44 @@ class GetDashboardMetricsAction
                     continue;
                 }
 
-                $byMonthPen[$key] = ($byMonthPen[$key] ?? 0) + $order->amountIn('PEN');
-                $byMonthUsd[$key] = ($byMonthUsd[$key] ?? 0) + $order->amountIn('USD');
+                $add($key, $order->amountIn('PEN'), $order->amountIn('USD'));
             }
+        }
+
+        $fallbackSell = ExchangeRate::latestAvailable()?->sell_price;
+        $fallbackSell = $fallbackSell !== null ? (float) $fallbackSell : null;
+
+        $attended = Appointment::query()
+            ->with(['servicePackage:id,price,currency', 'services:id,appointment_id,price,currency'])
+            ->where('status', AppointmentStatus::Attended)
+            ->where(function (Builder $query) use ($start): void {
+                $query->where('attended_at', '>=', $start)
+                    ->orWhere(function (Builder $inner) use ($start): void {
+                        $inner->whereNull('attended_at')
+                            ->where('updated_at', '>=', $start);
+                    });
+            })
+            ->get();
+
+        foreach ($attended as $appointment) {
+            $when = $appointment->attended_at ?? $appointment->updated_at;
+            $key = optional($when)->format('Y-m');
+            if ($key === null) {
+                continue;
+            }
+
+            $sellRate = $appointment->exchange_rate_sell !== null
+                ? (float) $appointment->exchange_rate_sell
+                : $fallbackSell;
+
+            $amount = $appointment->revenueAmount();
+            $currency = $appointment->revenueCurrency();
+
+            $add(
+                $key,
+                Currency::convert($amount, $currency, 'PEN', $sellRate),
+                Currency::convert($amount, $currency, 'USD', $sellRate),
+            );
         }
 
         $labels = [];

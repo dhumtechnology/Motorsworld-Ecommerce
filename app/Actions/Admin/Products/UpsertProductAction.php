@@ -33,6 +33,12 @@ class UpsertProductAction
      *     remove_image_ids?: list<int>
      * }>  $variants
      * @param  list<int>  $removeVariantIds
+     * @param  array{
+     *     available_stock?: int,
+     *     primary_image?: UploadedFile|null,
+     *     secondary_images?: list<UploadedFile>,
+     *     remove_image_ids?: list<int>
+     * }  $defaultGallery
      */
     public function execute(
         array $attributes,
@@ -41,6 +47,7 @@ class UpsertProductAction
         bool $removeTechnicalSheet = false,
         array $variants = [],
         array $removeVariantIds = [],
+        array $defaultGallery = [],
     ): Product {
         return DB::transaction(function () use (
             $attributes,
@@ -49,6 +56,7 @@ class UpsertProductAction
             $removeTechnicalSheet,
             $variants,
             $removeVariantIds,
+            $defaultGallery,
         ) {
             unset($attributes['image'], $attributes['technical_sheet']);
 
@@ -58,8 +66,35 @@ class UpsertProductAction
                 $product->update($attributes);
             }
 
-            $this->removeVariants($product, $removeVariantIds);
-            $this->syncVariants($product, $variants);
+            $willHaveColoredVariants = $this->willHaveColoredVariants(
+                $product,
+                $variants,
+                $removeVariantIds,
+            );
+
+            $this->removeVariants($product, $removeVariantIds, $willHaveColoredVariants);
+
+            $hadDefaultImages = $this->defaultImageQuery($product)->exists();
+
+            $coloredVariants = $this->syncColoredVariants($product, $variants);
+
+            if ($coloredVariants === []) {
+                $this->syncDefaultGallery($product, $defaultGallery);
+                $this->syncStandardVariant(
+                    $product,
+                    max(0, (int) ($defaultGallery['available_stock'] ?? 0)),
+                );
+            } else {
+                if ($hadDefaultImages) {
+                    $this->migrateDefaultImagesToVariant($product, $coloredVariants[0]);
+                }
+
+                $this->removeColorlessVariants($product, array_map(
+                    static fn (ProductVariant $variant): int => $variant->id,
+                    $coloredVariants,
+                ));
+            }
+
             $this->syncTechnicalSheet($product, $technicalSheet, $removeTechnicalSheet);
             $this->syncLegacyImageColumn($product);
 
@@ -76,29 +111,62 @@ class UpsertProductAction
     }
 
     /**
+     * @param  list<array{color_ids?: list<int>, new_colors?: list<array{name: string, hex?: string|null}>}>  $variants
+     * @param  list<int>  $removeVariantIds
+     */
+    private function willHaveColoredVariants(Product $product, array $variants, array $removeVariantIds): bool
+    {
+        foreach ($variants as $payload) {
+            $colorIds = array_values(array_filter(array_map(
+                'intval',
+                is_array($payload['color_ids'] ?? null) ? $payload['color_ids'] : [],
+            )));
+
+            if ($colorIds !== []) {
+                return true;
+            }
+
+            foreach ($payload['new_colors'] ?? [] as $newColor) {
+                if (trim((string) ($newColor['name'] ?? '')) !== '') {
+                    return true;
+                }
+            }
+        }
+
+        return $product->variants()
+            ->whereNotIn('id', $removeVariantIds === [] ? [0] : $removeVariantIds)
+            ->whereHas('colors')
+            ->exists();
+    }
+
+    /**
      * @param  list<int>  $variantIds
      */
-    private function removeVariants(Product $product, array $variantIds): void
+    private function removeVariants(Product $product, array $variantIds, bool $willHaveColoredVariants): void
     {
         if ($variantIds === []) {
             return;
         }
 
         $variants = $product->variants()
-            ->with(['images', 'orderItems'])
+            ->with(['images', 'orderItems', 'colors'])
             ->whereIn('id', $variantIds)
             ->get();
 
         foreach ($variants as $variant) {
             if ($variant->orderItems()->exists()) {
                 throw ValidationException::withMessages([
-                    'remove_variant_ids' => "No se puede eliminar el color «{$variant->colorLabel()}» porque tiene pedidos.",
+                    'remove_variant_ids' => "No se puede eliminar la combinación «{$variant->colorLabel()}» porque tiene pedidos.",
                 ]);
             }
 
             foreach ($variant->images as $image) {
-                $this->deleteStoredFile($image->path);
-                $image->delete();
+                if ($willHaveColoredVariants) {
+                    $this->deleteStoredFile($image->path);
+                    $image->delete();
+                } else {
+                    $image->forceFill(['product_variant_id' => null])->save();
+                }
             }
 
             $variant->colors()->detach();
@@ -117,10 +185,13 @@ class UpsertProductAction
      *     secondary_images?: list<UploadedFile>,
      *     remove_image_ids?: list<int>
      * }>  $variants
+     * @return list<ProductVariant>
      */
-    private function syncVariants(Product $product, array $variants): void
+    private function syncColoredVariants(Product $product, array $variants): array
     {
-        foreach ($variants as $payload) {
+        $synced = [];
+
+        foreach ($variants as $index => $payload) {
             $colorIds = $this->resolveColorIds(
                 $payload['color_ids'] ?? [],
                 $payload['new_colors'] ?? [],
@@ -128,84 +199,318 @@ class UpsertProductAction
 
             if ($colorIds === []) {
                 throw ValidationException::withMessages([
-                    'variants' => 'Cada combinación debe tener al menos un color.',
+                    "variants.{$index}.color_ids" => 'Cada combinación debe tener al menos un color. Quita la fila si ya no la necesitas.',
                 ]);
             }
 
-            $colors = Color::query()->whereIn('id', $colorIds)->get()->sortBy(
-                fn (Color $color) => array_search($color->id, $colorIds, true),
-            )->values();
+            $synced[] = $this->upsertVariant($product, $payload, $colorIds);
+        }
 
-            $colorNames = $colors->pluck('name')->all();
-            $label = $colors->pluck('name')->implode(' / ');
+        return $synced;
+    }
 
-            $variantId = isset($payload['id']) ? (int) $payload['id'] : null;
-            $variant = null;
+    /**
+     * @param  array{
+     *     id?: int|null,
+     *     available_stock: int,
+     *     primary_image?: UploadedFile|null,
+     *     secondary_images?: list<UploadedFile>,
+     *     remove_image_ids?: list<int>
+     * }  $payload
+     * @param  list<int>  $colorIds
+     */
+    private function upsertVariant(Product $product, array $payload, array $colorIds): ProductVariant
+    {
+        $colors = Color::query()->whereIn('id', $colorIds)->get()->sortBy(
+            fn (Color $color) => array_search($color->id, $colorIds, true),
+        )->values();
 
-            if ($variantId) {
-                $variant = $product->variants()->with('inventory')->where('id', $variantId)->first();
+        $colorNames = $colors->pluck('name')->all();
+        $label = $colors->isEmpty()
+            ? 'Estándar'
+            : $colors->pluck('name')->implode(' / ');
+
+        $variantId = isset($payload['id']) ? (int) $payload['id'] : null;
+        $variant = null;
+
+        if ($variantId) {
+            $variant = $product->variants()->with('inventory')->where('id', $variantId)->first();
+        }
+
+        $sku = ($this->generateSku)->forVariant($product, $colorNames, $variant);
+
+        if ($variant === null) {
+            $variant = ProductVariant::query()->create([
+                'product_id' => $product->id,
+                'sku' => $sku,
+                'name' => $label,
+                'is_active' => true,
+            ]);
+        } else {
+            $variant->update([
+                'sku' => $sku,
+                'name' => $label,
+            ]);
+        }
+
+        $sync = [];
+        foreach ($colorIds as $index => $colorId) {
+            $sync[$colorId] = ['sort_order' => $index];
+        }
+        $variant->colors()->sync($sync);
+
+        $this->syncVariantStock($product, $variant, max(0, (int) ($payload['available_stock'] ?? 0)));
+        $this->removeVariantImages($variant, $payload['remove_image_ids'] ?? []);
+
+        if (($payload['primary_image'] ?? null) instanceof UploadedFile) {
+            $this->storePrimaryImage($product, $variant, $payload['primary_image']);
+        }
+
+        foreach ($payload['secondary_images'] ?? [] as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
             }
 
-            $sku = ($this->generateSku)->forVariant($product, $colorNames, $variant);
+            $sortOrder = (int) $variant->images()->max('sort_order');
 
-            if ($variant === null) {
-                $variant = ProductVariant::query()->create([
-                    'product_id' => $product->id,
-                    'sku' => $sku,
-                    'name' => $label,
-                    'is_active' => true,
+            ProductImage::query()->create([
+                'product_id' => $product->id,
+                'product_variant_id' => $variant->id,
+                'path' => $this->storeUploadedFile($product, $file),
+                'sort_order' => max($sortOrder + 1, 1),
+                'is_primary' => false,
+            ]);
+        }
+
+        return $variant->fresh(['colors', 'inventory', 'images']) ?? $variant;
+    }
+
+    private function syncStandardVariant(Product $product, int $availableStock): void
+    {
+        $product->load(['variants.colors', 'variants.inventory', 'variants.orderItems']);
+
+        $standard = $product->variants->first(
+            fn (ProductVariant $variant) => $variant->colors->isEmpty(),
+        );
+
+        if ($standard === null) {
+            $standard = ProductVariant::query()->create([
+                'product_id' => $product->id,
+                'sku' => ($this->generateSku)->forVariant($product, [], null),
+                'name' => 'Estándar',
+                'is_active' => true,
+            ]);
+            $standard->setRelation('inventory', null);
+        } else {
+            $standard->update([
+                'sku' => ($this->generateSku)->forVariant($product, [], $standard),
+                'name' => 'Estándar',
+                'is_active' => true,
+            ]);
+        }
+
+        $standard->colors()->sync([]);
+        $this->syncVariantStock($product, $standard->fresh(['inventory']) ?? $standard, $availableStock);
+
+        // Las imágenes del producto sin colores viven a nivel producto (variant_id null).
+        $standard->load('images');
+        foreach ($standard->images as $image) {
+            $image->forceFill(['product_variant_id' => null])->save();
+        }
+
+        foreach ($product->variants as $variant) {
+            if ($variant->id === $standard->id || $variant->colors->isNotEmpty()) {
+                continue;
+            }
+
+            if ($variant->orderItems()->exists()) {
+                continue;
+            }
+
+            foreach ($variant->images as $image) {
+                $image->forceFill(['product_variant_id' => null])->save();
+            }
+
+            $variant->colors()->detach();
+            $variant->inventory()?->delete();
+            $variant->delete();
+        }
+    }
+
+    /**
+     * @param  list<int>  $keepVariantIds
+     */
+    private function removeColorlessVariants(Product $product, array $keepVariantIds): void
+    {
+        $product->load(['variants.colors', 'variants.images', 'variants.orderItems']);
+
+        foreach ($product->variants as $variant) {
+            if (in_array($variant->id, $keepVariantIds, true)) {
+                continue;
+            }
+
+            if ($variant->colors->isNotEmpty()) {
+                continue;
+            }
+
+            if ($variant->orderItems()->exists()) {
+                throw ValidationException::withMessages([
+                    'variants' => 'No se puede quitar la variante estándar porque tiene pedidos. Asigna colores a esa variante o contacta soporte.',
                 ]);
-            } else {
-                $variant->update([
-                    'sku' => $sku,
-                    'name' => $label,
-                ]);
             }
 
-            $sync = [];
-            foreach ($colorIds as $index => $colorId) {
-                $sync[$colorId] = ['sort_order' => $index];
-            }
-            $variant->colors()->sync($sync);
-
-            $availableStock = max(0, (int) ($payload['available_stock'] ?? 0));
-            $previousAvailable = (int) ($variant->inventory?->available_stock ?? 0);
-            $reservedStock = (int) ($variant->inventory?->reserved_stock ?? 0);
-
-            Inventory::query()->updateOrCreate(
-                ['product_variant_id' => $variant->id],
-                [
-                    'product_id' => $product->id,
-                    'available_stock' => $availableStock,
-                    'reserved_stock' => $reservedStock,
-                    'total_stock' => $availableStock + $reservedStock,
-                ],
-            );
-
-            $this->recordStockAdjustment($product, $variant, $previousAvailable, $availableStock);
-
-            $this->removeImages($variant, $payload['remove_image_ids'] ?? []);
-
-            if (($payload['primary_image'] ?? null) instanceof UploadedFile) {
-                $this->storePrimaryImage($product, $variant, $payload['primary_image']);
+            foreach ($variant->images as $image) {
+                $this->deleteStoredFile($image->path);
+                $image->delete();
             }
 
-            foreach ($payload['secondary_images'] ?? [] as $file) {
-                if (! $file instanceof UploadedFile) {
-                    continue;
-                }
+            $variant->colors()->detach();
+            $variant->inventory()?->delete();
+            $variant->delete();
+        }
+    }
 
-                $sortOrder = (int) $variant->images()->max('sort_order');
+    private function migrateDefaultImagesToVariant(Product $product, ProductVariant $variant): void
+    {
+        $defaultImages = $this->defaultImageQuery($product)
+            ->orderBy('sort_order')
+            ->get();
 
-                ProductImage::query()->create([
-                    'product_id' => $product->id,
-                    'product_variant_id' => $variant->id,
-                    'path' => $this->storeUploadedFile($product, $file),
-                    'sort_order' => max($sortOrder + 1, 1),
-                    'is_primary' => false,
-                ]);
+        if ($defaultImages->isEmpty()) {
+            return;
+        }
+
+        $hasPrimaryOnVariant = $variant->images()->where('is_primary', true)->exists();
+
+        foreach ($defaultImages as $index => $image) {
+            if ((int) $image->product_variant_id === (int) $variant->id) {
+                continue;
+            }
+
+            $isPrimary = (bool) $image->is_primary;
+
+            if ($hasPrimaryOnVariant) {
+                $isPrimary = false;
+            } elseif ($isPrimary) {
+                $hasPrimaryOnVariant = true;
+            } elseif ($index === 0 && ! $hasPrimaryOnVariant) {
+                $isPrimary = true;
+                $hasPrimaryOnVariant = true;
+            }
+
+            $image->forceFill([
+                'product_variant_id' => $variant->id,
+                'is_primary' => $isPrimary,
+            ])->save();
+        }
+
+        if ($hasPrimaryOnVariant) {
+            $primary = $variant->images()->where('is_primary', true)->orderBy('sort_order')->first();
+            if ($primary) {
+                $variant->images()
+                    ->where('id', '!=', $primary->id)
+                    ->update(['is_primary' => false]);
             }
         }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Products\ProductImage, Product>
+     */
+    private function defaultImageQuery(Product $product)
+    {
+        return $product->images()
+            ->where(function ($query) use ($product) {
+                $query->whereNull('product_variant_id')
+                    ->orWhereIn(
+                        'product_variant_id',
+                        $product->variants()->whereDoesntHave('colors')->select('id'),
+                    );
+            });
+    }
+
+    /**
+     * @param  array{
+     *     available_stock?: int,
+     *     primary_image?: UploadedFile|null,
+     *     secondary_images?: list<UploadedFile>,
+     *     remove_image_ids?: list<int>
+     * }  $gallery
+     */
+    private function syncDefaultGallery(Product $product, array $gallery): void
+    {
+        $removeIds = $gallery['remove_image_ids'] ?? [];
+        if ($removeIds !== []) {
+            $images = $this->defaultImageQuery($product)
+                ->whereIn('id', $removeIds)
+                ->get();
+
+            foreach ($images as $image) {
+                $this->deleteStoredFile($image->path);
+                $image->delete();
+            }
+        }
+
+        if (($gallery['primary_image'] ?? null) instanceof UploadedFile) {
+            $previousPrimary = $this->defaultImageQuery($product)
+                ->where('is_primary', true)
+                ->get();
+
+            foreach ($previousPrimary as $image) {
+                $this->deleteStoredFile($image->path);
+                $image->delete();
+            }
+
+            $path = $this->storeUploadedFile($product, $gallery['primary_image']);
+
+            ProductImage::query()->create([
+                'product_id' => $product->id,
+                'product_variant_id' => null,
+                'path' => $path,
+                'sort_order' => 0,
+                'is_primary' => true,
+            ]);
+
+            $this->defaultImageQuery($product)
+                ->where('path', '!=', $path)
+                ->update(['is_primary' => false]);
+        }
+
+        foreach ($gallery['secondary_images'] ?? [] as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
+            }
+
+            $sortOrder = (int) $this->defaultImageQuery($product)->max('sort_order');
+
+            ProductImage::query()->create([
+                'product_id' => $product->id,
+                'product_variant_id' => null,
+                'path' => $this->storeUploadedFile($product, $file),
+                'sort_order' => max($sortOrder + 1, 1),
+                'is_primary' => false,
+            ]);
+        }
+    }
+
+    private function syncVariantStock(Product $product, ProductVariant $variant, int $availableStock): void
+    {
+        $variant->loadMissing('inventory');
+
+        $previousAvailable = (int) ($variant->inventory?->available_stock ?? 0);
+        $reservedStock = (int) ($variant->inventory?->reserved_stock ?? 0);
+
+        Inventory::query()->updateOrCreate(
+            ['product_variant_id' => $variant->id],
+            [
+                'product_id' => $product->id,
+                'available_stock' => $availableStock,
+                'reserved_stock' => $reservedStock,
+                'total_stock' => $availableStock + $reservedStock,
+            ],
+        );
+
+        $this->recordStockAdjustment($product, $variant, $previousAvailable, $availableStock);
     }
 
     /**
@@ -264,7 +569,7 @@ class UpsertProductAction
             'reason' => InventoryMovementReason::Adjustment,
             'quantity' => abs($delta),
             'notes' => $previousAvailable === 0 && $delta > 0 && $variant->wasRecentlyCreated
-                ? 'Stock inicial al crear color '.$variant->colorLabel()
+                ? 'Stock inicial ('.$variant->colorLabel().')'
                 : 'Ajuste desde ficha de producto ('.$variant->colorLabel().')',
             'created_by' => auth()->id(),
         ]);
@@ -273,7 +578,7 @@ class UpsertProductAction
     /**
      * @param  list<int>  $imageIds
      */
-    private function removeImages(ProductVariant $variant, array $imageIds): void
+    private function removeVariantImages(ProductVariant $variant, array $imageIds): void
     {
         if ($imageIds === []) {
             return;

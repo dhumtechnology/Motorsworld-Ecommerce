@@ -63,10 +63,19 @@ class ProductController extends Controller
             ->map(fn ($qty) => (int) $qty)
             ->all();
 
+        $defaultProductImages = $product->images
+            ->filter(fn ($image) => $image->product_variant_id === null && filled($image->path))
+            ->values()
+            ->map(fn ($image) => [
+                'path' => $image->path,
+                'is_primary' => (bool) $image->is_primary,
+            ])
+            ->all();
+
         $variantsPayload = $product->variants
             ->filter(fn ($variant) => (bool) $variant->is_active)
             ->values()
-            ->map(function ($variant) use ($cartQuantitiesByVariant) {
+            ->map(function ($variant) use ($cartQuantitiesByVariant, $defaultProductImages) {
                 $images = $variant->images
                     ->filter(fn ($image) => filled($image->path))
                     ->values()
@@ -76,10 +85,15 @@ class ProductController extends Controller
                     ])
                     ->all();
 
+                if ($images === [] && $variant->colors->isEmpty() && $defaultProductImages !== []) {
+                    $images = $defaultProductImages;
+                }
+
                 return [
                     'id' => $variant->id,
                     'sku' => $variant->sku,
                     'label' => $variant->colorLabel(),
+                    'has_colors' => $variant->colors->isNotEmpty(),
                     'available_stock' => (int) ($variant->inventory?->available_stock ?? 0),
                     'cart_quantity' => (int) ($cartQuantitiesByVariant[$variant->id] ?? 0),
                     'colors' => $variant->colors->map(fn ($color) => [
@@ -91,9 +105,24 @@ class ProductController extends Controller
             })
             ->all();
 
-        $defaultVariant = collect($variantsPayload)->first(
+        // Si no hay imágenes a nivel producto, usar las de la variante estándar.
+        if ($defaultProductImages === []) {
+            $stdPayload = collect($variantsPayload)->first(fn (array $v) => ! $v['has_colors']);
+            if ($stdPayload && $stdPayload['images'] !== []) {
+                $defaultProductImages = $stdPayload['images'];
+            }
+        }
+
+        $coloredVariants = collect($variantsPayload)->filter(fn (array $variant) => $variant['has_colors'])->values();
+        $hasColorChoices = $coloredVariants->isNotEmpty();
+
+        $pickerVariants = $hasColorChoices
+            ? $coloredVariants->all()
+            : collect($variantsPayload)->all();
+
+        $defaultVariant = collect($pickerVariants)->first(
             fn (array $variant) => $variant['available_stock'] > 0
-        ) ?? collect($variantsPayload)->first();
+        ) ?? collect($pickerVariants)->first();
 
         $defaultVariantId = $defaultVariant['id'] ?? null;
 
@@ -107,8 +136,10 @@ class ProductController extends Controller
             'cartLineQuantity' => $cartLineQuantity,
             'popularProducts' => $this->popularProducts->execute(10),
             'cartQuantities' => $cartQuantitiesByProduct,
-            'variantsPayload' => $variantsPayload,
+            'variantsPayload' => $pickerVariants,
             'defaultVariantId' => $defaultVariantId,
+            'hasColorChoices' => $hasColorChoices,
+            'defaultProductImages' => $defaultProductImages,
         ]);
     }
 

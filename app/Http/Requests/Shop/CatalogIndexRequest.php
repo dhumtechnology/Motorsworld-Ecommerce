@@ -20,7 +20,7 @@ class CatalogIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'section' => ['nullable', 'string', Rule::in(['motos', 'accesorios'])],
+            'section' => ['nullable', 'string', Rule::in(['motos', 'accesorios', 'all'])],
             'categories' => ['nullable', 'array'],
             'categories.*' => ['integer', 'min:1', 'exists:categories,id'],
             'brands' => ['nullable', 'array'],
@@ -128,7 +128,16 @@ class CatalogIndexRequest extends FormRequest
     {
         $section = $this->input('section');
 
-        return in_array($section, ['motos', 'accesorios'], true) ? $section : 'accesorios';
+        if (in_array($section, ['motos', 'accesorios', 'all'], true)) {
+            return $section;
+        }
+
+        // Búsqueda global (p. ej. header): sin sección → todo el catálogo.
+        if ($this->searchTerm() !== null) {
+            return 'all';
+        }
+
+        return 'accesorios';
     }
 
     /**

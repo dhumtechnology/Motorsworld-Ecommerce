@@ -331,7 +331,7 @@
                 '<div class="inline-flex items-center gap-3 rounded-lg border border-border bg-surface p-2">' +
                 '<img src="' + url + '" alt="" class="h-16 w-16 rounded object-cover">' +
                 '<div class="text-left"><p class="text-sm text-text font-semibold truncate max-w-[14rem]">' + file.name + '</p>' +
-                '<button type="button" data-clear-primary class="mt-1 text-xs font-bold uppercase tracking-wide text-red-600 hover:text-red-300">Quitar</button></div></div>';
+                '<button type="button" data-clear-primary class="mt-1 text-xs font-bold uppercase tracking-wide text-red-600 hover:text-red-700">Quitar</button></div></div>';
 
             container.querySelector('[data-clear-primary]')?.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -358,7 +358,7 @@
                 card.className = 'relative overflow-hidden rounded-lg border border-border bg-surface';
                 card.innerHTML =
                     '<img src="' + url + '" alt="" class="h-28 w-full object-cover">' +
-                    '<button type="button" data-remove-index="' + index + '" class="absolute inset-x-0 bottom-0 bg-black/70 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-300 hover:text-red-200">Quitar</button>';
+                    '<button type="button" data-remove-index="' + index + '" class="absolute inset-x-0 bottom-0 bg-black/70 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-200 hover:text-red-100">Quitar</button>';
                 container.appendChild(card);
             });
 
@@ -443,7 +443,7 @@
         setupDropzone('secondary');
     })();
 
-    window.productVariantsForm = function (initialVariants, availableColors) {
+    window.productVariantsForm = function (initialVariants, availableColors, defaultImages, defaultStock) {
         return {
             variants: (initialVariants || []).map((v, i) => ({
                 _key: v.id ? 'v-' + v.id : 'n-' + i + '-' + Date.now(),
@@ -456,15 +456,23 @@
                 remove_image_ids: v.remove_image_ids || [],
             })),
             availableColors: availableColors || [],
+            defaultImages: defaultImages || [],
+            defaultRemoveImageIds: [],
+            defaultStock: Number(defaultStock || 0),
             removedVariantIds: [],
+            colorById(colorId) {
+                const id = String(colorId);
+                return this.availableColors.find((c) => String(c.id) === id) || null;
+            },
             addVariant() {
+                const carryStock = this.variants.length === 0 ? Number(this.defaultStock || 0) : 0;
                 this.variants.push({
                     _key: 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
                     id: null,
                     sku: '',
                     color_ids: [],
                     new_colors: [{ name: '', hex: '#FF6600' }],
-                    available_stock: 0,
+                    available_stock: carryStock,
                     images: [],
                     remove_image_ids: [],
                 });
@@ -484,6 +492,9 @@
                     variant.color_ids = variant.color_ids.filter((c) => c !== id);
                 }
             },
+            removeColorFromVariant(variant, colorId) {
+                this.toggleColor(variant, colorId, false);
+            },
             addNewColor(variant) {
                 variant.new_colors.push({ name: '', hex: '#FF6600' });
             },
@@ -496,6 +507,16 @@
                     variant.remove_image_ids = variant.remove_image_ids.filter((x) => x !== id);
                 }
             },
+            toggleDefaultRemoveImage(imageId, checked) {
+                if (!imageId) return;
+                const id = Number(imageId);
+                if (checked) {
+                    if (!this.defaultRemoveImageIds.includes(id)) this.defaultRemoveImageIds.push(id);
+                } else {
+                    this.defaultRemoveImageIds = this.defaultRemoveImageIds.filter((x) => x !== id);
+                }
+            },
         };
     };
+
 </script>

@@ -112,27 +112,86 @@
 </style>
 
 {{-- Tenemos todo lo que necesitas --}}
-<section class="bg-white border-t border-neutral-100">
-    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
+<section class="bg-white border-t border-neutral-100"
+         x-data="{
+             current: 0,
+             get total() {
+                 return this.$refs.slider ? this.$refs.slider.children.length : 0;
+             },
+             next() {
+                 if (this.total === 0) return;
+                 this.current = (this.current + 1) % this.total;
+                 this.scrollToCurrent();
+             },
+             prev() {
+                 if (this.total === 0) return;
+                 this.current = (this.current - 1 + this.total) % this.total;
+                 this.scrollToCurrent();
+             },
+             scrollToCurrent() {
+                 const container = this.$refs.slider;
+                 const card = container.children[this.current];
+                 if (card) {
+                     container.scrollTo({
+                         left: card.offsetLeft - container.offsetLeft,
+                         behavior: 'smooth'
+                     });
+                 }
+             }
+         }">
+    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14 relative">
         <h2 class="mb-8 md:mb-10 text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
             Tenemos todo lo que necesitas
         </h2>
 
-        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
-            @foreach ($needLinks as $link)
-                <a
-                    href="{{ $link['href'] }}"
-                    class="group relative block overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-                >
-                    <img
-                        src="{{ $link['image'] }}"
-                        alt="{{ $link['label'] }}"
-                        class="block h-auto w-full transition-transform duration-500 ease-out group-hover:scale-105"
-                        onerror="this.classList.add('opacity-0');"
-                    >
-                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
-                </a>
-            @endforeach
+        <!-- Contenedor relativo para posicionar las flechas -->
+        <div class="relative group">
+            
+            <!-- Flecha Izquierda (Anterior) -->
+            <button 
+                @click="prev()" 
+                aria-label="Anterior"
+                class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-all hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+            </button>
+
+            <!-- Flecha Derecha (Siguiente) -->
+            <button 
+                @click="next()" 
+                aria-label="Siguiente"
+                class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-all hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+            </button>
+
+            <!-- Slider / Carrusel -->
+            <div 
+                x-ref="slider"
+                class="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth py-1"
+            >
+                @foreach ($needLinks as $index => $link)
+                    <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
+                        <a
+                            href="{{ $link['href'] }}"
+                            class="group relative block overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                        >
+                            <img
+                                src="{{ $link['image'] }}"
+                                alt="{{ $link['label'] }}"
+                                class="block h-auto w-full transition-transform duration-500 ease-out group-hover:scale-105"
+                                onerror="this.classList.add('opacity-0');"
+                            >
+                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+
         </div>
     </div>
 </section>
@@ -182,7 +241,7 @@
                             </div>
                             <div class="flex items-center justify-center bg-primary px-3 py-3 text-center">
                                 <span class="text-xl font-black text-white tracking-tight">
-                                    {{ $product->currencySymbol() }} {{ number_format($price, 2) }}
+                                    S/ {{ number_format($price, 2) }}
                                 </span>
                             </div>
                         </div>

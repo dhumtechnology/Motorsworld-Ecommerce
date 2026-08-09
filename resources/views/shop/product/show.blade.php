@@ -194,7 +194,7 @@
 
         <div
             class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-8 select-none font-title"
-            x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }}, @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'))"
+            x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }}, @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'), {{ ($hasColorChoices ?? false) ? 'true' : 'false' }})"
         >
             <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 h-fit">
                 <div class="flex flex-row px-4 sm:flex-col gap-3 py-1" x-show="galleryImages.length > 0">
@@ -231,7 +231,7 @@
                     <p><span class="font-bold">Disponibilidad:</span> <span class="font-bold" x-text="stockLabel"></span></p>
                 </div>
 
-                <div class="my-4 space-y-3" x-show="variants.length > 0">
+                <div class="my-4 space-y-3" x-show="hasColorChoices && variants.length > 0">
                     <div class="flex items-end justify-between gap-3">
                         <p class="text-sm font-bold uppercase tracking-wide">Elige un color</p>
                         <p class="text-xs text-neutral-600" x-show="selected">
@@ -275,7 +275,7 @@
                 </div>
 
                 <div class="my-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" x-show="variants.length === 0">
-                    Este producto aún no tiene colores configurados.
+                    Este producto no está disponible para compra por ahora.
                 </div>
 
                 <div class="my-6 flex items-baseline gap-4">
@@ -310,7 +310,7 @@
                             class="w-full sm:w-auto px-8 py-3 text-white font-title bold tracking-widest bg-primary rounded hover:bg-black cursor-pointer transition-colors uppercase disabled:opacity-60"
                         >
                             <span>Agregar al carrito</span>
-                            <span class="normal-case tracking-normal font-semibold opacity-90" x-text="selected ? ' — ' + selected.label : ''"></span>
+                            <span class="normal-case tracking-normal font-semibold opacity-90" x-show="hasColorChoices" x-text="selected ? ' — ' + selected.label : ''"></span>
                         </button>
                         <button
                             type="button"
@@ -318,13 +318,13 @@
                             x-show="!selectedId || selectedStock <= 0"
                             class="w-full sm:w-auto px-8 py-3 bg-neutral-700 text-neutral-400 font-extrabold text-xs tracking-widest rounded uppercase cursor-not-allowed"
                         >
-                            <span x-text="!selectedId ? 'Selecciona un color' : 'Agotado'"></span>
+                            <span x-text="!selectedId ? (hasColorChoices ? 'Selecciona un color' : 'No disponible') : 'Agotado'"></span>
                         </button>
                     </div>
 
                     <div data-cart-qty x-show="cartQty > 0" x-cloak class="space-y-2">
                         <p class="text-xs text-neutral-600">
-                            En carrito (<span class="font-bold text-black" x-text="selected?.label"></span>):
+                            En carrito<span x-show="hasColorChoices"> (<span class="font-bold text-black" x-text="selected?.label"></span>)</span>:
                         </p>
                         <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm">
                             <button type="button" data-cart-action="decrement" :disabled="cartBusy" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Disminuir">−</button>
@@ -334,7 +334,7 @@
                             <button type="button" data-cart-action="increment" :disabled="cartBusy || cartQty >= selectedStock" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Aumentar">+</button>
                         </div>
                         <p class="text-xs">
-                            Puedes elegir otro color y agregarlo también.
+                            <span x-show="hasColorChoices">Puedes elegir otro color y agregarlo también.</span>
                             <a href="{{ route('shop.cart.index') }}" class="hover:text-orange-400 font-bold">Ver carrito →</a>
                         </p>
                     </div>
@@ -343,11 +343,12 @@
         </div>
 
         <script>
-            window.productColorPicker = function (variants, defaultId, fallbackImage) {
+            window.productColorPicker = function (variants, defaultId, fallbackImage, hasColorChoices) {
                 const list = Array.isArray(variants) ? variants : [];
                 const initial = list.find((v) => Number(v.id) === Number(defaultId)) || list[0] || null;
                 return {
                     variants: list,
+                    hasColorChoices: Boolean(hasColorChoices),
                     selectedId: initial ? Number(initial.id) : null,
                     cartQty: Number(initial?.cart_quantity || 0),
                     cartBusy: false,
@@ -360,7 +361,7 @@
                     get selectedStock() { return Number(this.selected?.available_stock || 0); },
                     get galleryImages() { return this.selected?.images?.length ? this.selected.images : [{ path: this.mainImage }]; },
                     get stockLabel() {
-                        if (!this.selected) return 'Sin colores';
+                        if (!this.selected) return 'No disponible';
                         return this.selectedStock > 0 ? `En Stock (${this.selectedStock} u.)` : 'Agotado';
                     },
                     syncCartRoot() {
