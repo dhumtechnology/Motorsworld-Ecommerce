@@ -268,36 +268,39 @@
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <template x-for="variant in variants" :key="variant.id">
                             <button
                                 type="button"
                                 @click="selectVariant(variant.id)"
                                 :class="Number(selectedId) === Number(variant.id)
-                                    ? 'border-[#f15a24] bg-orange-50 ring-1 ring-[#f15a24]/40'
+                                    ? 'border-black bg-orange-50 ring-1 ring-[#f15a24]/40'
                                     : 'border-neutral-300 hover:border-neutral-500 bg-white'"
-                                class="w-full rounded border px-3 py-2.5 text-left transition-colors"
+                                class="w-fit rounded-lg border px-3 py-2 text-left transition-colors shadow-sm"
                             >
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="flex -space-x-1 shrink-0">
-                                            <template x-for="(color, cIndex) in (variant.colors.length ? variant.colors : [{ name: variant.label, hex: '#9CA3AF' }])" :key="cIndex">
-                                                <span
-                                                    class="h-5 w-5 rounded-full border-2 border-white shadow-sm"
-                                                    :style="`background:${color.hex || '#d1d5db'}`"
-                                                    :title="color.name"
-                                                ></span>
-                                            </template>
-                                        </div>
-                                        <span class="text-sm font-semibold truncate" x-text="variant.label"></span>
+                                <!-- Fila superior: Círculos de color y Unidades -->
+                                <div class="flex items-center justify-between gap-3">
+                                    <!-- Círculos de color con borde negro fino -->
+                                    <div class="flex -space-x-1 shrink-0">
+                                        <template x-for="(color, cIndex) in (variant.colors.length ? variant.colors : [{ name: variant.label, hex: '#9CA3AF' }])" :key="cIndex">
+                                            <span
+                                                class="h-5 w-5 rounded-full border border-black shadow-sm"
+                                                :style="`background:${color.hex || '#d1d5db'}`"
+                                                :title="color.name"
+                                            ></span>
+                                        </template>
                                     </div>
+
+                                    <!-- Cantidad de unidades -->
                                     <span
-                                        class="shrink-0 text-[11px] font-bold uppercase tracking-wide"
+                                        class="shrink-0 text-xs font-bold tracking-wide"
                                         :class="Number(variant.available_stock) > 0 ? 'text-emerald-700' : 'text-rose-600'"
                                         x-text="Number(variant.available_stock) > 0 ? (variant.available_stock + ' u.') : 'Agotado'"
                                     ></span>
                                 </div>
-                                <p class="mt-1 text-[11px] text-neutral-500 font-mono truncate" x-text="variant.sku"></p>
+
+                                <!-- Fila inferior: Nombre del color -->
+                                <p class="mt-1 text-xs font-medium text-neutral-900 truncate" x-text="variant.label"></p>
                             </button>
                         </template>
                     </div>
