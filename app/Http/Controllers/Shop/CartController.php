@@ -92,6 +92,16 @@ class CartController extends Controller
         return $this->respond($cart, $variant->id);
     }
 
+    public function remove(Request $request, Product $product): JsonResponse
+    {
+        $cart = $this->resolveCart($request);
+        $variant = $this->resolveVariant($request, $product);
+
+        $this->updateQuantity->execute($cart, $variant, 0);
+
+        return $this->respond($cart, $variant->id);
+    }
+
     private function resolveCart(Request $request): Cart
     {
         return $this->cartResolver->resolve(

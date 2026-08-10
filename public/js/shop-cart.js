@@ -439,6 +439,7 @@
             store: root.dataset.storeUrl,
             increment: root.dataset.incrementUrl,
             decrement: root.dataset.decrementUrl,
+            remove: button.dataset.removeUrl || root.dataset.removeUrl,
         };
 
         const url = urls[action];
@@ -460,6 +461,8 @@
             optimisticQty = previousQty + 1;
         } else if (action === 'decrement') {
             optimisticQty = Math.max(0, previousQty - 1);
+        } else if (action === 'remove') {
+            optimisticQty = 0;
         }
 
         if (root.hasAttribute('data-product-cart') || root.hasAttribute('data-cart-line')) {
@@ -471,7 +474,8 @@
                 product_variant_id: variantId,
                 ...(action === 'store' ? { quantity: 1 } : {}),
             };
-            const data = await cartRequest(url, 'POST', body);
+            const method = action === 'remove' ? 'DELETE' : 'POST';
+            const data = await cartRequest(url, method, body);
 
             updateBadge(Number(data.item_count || 0));
             updateCartDrawer(data);
