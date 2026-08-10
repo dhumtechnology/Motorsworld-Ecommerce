@@ -21,7 +21,7 @@
                 badge = document.createElement('span');
                 badge.setAttribute('data-cart-badge', '');
                 badge.className =
-                    'absolute -right-2 -top-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center';
+                    'absolute -left-3 -top-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center';
                 mark.appendChild(badge);
             }
 
