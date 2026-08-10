@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Actions\Cart\AddProductToCartAction;
+use App\Actions\Cart\BuildCartLinesAction;
 use App\Actions\Cart\UpdateCartItemQuantityAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\AddToCartRequest;
@@ -12,7 +13,6 @@ use App\Models\Products\Product;
 use App\Models\Products\ProductVariant;
 use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
-use App\Services\Orders\ProductPricingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,46 +25,13 @@ class CartController extends Controller
         private readonly AddProductToCartAction $addProduct,
         private readonly UpdateCartItemQuantityAction $updateQuantity,
         private readonly CartTotalsService $cartTotals,
-        private readonly ProductPricingService $pricing,
+        private readonly BuildCartLinesAction $buildCartLines,
     ) {}
 
     public function index(Request $request): View
     {
         $cart = $this->resolveCart($request);
-        $cart->loadMissing([
-            'items.product.category',
-            'items.product.primaryImage',
-            'items.product.activeOffer',
-            'items.variant.inventory',
-            'items.variant.images',
-            'items.variant.colors',
-        ]);
-
-        $lines = $cart->items
-            ->filter(fn ($item) => $item->product !== null && $item->variant !== null)
-            ->map(function ($item) {
-                $product = $item->product;
-                $variant = $item->variant;
-                $price = $this->pricing->resolve($product);
-
-                return [
-                    'item' => $item,
-                    'product' => $product,
-                    'variant' => $variant,
-                    'quantity' => (int) $item->quantity,
-                    'unit_price' => (float) $price->unitPrice,
-                    'list_unit_price' => (float) $price->listUnitPrice,
-                    'line_total' => (float) $price->unitPrice * (int) $item->quantity,
-                    'is_on_sale' => $price->hasOffer(),
-                    'image' => $variant->catalogImageUrl() ?? $product->catalogImageUrl(),
-                    'max_quantity' => max(0, (int) ($variant->inventory?->available_stock ?? 0)),
-                    'color_label' => $variant->colorLabel(),
-                    'currency' => strtoupper((string) ($price->currency ?: 'PEN')),
-                    'currency_symbol' => \App\Support\Currency::symbol($price->currency ?: 'PEN'),
-                ];
-            })
-            ->values();
-
+        $lines = $this->buildCartLines->execute($cart);
         $totals = $this->cartTotals->summarize($lines);
 
         return view('shop.cart.index', [

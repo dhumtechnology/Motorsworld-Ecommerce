@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Actions\Cart\BuildCartLinesAction;
 use App\Actions\Shop\GetShopHeaderSearchDataAction;
 use App\Models\Auth\User;
 use App\Services\Cart\CartResolver;
+use App\Services\Cart\CartTotalsService;
 use App\Services\Payments\Culqi\CulqiClient;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -43,7 +45,9 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.shop', function ($view): void {
             $request = request();
+            $cartLines = collect();
             $count = 0;
+            $cartTotals = null;
 
             if ($request->hasSession()) {
                 $cart = app(CartResolver::class)->resolve(
@@ -51,13 +55,17 @@ class AppServiceProvider extends ServiceProvider
                     $request->session()->getId(),
                 );
 
-                $count = (int) $cart->items()->sum('quantity');
+                $cartLines = app(BuildCartLinesAction::class)->execute($cart);
+                $count = (int) $cartLines->sum('quantity');
+                $cartTotals = app(CartTotalsService::class)->summarize($cartLines);
             }
 
             $searchData = app(GetShopHeaderSearchDataAction::class)->execute();
 
             $view->with([
                 'cartItemCount' => $count,
+                'cartDrawerLines' => $cartLines,
+                'cartDrawerTotals' => $cartTotals,
                 'searchCategories' => $searchData['searchCategories'],
                 'searchRecommendedProducts' => $searchData['searchRecommendedProducts'],
             ]);

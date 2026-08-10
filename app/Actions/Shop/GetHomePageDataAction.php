@@ -9,7 +9,6 @@ use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Services\Products\ProductOfferPresenter;
 use App\Support\QueryResultCache;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class GetHomePageDataAction
@@ -66,12 +65,12 @@ class GetHomePageDataAction
     }
 
     /**
+     * Top productos por ventas (motos y accesorios). Si no hay ventas, últimos activos.
+     *
      * @return Collection<int, Product>
      */
     private function popularProducts(): Collection
     {
-        $motosCategoryId = $this->motosCategoryId();
-
         $rankedIds = Product::query()
             ->toBase()
             ->select('products.id')
@@ -82,10 +81,6 @@ class GetHomePageDataAction
                 OrderStatus::Cancelled->value,
                 OrderStatus::Refunded->value,
             ])
-            ->when(
-                $motosCategoryId !== null,
-                fn ($q) => $q->where('products.category_id', '!=', $motosCategoryId),
-            )
             ->groupBy('products.id')
             ->orderByRaw('SUM(order_items.quantity) DESC')
             ->limit(self::POPULAR_LIMIT)
@@ -94,10 +89,6 @@ class GetHomePageDataAction
         if ($rankedIds->isEmpty()) {
             $fallback = Product::query()
                 ->active()
-                ->when(
-                    $motosCategoryId !== null,
-                    fn (Builder $q) => $q->where('category_id', '!=', $motosCategoryId),
-                )
                 ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
                 ->latest('id')
                 ->limit(self::POPULAR_LIMIT)

@@ -362,10 +362,18 @@
                             </div>
                             <button type="button" data-cart-action="increment" :disabled="cartBusy || cartQty >= selectedStock" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Aumentar">+</button>
                         </div>
-                        <p class="text-xs">
-                            <span x-show="hasColorChoices">Puedes elegir otro color y agregarlo también.</span>
-                            <a href="{{ route('shop.cart.index') }}" class="hover:text-orange-400 font-bold">Ver carrito →</a>
+                        <p class="text-xs text-neutral-600" x-show="hasColorChoices">
+                            Puedes elegir otro color y agregarlo también.
                         </p>
+                        <button
+                            type="button"
+                            x-show="cartQty > 1"
+                            x-cloak
+                            @click="$dispatch('open-cart-drawer')"
+                            class="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-500 transition-colors"
+                        >
+                            Ver carrito →
+                        </button>
                     </div>
                 </div>
             </div>

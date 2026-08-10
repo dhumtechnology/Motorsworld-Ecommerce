@@ -14,7 +14,7 @@
     - public/images/home/need-repuestos.png
 
     Variables:
-    - $popularProducts : Collection<Product> (top 4 por ventas, sin MOTOS)
+    - $popularProducts : Collection<Product> (top por ventas; incluye motos)
     - $brands          : Collection<Brand> — marcas con imagen (id, name, image)
     - $categories      : Collection<Category> — categorías con imagen (id, name, description, image)
 --}}
@@ -278,7 +278,9 @@
         @if ($popularProducts->isEmpty())
             <p class="text-center text-sm text-neutral-500">Pronto verás aquí los productos más vendidos.</p>
         @else
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div
+                class="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scroll-smooth scrollbar-none md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 md:snap-none lg:grid-cols-4"
+            >
                 @foreach ($popularProducts as $product)
                     @php
                         $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motoworld';
@@ -292,7 +294,7 @@
 
                     <a
                         href="{{ route('shop.product.show', $product) }}"
-                        class="group flex flex-col overflow-hidden border border-neutral-200 bg-white transition-shadow hover:shadow-md"
+                        class="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden border border-neutral-200 bg-white transition-shadow hover:shadow-md sm:w-[45%] md:w-auto md:min-w-0 md:shrink"
                     >
                         <div class="relative aspect-square overflow-hidden bg-neutral-100">
                             <img

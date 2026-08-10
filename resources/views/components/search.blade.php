@@ -12,7 +12,7 @@
 @endphp
 
 <div
-    class="relative"
+    class="relative h-full"
     x-data="{
         open: false,
         query: @js($current),
@@ -35,7 +35,8 @@
     <button
         type="button"
         @click="toggle()"
-        class="inline-flex h-9 w-9 items-center justify-center rounded text-white transition-colors hover:text-orange-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/70"
+        class="inline-flex h-full min-w-11 items-center justify-center px-3 text-white transition-colors hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500/70"
+        :class="open ? 'bg-orange-600' : ''"
         :aria-expanded="open.toString()"
         aria-controls="shop-search-panel"
         aria-label="Buscar productos"
@@ -199,7 +200,7 @@
                                 Pronto verás recomendaciones aquí.
                             </p>
                         @else
-                            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:gap-4">
+                            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-2.5">
                                 @foreach ($recommended as $product)
                                     @php
                                         $currencySymbol = \App\Support\Currency::symbol($product->currency ?? 'PEN');
@@ -218,14 +219,14 @@
                                                 loading="lazy"
                                             >
                                         </div>
-                                        <div class="flex flex-1 flex-col gap-1 p-2.5 sm:p-3">
-                                            <p class="line-clamp-2 text-sm font-bold leading-snug text-neutral-900 group-hover:text-orange-600">
+                                        <div class="flex flex-1 flex-col gap-1 p-2.5 sm:p-3 lg:gap-0.5 lg:p-2">
+                                            <p class="line-clamp-2 text-sm font-bold leading-snug text-neutral-900 group-hover:text-orange-600 lg:text-xs">
                                                 {{ $product->name }}
                                             </p>
-                                            <p class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 lg:text-[9px]">
                                                 {{ $product->category?->name ?? 'Producto' }}
                                             </p>
-                                            <p class="mt-auto pt-1 text-sm font-black text-neutral-900">
+                                            <p class="mt-auto pt-1 text-sm font-black text-neutral-900 lg:pt-0.5 lg:text-xs">
                                                 {{ $currencySymbol }} {{ number_format((float) ($product->effective_price ?? $product->price_amount), 2) }}
                                             </p>
                                         </div>
