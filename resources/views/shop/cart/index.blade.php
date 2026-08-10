@@ -23,7 +23,7 @@
     <div data-cart-empty class="{{ $lines->isEmpty() ? '' : 'hidden' }} rounded-lg p-10 text-center">
         <p class="text-black mb-6">Aún no has agregado productos.</p>
         <a href="{{ route('shop.catalog') }}"
-            class="inline-block rounded bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wide hover:bg-orange-500 transition-colors">
+            class="inline-block rounded bg-orange-600 px-6 py-3 text-sm text-white font-bold uppercase tracking-wide hover:bg-orange-500 transition-colors">
             Ir al catálogo
         </a>
     </div>
