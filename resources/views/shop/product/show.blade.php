@@ -358,25 +358,26 @@
                         <p class="text-xs text-neutral-600">
                             En carrito<span x-show="hasColorChoices"> (<span class="font-bold text-black" x-text="selected?.label"></span>)</span>:
                         </p>
-                        <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm">
-                            <button type="button" data-cart-action="decrement" :disabled="cartBusy" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Disminuir">−</button>
-                            <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center text-white font-sans font-black text-lg">
-                                <span data-cart-qty-value x-text="cartQty"></span>
+                        <div class="flex items-center gap-8 ">
+                            <div class="flex items-center w-36 h-10 border border-neutral-700 bg-white select-none overflow-hidden rounded-sm">
+                                <button type="button" data-cart-action="decrement" :disabled="cartBusy" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-2xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Disminuir">−</button>
+                                <div class="w-12 h-full bg-[#f15a24] flex items-center justify-center text-white font-sans font-black text-lg">
+                                    <span data-cart-qty-value x-text="cartQty"></span>
+                                </div>
+                                <button type="button" data-cart-action="increment" :disabled="cartBusy || cartQty >= selectedStock" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Aumentar">+</button>
                             </div>
-                            <button type="button" data-cart-action="increment" :disabled="cartBusy || cartQty >= selectedStock" class="w-12 h-full flex items-center justify-center bg-white text-[#f15a24] hover:bg-neutral-100 font-sans font-black text-xl focus:outline-none transition-colors disabled:opacity-40" aria-label="Aumentar">+</button>
+                            <div>
+                                <a 
+                                    href="{{ route('shop.cart.index') }}"
+                                    class="w-full sm:w-auto px-8 py-2 text-white font-title bold tracking-widest bg-primary rounded hover:bg-black cursor-pointer transition-colors uppercase disabled:opacity-60"
+                                >
+                                    <span>Ver carrito</span>
+                                </a>
+                            </div>
                         </div>
                         <p class="text-xs text-neutral-600" x-show="hasColorChoices">
                             Puedes elegir otro color y agregarlo también.
                         </p>
-                        <button
-                            type="button"
-                            x-show="cartQty > 1"
-                            x-cloak
-                            @click="$dispatch('open-cart-drawer')"
-                            class="inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-500 transition-colors"
-                        >
-                            Ver carrito →
-                        </button>
                     </div>
                 </div>
             </div>
