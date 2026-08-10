@@ -71,6 +71,7 @@ Route::prefix('carrito')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('/productos/{product}', [CartController::class, 'store'])->name('items.store');
     Route::patch('/productos/{product}', [CartController::class, 'update'])->name('items.update');
+    Route::delete('/productos/{product}', [CartController::class, 'remove'])->name('items.remove');
     Route::post('/productos/{product}/increment', [CartController::class, 'increment'])->name('items.increment');
     Route::post('/productos/{product}/decrement', [CartController::class, 'decrement'])->name('items.decrement');
 });
