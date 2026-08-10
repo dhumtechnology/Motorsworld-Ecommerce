@@ -23,14 +23,17 @@
 
             <div class="flex items-stretch gap-2 sm:gap-3 lg:gap-4">
                 <nav class="hidden h-full lg:block">
+                    @php
+                        $shopNavLink = 'inline-flex h-full w-36 shrink-0 items-center justify-center whitespace-nowrap px-2 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600';
+                    @endphp
                     <ul class="flex h-full items-stretch">
                         <li class="flex h-full">
-                            <a href="{{ route('shop.home') }}" class="inline-flex h-full items-center px-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600">HOME</a>
+                            <a href="{{ route('shop.home') }}" class="{{ $shopNavLink }}">HOME</a>
                         </li>
                         <li class="flex h-full">
-                            <a href="{{ route('shop.services.index') }}" class="inline-flex h-full items-center px-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600">SERVICIOS</a>
+                            <a href="{{ route('shop.services.index') }}" class="{{ $shopNavLink }}">SERVICIOS</a>
                         </li>
-                        <x-dropdown title="TIENDA">
+                        <x-dropdown title="TIENDA" :trigger-class="$shopNavLink">
                             <a
                                 href="{{ route('shop.catalog', ['section' => 'motos']) }}"
                                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
@@ -45,13 +48,13 @@
                             </a>
                         </x-dropdown>
                         <li class="flex h-full">
-                            <a href="{{ route('shop.about') }}" class="inline-flex h-full items-center px-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600">NOSOTROS</a>
+                            <a href="{{ route('shop.about') }}" class="{{ $shopNavLink }}">NOSOTROS</a>
                         </li>
                         <li class="flex h-full">
-                            <a href="{{ route('shop.blog.index') }}" class="inline-flex h-full items-center px-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600">BLOG</a>
+                            <a href="{{ route('shop.blog.index') }}" class="{{ $shopNavLink }}">BLOG</a>
                         </li>
                         <li class="flex h-full">
-                            <a href="{{ route('shop.contact') }}" class="inline-flex h-full items-center px-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600">CONTÁCTANOS</a>
+                            <a href="{{ route('shop.contact') }}" class="{{ $shopNavLink }}">CONTÁCTANOS</a>
                         </li>
                     </ul>
                 </nav>

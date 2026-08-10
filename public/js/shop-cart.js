@@ -9,6 +9,7 @@
 
     function updateBadge(itemCount) {
         document.querySelectorAll('[data-cart-icon]').forEach((link) => {
+            const mark = link.querySelector('[data-cart-icon-mark]') || link;
             let badge = link.querySelector('[data-cart-badge]');
 
             if (itemCount <= 0) {
@@ -20,12 +21,132 @@
                 badge = document.createElement('span');
                 badge.setAttribute('data-cart-badge', '');
                 badge.className =
-                    'absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-600 text-white text-[10px] font-black leading-[18px] text-center';
-                link.appendChild(badge);
+                    'absolute -right-2 -top-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center';
+                mark.appendChild(badge);
             }
 
             badge.textContent = itemCount > 99 ? '99+' : String(itemCount);
         });
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function moneyText(amount, symbol) {
+        return `${escapeHtml(symbol || 'S/')} ${Number(amount || 0).toLocaleString('es-PE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`;
+    }
+
+    function catalogUrl() {
+        return document.querySelector('[data-cart-drawer]')?.dataset?.catalogUrl || '/catalogo';
+    }
+
+    function updateCartDrawer(data) {
+        const panel = document.querySelector('[data-cart-drawer-panel]');
+        if (!panel) return;
+
+        const items = Array.isArray(data.items) ? data.items : [];
+        const itemCount = Number(data.item_count || 0);
+        const summary = panel.querySelector('[data-cart-drawer-summary]');
+        const body = panel.querySelector('[data-cart-drawer-body]');
+        const totalWrap = panel.querySelector('[data-cart-drawer-total]');
+        const totalAmount = panel.querySelector('[data-cart-drawer-total-amount]');
+        const payBtn = panel.querySelector('[data-cart-drawer-pay]');
+
+        if (summary) {
+            summary.textContent =
+                itemCount > 0
+                    ? `${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`
+                    : 'Vacío';
+        }
+
+        if (body) {
+            if (items.length === 0) {
+                body.innerHTML = `
+                    <div class="flex h-full min-h-[12rem] flex-col items-center justify-center px-4 text-center">
+                        <p class="text-sm text-neutral-600">Aún no has agregado productos.</p>
+                        <a
+                            href="${escapeHtml(catalogUrl())}"
+                            data-cart-drawer-close
+                            class="mt-5 inline-flex rounded bg-orange-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-orange-500 transition-colors"
+                        >
+                            Ir al catálogo
+                        </a>
+                    </div>
+                `;
+            } else {
+                body.innerHTML = `<ul class="flex flex-col divide-y divide-neutral-200">${items
+                    .map((item) => {
+                        const image = item.image
+                            ? `<img src="${escapeHtml(item.image)}" alt="" class="h-full w-full object-cover" loading="lazy">`
+                            : '';
+                        const sale = item.is_on_sale
+                            ? `<p class="text-[11px] text-neutral-400 line-through">${moneyText(
+                                  item.list_line_total,
+                                  item.currency_symbol,
+                              )}</p>`
+                            : '';
+
+                        return `
+                            <li class="flex gap-3 py-4 first:pt-0 last:pb-0">
+                                <a href="${escapeHtml(item.url)}" data-cart-drawer-close class="h-20 w-20 shrink-0 overflow-hidden rounded bg-neutral-100">
+                                    ${image}
+                                </a>
+                                <div class="min-w-0 flex-1">
+                                    <a href="${escapeHtml(item.url)}" data-cart-drawer-close class="line-clamp-2 text-sm font-bold uppercase leading-snug text-neutral-900 hover:text-orange-600 transition-colors">
+                                        ${escapeHtml(item.name)}
+                                    </a>
+                                    <p class="mt-1 text-[11px] text-neutral-500">
+                                        ${escapeHtml(item.color || '')}
+                                        · Cant. ${Number(item.quantity || 0)}
+                                    </p>
+                                    <p class="mt-2 text-sm font-black text-neutral-900">
+                                        ${moneyText(item.line_total, item.currency_symbol)}
+                                    </p>
+                                    ${sale}
+                                </div>
+                            </li>
+                        `;
+                    })
+                    .join('')}</ul>`;
+            }
+        }
+
+        const hasItems = items.length > 0;
+        const chargeAmount = data.charge_amount;
+
+        if (totalWrap) {
+            totalWrap.classList.toggle('hidden', !hasItems || chargeAmount == null);
+        }
+        if (totalAmount && hasItems && chargeAmount != null) {
+            totalAmount.textContent = moneyText(chargeAmount, data.charge_currency_symbol);
+        }
+
+        if (payBtn) {
+            payBtn.classList.toggle('pointer-events-none', !hasItems);
+            payBtn.classList.toggle('bg-neutral-300', !hasItems);
+            payBtn.classList.toggle('text-neutral-500', !hasItems);
+            payBtn.classList.toggle('bg-orange-600', hasItems);
+            payBtn.classList.toggle('text-white', hasItems);
+            payBtn.classList.toggle('hover:bg-orange-500', hasItems);
+            if (hasItems) {
+                payBtn.removeAttribute('aria-disabled');
+                payBtn.removeAttribute('tabindex');
+                payBtn.setAttribute('data-cart-drawer-close', '');
+            } else {
+                payBtn.setAttribute('aria-disabled', 'true');
+                payBtn.setAttribute('tabindex', '-1');
+                payBtn.removeAttribute('data-cart-drawer-close');
+            }
+        }
     }
 
     function formatMoney(amount, symbol = 'S/') {
@@ -353,6 +474,7 @@
             const data = await cartRequest(url, 'POST', body);
 
             updateBadge(Number(data.item_count || 0));
+            updateCartDrawer(data);
 
             const lineQty = Number(data.line_quantity ?? optimisticQty);
             if (root.hasAttribute('data-product-cart') || root.hasAttribute('data-cart-line')) {
@@ -374,6 +496,11 @@
     }
 
     document.addEventListener('click', (event) => {
+        const closeTarget = event.target.closest('[data-cart-drawer-close]');
+        if (closeTarget && closeTarget.closest('[data-cart-drawer-panel]')) {
+            window.dispatchEvent(new CustomEvent('close-cart-drawer'));
+        }
+
         const currencyButton = event.target.closest('[data-cart-total-currency]');
         if (currencyButton) {
             const page = currencyButton.closest('[data-cart-page]');

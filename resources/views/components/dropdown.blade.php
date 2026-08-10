@@ -1,5 +1,6 @@
 @props([
     'title' => 'Menú',
+    'triggerClass' => 'inline-flex h-full w-36 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-2 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600 cursor-pointer',
 ])
 
 <li
@@ -10,13 +11,13 @@
         type="button"
         @click="open = !open"
         @click.away="open = false"
-        class="inline-flex h-full items-center gap-2 px-3 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-orange-600 cursor-pointer"
+        class="{{ $triggerClass }} gap-2 cursor-pointer"
         :class="open ? 'bg-orange-600' : ''"
     >
         <span>{{ $title }}</span>
 
         <svg
-            class="w-4 h-4 transition-transform"
+            class="w-4 h-4 shrink-0 transition-transform"
             :class="{ 'rotate-180': open }"
             fill="none"
             stroke="currentColor"

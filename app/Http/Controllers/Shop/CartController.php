@@ -129,28 +129,43 @@ class CartController extends Controller
     private function cartSummary(Cart $cart, ?int $variantId = null): array
     {
         $cart->unsetRelation('items');
-        $cart->load(['items.product', 'items.variant.inventory']);
+
+        $lines = $this->buildCartLines->execute($cart);
+        $totals = $this->cartTotals->summarize($lines);
 
         $lineQuantity = 0;
 
         if ($variantId !== null) {
-            $lineQuantity = (int) $cart->items
-                ->firstWhere('product_variant_id', $variantId)
-                ?->quantity;
+            $matched = $lines->first(
+                fn (array $line) => (int) $line['variant']->id === $variantId,
+            );
+            $lineQuantity = (int) ($matched['quantity'] ?? 0);
         }
 
+        $chargeCurrency = $totals->chargeCurrency();
+
         return [
-            'item_count' => (int) $cart->items->sum('quantity'),
-            'line_count' => $cart->items->count(),
+            'item_count' => (int) $lines->sum('quantity'),
+            'line_count' => $lines->count(),
             'product_variant_id' => $variantId,
             'line_quantity' => $lineQuantity,
-            'items' => $cart->items->map(fn ($item) => [
-                'product_id' => $item->product_id,
-                'product_variant_id' => $item->product_variant_id,
-                'quantity' => (int) $item->quantity,
-                'sku' => $item->variant?->sku ?? $item->product?->sku,
-                'name' => $item->product?->name,
-                'color' => $item->variant?->colorLabel(),
+            'charge_amount' => $totals->chargeAmount(),
+            'charge_currency' => $chargeCurrency,
+            'charge_currency_symbol' => \App\Support\Currency::symbol($chargeCurrency),
+            'items' => $lines->map(fn (array $line) => [
+                'product_id' => $line['product']->id,
+                'product_variant_id' => $line['variant']->id,
+                'quantity' => (int) $line['quantity'],
+                'sku' => $line['variant']->sku ?? $line['product']->sku,
+                'name' => $line['product']->name,
+                'color' => $line['color_label'],
+                'url' => route('shop.product.show', $line['product']),
+                'image' => $line['image'],
+                'line_total' => (float) $line['line_total'],
+                'list_line_total' => round((float) $line['list_unit_price'] * (int) $line['quantity'], 2),
+                'is_on_sale' => (bool) $line['is_on_sale'],
+                'currency' => $line['currency'],
+                'currency_symbol' => $line['currency_symbol'],
             ])->values()->all(),
         ];
     }
