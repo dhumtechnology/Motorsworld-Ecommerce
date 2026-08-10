@@ -72,6 +72,7 @@ class OrderSalesSeeder extends Seeder
                 OrderItem::query()->create([
                     'order_id' => $order->id,
                     'product_id' => $line['product_id'],
+                    'product_variant_id' => $line['product_variant_id'],
                     'product_offer_id' => $line['product_offer_id'],
                     'quantity' => $line['quantity'],
                     'unit_price' => $line['unit_price'],

@@ -2,19 +2,27 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Appointments\AppointmentStatus;
+use App\Models\Appointments\Appointment;
 use App\Models\Appointments\ServicePackage;
 use App\Models\Appointments\ServiceType;
+use App\Models\Auth\User;
+use App\Models\Products\Brand;
+use App\Models\Products\VehicleModel;
 use Illuminate\Database\Seeder;
 
 class AppointmentSeeder extends Seeder
 {
+    private const SEED_COMMENT = '[AppointmentSeeder] Reserva demo';
+
     /**
-     * Seed service types and their packages (idempotent).
+     * Seed service types, packages and sample appointments (idempotent).
      */
     public function run(): void
     {
         $serviceTypes = $this->seedServiceTypes();
         $this->seedServicePackages($serviceTypes);
+        $this->seedAppointments($serviceTypes);
     }
 
     /**
@@ -25,19 +33,19 @@ class AppointmentSeeder extends Seeder
         $definitions = [
             'Mantenimiento preventivo' => [
                 'description' => 'Revisión periódica para mantener tu moto en óptimas condiciones.',
-                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTh_mUP8eGXNljBnZ34mtOKfTzDOgzHes4BjoxEAow2UmKsTIJlIOqJZ5I&s=10',
+                'image' => '/images/services/mantenimiento-preventivo.png',
             ],
             'Cambio de aceite' => [
                 'description' => 'Cambio de aceite y filtro con productos de calidad.',
-                'image' => 'https://euroshop.com.pe/wp-content/uploads/2026/03/mantenimiento-preventivo-moto-deportiva.jpg',
+                'image' => '/images/services/cambio-de-aceite.png',
             ],
             'Revisión de frenos' => [
                 'description' => 'Inspección y servicio del sistema de frenos.',
-                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA6dxlMtfcT9sSD6AGfbHnqpIxloBPZIDws3UeRFuQDWPaymqtjAZTDV8&s=10',
+                'image' => '/images/services/revision-de-frenos.png',
             ],
             'Alineamiento y balanceo' => [
                 'description' => 'Ajuste de dirección y balanceo de ruedas.',
-                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShYUXXf4v9Gyopqdg10S16PEaIw-_6dZ46FSVUgPX1VSv3jGqBlLc8ggj1&s=10',
+                'image' => '/images/services/alineamiento-y-balanceo.png',
             ],
             'Diagnóstico electrónico' => [
                 'description' => 'Escaneo y análisis de fallas del sistema electrónico.',
@@ -53,7 +61,7 @@ class AppointmentSeeder extends Seeder
             ],
             'Lavado y detailing' => [
                 'description' => 'Lavado exterior y detailing para dejar tu moto impecable.',
-                'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFrHeWfL4kYXcgPdbsAiU2svw3wmCQFnQkvKi4G7xF4MVDhdtZZckMcnc&s=10',
+                'image' => '/images/services/lavado-y-detailing.png',
             ],
         ];
 
@@ -133,6 +141,117 @@ class AppointmentSeeder extends Seeder
                     ],
                 );
             }
+        }
+    }
+
+    /**
+     * @param  array<string, ServiceType>  $serviceTypes
+     */
+    private function seedAppointments(array $serviceTypes): void
+    {
+        Appointment::query()
+            ->where('comments', self::SEED_COMMENT)
+            ->delete();
+
+        $customers = User::query()
+            ->whereHas('roles', fn ($q) => $q->where('slug', 'usuario'))
+            ->with('customerProfile')
+            ->orderBy('id')
+            ->limit(5)
+            ->get();
+
+        if ($customers->isEmpty()) {
+            $this->command?->warn('AppointmentSeeder: no hay clientes. Ejecute UserSeeder primero.');
+
+            return;
+        }
+
+        $brand = Brand::query()->where('name', 'Yamaha')->first()
+            ?? Brand::query()->orderBy('id')->first();
+        $model = $brand
+            ? VehicleModel::query()->where('brand_id', $brand->id)->orderBy('id')->first()
+            : null;
+
+        $definitions = [
+            [
+                'type' => 'Mantenimiento preventivo',
+                'package' => 'Completo',
+                'status' => AppointmentStatus::Pending,
+                'days' => 2,
+            ],
+            [
+                'type' => 'Cambio de aceite',
+                'package' => 'Aceite sintético',
+                'status' => AppointmentStatus::Accepted,
+                'days' => 1,
+            ],
+            [
+                'type' => 'Revisión de frenos',
+                'package' => 'Servicio completo',
+                'status' => AppointmentStatus::InProgress,
+                'days' => 0,
+            ],
+            [
+                'type' => 'Lavado y detailing',
+                'package' => 'Detailing premium',
+                'status' => AppointmentStatus::Attended,
+                'days' => -3,
+            ],
+            [
+                'type' => 'Diagnóstico electrónico',
+                'package' => 'Escaneo básico',
+                'status' => AppointmentStatus::Cancelled,
+                'days' => -1,
+            ],
+        ];
+
+        foreach ($definitions as $index => $definition) {
+            $type = $serviceTypes[$definition['type']] ?? null;
+            if ($type === null) {
+                continue;
+            }
+
+            $package = ServicePackage::query()
+                ->where('service_type_id', $type->id)
+                ->where('name', $definition['package'])
+                ->first();
+
+            if ($package === null) {
+                continue;
+            }
+
+            $customer = $customers[$index % $customers->count()];
+            $profile = $customer->customerProfile;
+            $appointmentAt = now()->addDays($definition['days'])->setTime(10 + $index, 0);
+
+            Appointment::query()->create([
+                'user_id' => $customer->id,
+                'customer_name' => trim(($profile?->first_name ?? 'Cliente').' '.($profile?->last_name ?? 'Demo')),
+                'customer_document' => $profile?->document,
+                'customer_phone' => $profile?->phone,
+                'customer_email' => $customer->email,
+                'appointment_at' => $appointmentAt,
+                'brand_id' => $brand?->id,
+                'vehicle_model_id' => $model?->id,
+                'km' => 12000 + ($index * 1500),
+                'plate' => 'ABC-'.str_pad((string) (100 + $index), 3, '0', STR_PAD_LEFT),
+                'service_type_id' => $type->id,
+                'service_package_id' => $package->id,
+                'comments' => self::SEED_COMMENT,
+                'status' => $definition['status'],
+                'charged_amount' => $definition['status'] === AppointmentStatus::Attended
+                    ? $package->price
+                    : null,
+                'charged_currency' => $definition['status'] === AppointmentStatus::Attended
+                    ? 'PEN'
+                    : null,
+                'attended_at' => $definition['status'] === AppointmentStatus::Attended
+                    ? $appointmentAt->copy()->addHour()
+                    : null,
+                'cancellation_reason' => $definition['status'] === AppointmentStatus::Cancelled
+                    ? 'Cliente reprogramó'
+                    : null,
+            ]);
         }
     }
 }
