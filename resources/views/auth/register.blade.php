@@ -22,7 +22,13 @@
                 </div>
             @endif
 
-            <form action="{{ route('register.store') }}" method="POST" class="space-y-5">
+            <form
+                action="{{ route('register.store') }}"
+                method="POST"
+                class="space-y-5"
+                x-data="{ submitting: false }"
+                @submit="if (submitting) { $event.preventDefault() } else { submitting = true }"
+            >
                 @csrf
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -141,9 +147,22 @@
 
                 <button
                     type="submit"
-                    class="w-full py-3 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase"
+                    :disabled="submitting"
+                    class="w-full inline-flex items-center justify-center gap-2 py-3 bg-orange-600 text-white font-extrabold text-xs tracking-widest rounded hover:bg-orange-700 transition-colors uppercase disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    Crear cuenta
+                    <svg
+                        x-show="submitting"
+                        x-cloak
+                        class="h-4 w-4 animate-spin"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span x-text="submitting ? 'Registrando…' : 'Crear cuenta'">Crear cuenta</span>
                 </button>
             </form>
 

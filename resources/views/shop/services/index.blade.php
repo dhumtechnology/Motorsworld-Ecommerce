@@ -131,6 +131,7 @@
                     'appointment_time' => old('appointment_time'),
                 ],
             ]))"
+            @submit="if (submitting) { $event.preventDefault() } else { submitting = true }"
         >
             @csrf
 
@@ -341,9 +342,24 @@
                 </div>
 
                 <div class="flex justify-center">
-                    <button type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-orange-600 px-20 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
-                        Reservar cita
+                    <button
+                        type="submit"
+                        :disabled="submitting"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-16 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-orange-600"
+                    >
+                        <svg
+                            x-show="submitting"
+                            x-cloak
+                            class="h-4 w-4 animate-spin"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span x-text="submitting ? 'Reservando…' : 'Reservar cita'">Reservar cita</span>
                     </button>
                 </div>
             </div>
@@ -403,6 +419,7 @@
             time: config.old.appointment_time || '',
             slots: [],
             loadingSlots: false,
+            submitting: false,
             weekendSelected: false,
             minDate: nextWeekday(),
             formatSlot(slot) {

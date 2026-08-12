@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Appointments\Appointment;
+use App\Support\Currency;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -43,6 +44,11 @@ class AppointmentConfirmationMail extends Mailable
             $firstName = 'Motero';
         }
 
+        $package = $appointment->servicePackage;
+        $packagePrice = $package !== null && $package->price !== null
+            ? Currency::format((float) $package->price, $package->currency)
+            : null;
+
         return new Content(
             view: 'emails.appointment-confirmation',
             with: [
@@ -54,7 +60,8 @@ class AppointmentConfirmationMail extends Mailable
                 'appointmentDate' => $appointment->appointment_at?->format('d/m/Y') ?? '—',
                 'appointmentTime' => $appointment->appointment_at?->format('H:i') ?? '—',
                 'serviceType' => $appointment->serviceType?->name ?? '—',
-                'servicePackage' => $appointment->servicePackage?->name ?? '—',
+                'servicePackage' => $package?->name ?? '—',
+                'packagePrice' => $packagePrice,
                 'vehicle' => trim(($appointment->brand?->name ?? '').' '.($appointment->vehicleModel?->name ?? '')) ?: '—',
                 'plate' => $appointment->plate ?: '—',
                 'km' => $appointment->km !== null ? (string) $appointment->km : null,

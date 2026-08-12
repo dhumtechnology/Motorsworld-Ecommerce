@@ -53,7 +53,7 @@
                 <path d="M1 1H5.16667L7.95833 14.39C8.05359 14.8504 8.31449 15.264 8.69536 15.5583C9.07623 15.8526 9.55281 16.009 10.0417 16H20.1667C20.6555 16.009 21.1321 15.8526 21.513 15.5583C21.8938 15.264 22.1547 14.8504 22.25 14.39L23.9167 6H6.20833" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             @if ($itemCount > 0)
-                <span data-cart-badge class="absolute -right-1 -top-1 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center">
+                <span data-cart-badge class="absolute left-2 -top-1 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center">
                     {{ $itemCount > 99 ? '99+' : $itemCount }}
                 </span>
             @endif

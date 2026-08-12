@@ -52,6 +52,12 @@
                         <td style="padding:0 0 10px;font-size:13px;color:#737373;">Paquete</td>
                         <td style="padding:0 0 10px;font-size:14px;color:#111111;">{{ $servicePackage }}</td>
                     </tr>
+                    @if ($packagePrice)
+                        <tr>
+                            <td style="padding:0 0 10px;font-size:13px;color:#737373;">Precio</td>
+                            <td style="padding:0 0 10px;font-size:14px;color:#111111;font-weight:600;">{{ $packagePrice }}</td>
+                        </tr>
+                    @endif
                     <tr>
                         <td style="padding:0 0 10px;font-size:13px;color:#737373;">Vehículo</td>
                         <td style="padding:0 0 10px;font-size:14px;color:#111111;">{{ $vehicle }}</td>
