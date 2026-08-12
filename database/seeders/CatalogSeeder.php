@@ -61,9 +61,19 @@ class CatalogSeeder extends Seeder
     ];
 
     /**
-     * Catálogo demo idempotente: categorías, marcas, modelos, productos, variantes, inventario e imágenes.
+     * Solo datos de sistema: categorías y marcas.
+     * Productos, modelos, ofertas e inventario demo quedan en pausa (usar seedDemo()).
      */
     public function run(): void
+    {
+        $this->seedCategories();
+        $this->seedBrands();
+    }
+
+    /**
+     * Catálogo demo completo (productos, variantes, ofertas). No se llama desde DatabaseSeeder.
+     */
+    public function seedDemo(): void
     {
         $categories = $this->seedCategories();
         $brands = $this->seedBrands();
