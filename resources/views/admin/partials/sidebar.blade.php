@@ -118,6 +118,25 @@
             ],
         ],
         [
+            'label' => 'Libro de reclamaciones',
+            'items' => [
+                [
+                    'label' => 'Quejas',
+                    'route' => 'admin.claim-book.complaints',
+                    'active' => request()->routeIs('admin.claim-book.complaints')
+                        || (request()->routeIs('admin.claim-book.show') && optional(request()->route('claimBookEntry'))->claim_type?->value === 'complaint'),
+                    'permission' => 'claim_book_entries.view',
+                ],
+                [
+                    'label' => 'Reclamos',
+                    'route' => 'admin.claim-book.claims',
+                    'active' => request()->routeIs('admin.claim-book.claims')
+                        || (request()->routeIs('admin.claim-book.show') && optional(request()->route('claimBookEntry'))->claim_type?->value === 'claim'),
+                    'permission' => 'claim_book_entries.view',
+                ],
+            ],
+        ],
+        [
             'label' => 'Gestión de inventario',
             'items' => [
                 [

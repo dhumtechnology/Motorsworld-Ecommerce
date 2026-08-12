@@ -3,10 +3,13 @@
 namespace App\Actions\Shop;
 
 use App\Enums\Auth\UserStatus;
+use App\Mail\WelcomeCustomerMail;
 use App\Models\Auth\CustomerProfile;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class RegisterCustomerAction
 {
@@ -18,7 +21,7 @@ class RegisterCustomerAction
         string $lastName,
         ?string $phone = null,
     ): User {
-        return DB::transaction(function () use ($email, $password, $document, $firstName, $lastName, $phone): User {
+        $user = DB::transaction(function () use ($email, $password, $document, $firstName, $lastName, $phone): User {
             $email = strtolower(trim($email));
 
             $pending = User::query()
@@ -66,6 +69,19 @@ class RegisterCustomerAction
 
             return $user->load('customerProfile', 'roles');
         });
+
+        $this->sendWelcomeEmail($user);
+
+        return $user;
+    }
+
+    private function sendWelcomeEmail(User $user): void
+    {
+        try {
+            Mail::to($user->email)->send(new WelcomeCustomerMail($user));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private function activatePendingCustomer(

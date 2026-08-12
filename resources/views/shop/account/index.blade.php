@@ -87,16 +87,20 @@
 
                     <div>
                         <label for="document" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Documento</label>
-                        <input id="document" name="document" type="text" required
-                               value="{{ old('document', $profile?->document) }}"
-                               class="w-full px-3 py-2.5 rounded border border-neutral-300 bg-white text-sm focus:outline-none focus:border-orange-600">
+                        <input id="document" type="text" readonly
+                               value="{{ $profile?->document }}"
+                               class="w-full px-3 py-2.5 rounded border border-neutral-200 bg-neutral-100 text-sm text-neutral-600 cursor-not-allowed"
+                               aria-readonly="true">
+                        <p class="mt-1 text-xs text-neutral-400">El documento no se puede modificar.</p>
                     </div>
 
                     <div>
                         <label for="email" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Correo</label>
-                        <input id="email" name="email" type="email" required
-                               value="{{ old('email', $user->email) }}"
-                               class="w-full px-3 py-2.5 rounded border border-neutral-300 bg-white text-sm focus:outline-none focus:border-orange-600">
+                        <input id="email" type="email" readonly
+                               value="{{ $user->email }}"
+                               class="w-full px-3 py-2.5 rounded border border-neutral-200 bg-neutral-100 text-sm text-neutral-600 cursor-not-allowed"
+                               aria-readonly="true">
+                        <p class="mt-1 text-xs text-neutral-400">El correo no se puede modificar.</p>
                     </div>
 
                     <div>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Shop;
 
-use App\Actions\Shop\GetPopularNonMotoProductsAction;
+use App\Actions\Shop\GetPopularProductsAction;
 use App\Enums\Products\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Products\Product;
@@ -21,7 +21,7 @@ class ProductController extends Controller
         private readonly RelatedProductsResolver $relatedProducts,
         private readonly CartResolver $cartResolver,
         private readonly ProductOfferPresenter $offerPresenter,
-        private readonly GetPopularNonMotoProductsAction $popularProducts,
+        private readonly GetPopularProductsAction $popularProducts,
     ) {}
 
     public function show(Request $request, Product $product): View

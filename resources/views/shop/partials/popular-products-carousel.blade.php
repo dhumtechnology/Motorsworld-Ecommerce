@@ -1,5 +1,5 @@
 {{--
-    Carrusel productos populares (no motos).
+    Carrusel productos populares (motos y accesorios).
     Requiere: $popularProducts, $cartQuantities (opcional, por product_id)
 --}}
 @if (($popularProducts ?? collect())->isNotEmpty())

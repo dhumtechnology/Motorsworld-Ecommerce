@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Shop;
 
-use App\Enums\Orders\OrderStatus;
-use App\Enums\Products\ProductStatus;
+use App\Actions\Shop\GetPopularProductsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\CatalogIndexRequest;
-use App\Models\Orders\OrderItem;
 use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
@@ -17,7 +15,6 @@ use App\Support\QueryResultCache;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -27,13 +24,15 @@ class CatalogController extends Controller
 
     private const PER_PAGE = 12;
 
-    private const FEATURED_LIMIT = 10;
-
     private const LOG_CHANNEL = 'catalog';
 
     private ?int $motosCategoryId = null;
 
     private bool $motosCategoryIdResolved = false;
+
+    public function __construct(
+        private readonly GetPopularProductsAction $popularProducts,
+    ) {}
 
     public function index(CatalogIndexRequest $request): View|JsonResponse
     {
@@ -76,13 +75,11 @@ class CatalogController extends Controller
                 'price' => $this->priceBounds($section),
             ];
 
-            $popularProducts = $this->popularNonMotoProducts();
-
             $priceBounds = $filterOptions['price'];
 
             return view('shop.catalog.index', [
                 'products' => $products,
-                'popularProducts' => $popularProducts,
+                'popularProducts' => $this->popularProducts->execute(10),
                 'cartQuantities' => $cartQuantities,
                 'section' => $section,
                 'filters' => [
@@ -146,80 +143,6 @@ class CatalogController extends Controller
     private function withActiveOfferPricing(Product $product): Product
     {
         return app(ProductOfferPresenter::class)->apply($product);
-    }
-
-    /**
-     * Top productos por ventas excluyendo MOTOS (carrusel del catálogo).
-     *
-     * @return Collection<int, Product>
-     */
-    private function popularNonMotoProducts(): Collection
-    {
-        $products = $this->featuredProducts('accesorios');
-
-        if ($products->isNotEmpty()) {
-            return $products;
-        }
-
-        $motosCategoryId = $this->motosCategoryId();
-
-        return Product::query()
-            ->active()
-            ->when(
-                $motosCategoryId !== null,
-                fn (Builder $q) => $q->where('category_id', '!=', $motosCategoryId),
-            )
-            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
-            ->latest('id')
-            ->limit(self::FEATURED_LIMIT)
-            ->get()
-            ->map(fn (Product $product) => $this->withActiveOfferPricing($product));
-    }
-
-    /**
-     * Top productos por unidades vendidas (pedidos no cancelados ni reembolsados).
-     *
-     * @return Collection<int, Product>
-     */
-    private function featuredProducts(string $section): Collection
-    {
-        $motosCategoryId = $this->motosCategoryId();
-
-        $rankedIds = OrderItem::query()
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->join('products', 'products.id', '=', 'order_items.product_id')
-            ->where('products.status', ProductStatus::Active)
-            ->whereNotIn('orders.status', [
-                OrderStatus::Cancelled,
-                OrderStatus::Refunded,
-            ])
-            ->when(
-                $section === 'motos',
-                fn (Builder $q) => $motosCategoryId
-                    ? $q->where('products.category_id', $motosCategoryId)
-                    : $q->whereRaw('0 = 1'),
-                fn (Builder $q) => $motosCategoryId
-                    ? $q->where('products.category_id', '!=', $motosCategoryId)
-                    : $q,
-            )
-            ->groupBy('order_items.product_id')
-            ->orderByRaw('SUM(order_items.quantity) DESC')
-            ->limit(self::FEATURED_LIMIT)
-            ->pluck('order_items.product_id');
-
-        if ($rankedIds->isEmpty()) {
-            return collect();
-        }
-
-        $orderById = $rankedIds->values()->all();
-
-        return Product::query()
-            ->whereIn('id', $orderById)
-            ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
-            ->get()
-            ->sortBy(fn (Product $product): int => array_search($product->id, $orderById, true))
-            ->values()
-            ->map(fn (Product $product) => $this->withActiveOfferPricing($product));
     }
 
     /**

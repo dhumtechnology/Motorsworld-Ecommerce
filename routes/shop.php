@@ -101,6 +101,10 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
 | Cuenta del cliente
 |--------------------------------------------------------------------------
 */
+Route::get('/cuenta/password/confirmar/{user}/{token}', [AccountController::class, 'confirmPasswordChange'])
+    ->middleware('signed')
+    ->name('account.password.confirm');
+
 Route::middleware('auth')->prefix('cuenta')->name('account.')->group(function () {
     Route::get('/', [AccountController::class, 'show'])->name('show');
     Route::put('/perfil', [AccountController::class, 'updateProfile'])->name('profile.update');

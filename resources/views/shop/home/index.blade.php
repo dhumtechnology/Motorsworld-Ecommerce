@@ -198,7 +198,7 @@
         </h2>
 
         <!-- Contenedor relativo para posicionar las flechas -->
-        <div class="relative group">
+        <div class="relative">
             
             <!-- Flecha Izquierda (Anterior) -->
             <button 
@@ -240,12 +240,12 @@
                     <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
                         <a
                             href="{{ $categoryHref }}"
-                            class="group relative block aspect-[3/4] overflow-hidden bg-neutral-200 opacity-80 transition-opacity duration-300 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:opacity-100"
+                            class="group/category relative block aspect-[3/4] overflow-hidden bg-neutral-200 opacity-80 transition-opacity duration-300 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:opacity-100"
                         >
                             <img
                                 src="{{ $category->image }}"
                                 alt="{{ $category->name }}"
-                                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover/category:scale-105"
                                 loading="lazy"
                                 onerror="this.classList.add('opacity-0');"
                             >
@@ -289,6 +289,7 @@
                             90
                         );
                         $price = (float) ($product->effective_price ?? $product->price_amount);
+                        $currencySymbol = $product->currencySymbol();
                         $image = $product->image ?: asset('images/home/product-placeholder.png');
                     @endphp
 
@@ -315,7 +316,7 @@
                             </div>
                             <div class="flex items-center justify-center bg-primary px-3 py-3 text-center">
                                 <span class="text-xl font-black text-white tracking-tight">
-                                    S/ {{ number_format($price, 2) }}
+                                    {{ $currencySymbol }} {{ number_format($price, 2) }}
                                 </span>
                             </div>
                         </div>

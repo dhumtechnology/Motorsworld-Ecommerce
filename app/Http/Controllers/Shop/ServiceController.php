@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Actions\Shop\GetAvailableAppointmentSlotsAction;
-use App\Actions\Shop\GetPopularNonMotoProductsAction;
+use App\Actions\Shop\GetPopularProductsAction;
 use App\Actions\Shop\StoreShopAppointmentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\StoreShopAppointmentRequest;
@@ -22,7 +22,7 @@ class ServiceController extends Controller
 {
     public function index(
         Request $request,
-        GetPopularNonMotoProductsAction $popularProducts,
+        GetPopularProductsAction $popularProducts,
         CartResolver $cartResolver,
     ): View {
         $user = $request->user();
@@ -87,7 +87,7 @@ class ServiceController extends Controller
 
         return redirect()
             ->route('shop.services.index')
-            ->with('status', 'Tu reserva fue registrada. Te contactaremos para confirmarla.');
+            ->with('status', 'Tu reserva fue registrada. Te enviamos un correo con la confirmación de tus datos, fecha y hora.');
     }
 
     public function availableSlots(
