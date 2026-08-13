@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', $entry->code.' — Incidencias')
-@section('page-title', $entry->claim_type->label().' '.$entry->code)
+@section('title', $contact->code.' — Contactos')
+@section('page-title', 'Contacto '.$contact->code)
 @section('page-subtitle', 'Gestión y respuesta al cliente')
 
 @section('content')
     <div class="mb-4">
-        <a href="{{ route($listRoute) }}" class="text-xs font-bold uppercase tracking-wider text-muted hover:text-primary">
+        <a href="{{ route('admin.contacts.index') }}" class="text-xs font-bold uppercase tracking-wider text-muted hover:text-primary">
             ← Volver al listado
         </a>
     </div>
@@ -26,79 +26,56 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 space-y-6">
             <section class="rounded-lg border border-border bg-surface p-5">
-                <h2 class="text-sm font-black uppercase tracking-wide text-text mb-4">Datos del consumidor</h2>
+                <h2 class="text-sm font-black uppercase tracking-wide text-text mb-4">Datos del contacto</h2>
                 <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Nombre</dt>
-                        <dd class="text-text font-semibold">{{ $entry->consumerFullName() }}</dd>
+                        <dd class="text-text font-semibold">{{ $contact->fullName() }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Documento</dt>
-                        <dd class="text-text">{{ $entry->document }}</dd>
+                        <dd class="text-text">{{ $contact->document }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Correo</dt>
-                        <dd class="text-text">{{ $entry->email }}</dd>
+                        <dd class="text-text">{{ $contact->email }}</dd>
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Teléfono</dt>
-                        <dd class="text-text">{{ $entry->phone }}</dd>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Domicilio</dt>
-                        <dd class="text-text">{{ $entry->address }}</dd>
+                        <dd class="text-text">{{ $contact->phone }}</dd>
                     </div>
                     <div class="sm:col-span-2">
                         <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Cuenta asociada</dt>
                         <dd class="text-text">
-                            @if ($entry->user)
-                                #{{ $entry->user_id }} — {{ $entry->user->email }}
+                            @if ($contact->user)
+                                #{{ $contact->user_id }} — {{ $contact->user->email }}
                             @else
                                 Sin cuenta (registro como invitado)
                             @endif
                         </dd>
                     </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Fecha</dt>
+                        <dd class="text-text">{{ $contact->created_at?->format('d/m/Y H:i') }}</dd>
+                    </div>
                 </dl>
             </section>
 
             <section class="rounded-lg border border-border bg-surface p-5">
-                <h2 class="text-sm font-black uppercase tracking-wide text-text mb-4">Detalle de la {{ strtolower($entry->claim_type->label()) }}</h2>
-                <dl class="space-y-4 text-sm">
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Bien contratado</dt>
-                        <dd class="text-text">{{ $entry->good_type->label() }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Descripción</dt>
-                        <dd class="text-text whitespace-pre-wrap">{{ $entry->good_description }}</dd>
-                    </div>
-                    @if ($entry->claimed_amount !== null)
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Monto reclamado</dt>
-                            <dd class="text-text font-semibold">S/ {{ number_format((float) $entry->claimed_amount, 2) }}</dd>
-                        </div>
-                    @endif
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Detalle</dt>
-                        <dd class="text-text whitespace-pre-wrap">{{ $entry->detail }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase tracking-wider text-muted font-bold mb-1">Pedido del consumidor</dt>
-                        <dd class="text-text whitespace-pre-wrap">{{ $entry->consumer_request }}</dd>
-                    </div>
-                </dl>
+                <h2 class="text-sm font-black uppercase tracking-wide text-text mb-4">Mensaje</h2>
+                <p class="text-sm text-text whitespace-pre-wrap">{{ $contact->message }}</p>
             </section>
 
-            @if ($entry->admin_reply)
+            @if ($contact->admin_reply)
                 <section class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
                     <h2 class="text-sm font-black uppercase tracking-wide text-emerald-800 mb-2">Última respuesta enviada</h2>
                     <p class="text-xs text-emerald-700 mb-3">
-                        {{ $entry->replied_at?->format('d/m/Y H:i') }}
-                        @if ($entry->handler)
-                            · por {{ $entry->handler->email }}
+                        {{ $contact->replied_at?->format('d/m/Y H:i') }}
+                        @if ($contact->handler)
+                            · por {{ $contact->handler->email }}
                         @endif
                     </p>
-                    <p class="text-sm text-emerald-950 whitespace-pre-wrap">{{ $entry->admin_reply }}</p>
+                    <p class="text-sm text-emerald-950 whitespace-pre-wrap">{{ $contact->admin_reply }}</p>
                 </section>
             @endif
         </div>
@@ -106,7 +83,7 @@
         <div class="space-y-6">
             <section class="rounded-lg border border-border bg-surface p-5">
                 <h2 class="text-sm font-black uppercase tracking-wide text-text mb-4">Gestionar estado</h2>
-                <form method="POST" action="{{ route('admin.claim-book.update', $entry) }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.contacts.update', $contact) }}" class="space-y-4">
                     @csrf
                     @method('PUT')
                     <div>
@@ -114,7 +91,7 @@
                         <select id="status" name="status" required
                                 class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                             @foreach ($statuses as $status)
-                                <option value="{{ $status->value }}" @selected(old('status', $entry->status->value) === $status->value)>{{ $status->label() }}</option>
+                                <option value="{{ $status->value }}" @selected(old('status', $contact->status->value) === $status->value)>{{ $status->label() }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -122,7 +99,7 @@
                         <label for="admin_notes" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Notas internas</label>
                         <textarea id="admin_notes" name="admin_notes" rows="4"
                                   class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                  placeholder="Solo visible para el equipo admin">{{ old('admin_notes', $entry->admin_notes) }}</textarea>
+                                  placeholder="Solo visible para el equipo admin">{{ old('admin_notes', $contact->admin_notes) }}</textarea>
                     </div>
                     <button type="submit" class="w-full rounded bg-black px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-neutral-800 transition-colors">
                         Guardar gestión
@@ -132,14 +109,20 @@
 
             <section class="rounded-lg border border-border bg-surface p-5">
                 <h2 class="text-sm font-black uppercase tracking-wide text-text mb-4">Responder al cliente</h2>
-                <p class="text-xs text-muted mb-4">Se enviará un correo a <strong class="text-text">{{ $entry->email }}</strong>.</p>
-                <form method="POST" action="{{ route('admin.claim-book.reply', $entry) }}" class="space-y-4">
+                <p class="text-xs text-muted mb-4">Se enviará un correo a <strong class="text-text">{{ $contact->email }}</strong>.</p>
+                <form
+                    method="POST"
+                    action="{{ route('admin.contacts.reply', $contact) }}"
+                    class="space-y-4"
+                    x-data="{ submitting: false }"
+                    @submit="if (submitting) { $event.preventDefault() } else { submitting = true }"
+                >
                     @csrf
                     <div>
                         <label for="admin_reply" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Mensaje</label>
                         <textarea id="admin_reply" name="admin_reply" rows="8" required
                                   class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                  placeholder="Escribe la respuesta oficial al cliente...">{{ old('admin_reply') }}</textarea>
+                                  placeholder="Escribe la respuesta al cliente...">{{ old('admin_reply') }}</textarea>
                     </div>
                     <div>
                         <label for="reply_status" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Estado al responder</label>
@@ -150,8 +133,24 @@
                             <option value="closed" @selected(old('status') === 'closed')>Cerrado</option>
                         </select>
                     </div>
-                    <button type="submit" class="w-full rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors">
-                        Enviar respuesta por correo
+                    <button
+                        type="submit"
+                        :disabled="submitting"
+                        class="w-full inline-flex items-center justify-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                        <svg
+                            x-show="submitting"
+                            x-cloak
+                            class="h-4 w-4 animate-spin"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span x-text="submitting ? 'Enviando…' : 'Enviar respuesta por correo'">Enviar respuesta por correo</span>
                     </button>
                 </form>
             </section>

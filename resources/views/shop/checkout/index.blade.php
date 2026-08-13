@@ -27,7 +27,7 @@
 
     <div class="grid gap-8 lg:grid-cols-12">
         <div class="lg:col-span-7">
-            <form id="checkout-form" method="POST" action="{{ route('shop.checkout.pay') }}" class="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-6 shadow-sm">
+            <form id="checkout-form" method="POST" action="{{ route('shop.checkout.pay') }}" data-submit-lock="async" class="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-6 shadow-sm">
                 @csrf
                 <input type="hidden" name="culqi_token" id="culqi_token" value="">
 
@@ -476,6 +476,11 @@
             form.submit();
         } catch (err) {
             showError(err.message || 'Error al preparar el pago.');
+            if (typeof window.unlockSubmitLock === 'function') {
+                window.unlockSubmitLock(form);
+            } else {
+                payButton.disabled = false;
+            }
         }
     });
 })();

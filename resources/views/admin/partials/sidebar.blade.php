@@ -1,5 +1,11 @@
 @php
     $user = auth()->user();
+    $pendingCounts = $sidebarPendingCounts ?? [
+        'appointments' => 0,
+        'complaints' => 0,
+        'claims' => 0,
+        'contacts' => 0,
+    ];
 
     $navGroups = [
         [
@@ -89,8 +95,10 @@
                 [
                     'label' => 'Reservas',
                     'route' => 'admin.appointments.index',
+                    'route_params' => ['status' => 'pending'],
                     'active' => request()->routeIs('admin.appointments.*'),
                     'permission' => 'appointments.view',
+                    'badge' => (int) ($pendingCounts['appointments'] ?? 0),
                 ],
                 [
                     'label' => 'Servicios',
@@ -118,21 +126,33 @@
             ],
         ],
         [
-            'label' => 'Libro de reclamaciones',
+            'label' => 'Incidencias',
             'items' => [
                 [
                     'label' => 'Quejas',
                     'route' => 'admin.claim-book.complaints',
+                    'route_params' => ['status' => 'pending'],
                     'active' => request()->routeIs('admin.claim-book.complaints')
                         || (request()->routeIs('admin.claim-book.show') && optional(request()->route('claimBookEntry'))->claim_type?->value === 'complaint'),
                     'permission' => 'claim_book_entries.view',
+                    'badge' => (int) ($pendingCounts['complaints'] ?? 0),
                 ],
                 [
                     'label' => 'Reclamos',
                     'route' => 'admin.claim-book.claims',
+                    'route_params' => ['status' => 'pending'],
                     'active' => request()->routeIs('admin.claim-book.claims')
                         || (request()->routeIs('admin.claim-book.show') && optional(request()->route('claimBookEntry'))->claim_type?->value === 'claim'),
                     'permission' => 'claim_book_entries.view',
+                    'badge' => (int) ($pendingCounts['claims'] ?? 0),
+                ],
+                [
+                    'label' => 'Contactos',
+                    'route' => 'admin.contacts.index',
+                    'route_params' => ['status' => 'pending'],
+                    'active' => request()->routeIs('admin.contacts.*'),
+                    'permission' => 'contact_messages.view',
+                    'badge' => (int) ($pendingCounts['contacts'] ?? 0),
                 ],
             ],
         ],
@@ -189,11 +209,17 @@
 
                 <div class="space-y-0.5">
                     @foreach ($group['items'] as $item)
+                        @php $badge = (int) ($item['badge'] ?? 0); @endphp
                         <a
-                            href="{{ route($item['route']) }}"
+                            href="{{ route($item['route'], $item['route_params'] ?? []) }}"
                             class="admin-nav-link {{ $item['active'] ? 'is-active' : '' }}"
                         >
-                            {{ $item['label'] }}
+                            <span>{{ $item['label'] }}</span>
+                            @if ($badge > 0)
+                                <span class="admin-nav-badge" title="{{ $badge }} pendiente{{ $badge === 1 ? '' : 's' }}">
+                                    {{ $badge > 99 ? '99+' : $badge }}
+                                </span>
+                            @endif
                         </a>
                     @endforeach
                 </div>

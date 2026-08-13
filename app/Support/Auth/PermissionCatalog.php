@@ -48,7 +48,8 @@ final class PermissionCatalog
         'service_types' => 'Tipos de servicio',
         'service_packages' => 'Paquetes de servicio',
         'blog_posts' => 'Publicaciones del blog',
-        'claim_book_entries' => 'Libro de reclamaciones',
+        'claim_book_entries' => 'Incidencias',
+        'contact_messages' => 'Contactos',
     ];
 
     /**

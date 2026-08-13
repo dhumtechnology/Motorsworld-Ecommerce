@@ -7,6 +7,12 @@
 @source "../js/**/*.js";
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
+button.is-submit-locked,
+input[type="submit"].is-submit-locked {
+    opacity: 0.7;
+    cursor: wait !important;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Importante
@@ -372,7 +378,10 @@
     }
 
     .admin-nav-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
         border-radius: 0.5rem;
         padding: 0.625rem 1rem;
         font-size: 0.875rem;
@@ -390,6 +399,28 @@
     .admin-nav-link.is-active {
         background: var(--color-primary);
         color: #fff;
+    }
+
+    .admin-nav-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.35rem;
+        height: 1.35rem;
+        padding: 0 0.35rem;
+        border-radius: 999px;
+        background: var(--color-primary);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0;
+        font-family: var(--font-secondary);
+    }
+
+    .admin-nav-link.is-active .admin-nav-badge {
+        background: #fff;
+        color: var(--color-primary);
     }
 
     .admin-nav-group {

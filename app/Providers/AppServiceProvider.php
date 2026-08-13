@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Actions\Admin\GetAdminSidebarPendingCountsAction;
 use App\Actions\Cart\BuildCartLinesAction;
 use App\Actions\Shop\GetShopHeaderSearchDataAction;
 use App\Models\Auth\User;
@@ -41,6 +42,11 @@ class AppServiceProvider extends ServiceProvider
             if ($user instanceof User && ! $user->relationLoaded('roles')) {
                 $user->load('roles.permissions');
             }
+
+            $view->with(
+                'sidebarPendingCounts',
+                app(GetAdminSidebarPendingCountsAction::class)->execute(),
+            );
         });
 
         View::composer('layouts.shop', function ($view): void {

@@ -3,12 +3,15 @@
 namespace App\Actions\Admin\Dashboard;
 
 use App\Enums\Appointments\AppointmentStatus;
+use App\Enums\Claims\ClaimBookStatus;
+use App\Enums\Claims\ClaimBookType;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Enums\Products\ProductStatus;
 use App\Models\Appointments\Appointment;
 use App\Models\Auth\User;
+use App\Models\Claims\ClaimBookEntry;
 use App\Models\Finance\ExchangeRate;
 use App\Models\Orders\Order;
 use App\Models\Orders\Payment;
@@ -85,6 +88,20 @@ class GetDashboardMetricsAction
                         AppointmentStatus::Cancelled,
                         AppointmentStatus::Absent,
                     ])
+                    ->count(),
+                'complaints' => ClaimBookEntry::query()
+                    ->ofType(ClaimBookType::Complaint)
+                    ->count(),
+                'pendingComplaints' => ClaimBookEntry::query()
+                    ->ofType(ClaimBookType::Complaint)
+                    ->where('status', ClaimBookStatus::Pending)
+                    ->count(),
+                'claims' => ClaimBookEntry::query()
+                    ->ofType(ClaimBookType::Claim)
+                    ->count(),
+                'pendingClaims' => ClaimBookEntry::query()
+                    ->ofType(ClaimBookType::Claim)
+                    ->where('status', ClaimBookStatus::Pending)
                     ->count(),
             ],
             'exchangeRate' => $latestRate ? [

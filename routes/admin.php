@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClaimBookController;
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryController;
@@ -175,12 +176,18 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/blog/{blogPost}', [BlogPostController::class, 'destroy'])->middleware('permission:blog_posts.delete')->name('blog-posts.destroy');
     Route::delete('/blog', [BlogPostController::class, 'bulkDestroy'])->middleware('permission:blog_posts.delete')->name('blog-posts.bulk-destroy');
 
-    // Libro de reclamaciones
+    // Incidencias (quejas / reclamos)
     Route::get('/libro-reclamaciones/quejas', [ClaimBookController::class, 'complaints'])->middleware('permission:claim_book_entries.view')->name('claim-book.complaints');
     Route::get('/libro-reclamaciones/reclamos', [ClaimBookController::class, 'claims'])->middleware('permission:claim_book_entries.view')->name('claim-book.claims');
     Route::get('/libro-reclamaciones/{claimBookEntry}', [ClaimBookController::class, 'show'])->middleware('permission:claim_book_entries.view')->name('claim-book.show');
     Route::put('/libro-reclamaciones/{claimBookEntry}', [ClaimBookController::class, 'update'])->middleware('permission:claim_book_entries.update')->name('claim-book.update');
     Route::post('/libro-reclamaciones/{claimBookEntry}/responder', [ClaimBookController::class, 'reply'])->middleware('permission:claim_book_entries.update')->name('claim-book.reply');
+
+    // Contactos (mensajes del formulario de contacto)
+    Route::get('/contactos', [ContactMessageController::class, 'index'])->middleware('permission:contact_messages.view')->name('contacts.index');
+    Route::get('/contactos/{contactMessage}', [ContactMessageController::class, 'show'])->middleware('permission:contact_messages.view')->name('contacts.show');
+    Route::put('/contactos/{contactMessage}', [ContactMessageController::class, 'update'])->middleware('permission:contact_messages.update')->name('contacts.update');
+    Route::post('/contactos/{contactMessage}/responder', [ContactMessageController::class, 'reply'])->middleware('permission:contact_messages.update')->name('contacts.reply');
 
     // Inventario
     Route::get('/inventario', [InventoryController::class, 'index'])->middleware('permission:inventory_movements.view')->name('inventory.index');
