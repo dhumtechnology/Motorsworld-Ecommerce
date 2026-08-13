@@ -28,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureSharedHostingPublicDisk();
+
         Gate::before(function ($user, string $ability) {
             if (! $user instanceof User) {
                 return null;
@@ -76,5 +78,32 @@ class AppServiceProvider extends ServiceProvider
                 'searchRecommendedProducts' => $searchData['searchRecommendedProducts'],
             ]);
         });
+    }
+
+    /**
+     * Deploy típico: /laravel (app) + /public_html (web).
+     * Sin symlink, las imágenes públicas deben vivir en public_html/storage.
+     */
+    private function configureSharedHostingPublicDisk(): void
+    {
+        if (env('FILESYSTEM_PUBLIC_ROOT')) {
+            return;
+        }
+
+        $publicHtml = dirname(base_path()).DIRECTORY_SEPARATOR.'public_html';
+        if (! is_dir($publicHtml)) {
+            return;
+        }
+
+        $storageRoot = $publicHtml.DIRECTORY_SEPARATOR.'storage';
+        if (! is_dir($storageRoot)) {
+            @mkdir($storageRoot, 0755, true);
+        }
+
+        if (! is_dir($storageRoot)) {
+            return;
+        }
+
+        config(['filesystems.disks.public.root' => $storageRoot]);
     }
 }

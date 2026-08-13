@@ -40,7 +40,12 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            /*
+             | En hosting (laravel/ + public_html/) puedes forzar:
+             | FILESYSTEM_PUBLIC_ROOT=/home/USUARIO/public_html/storage
+             | Si no se define, AppServiceProvider lo detecta solo.
+             */
+            'root' => env('FILESYSTEM_PUBLIC_ROOT') ?: storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
