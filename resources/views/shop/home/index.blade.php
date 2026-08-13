@@ -3,6 +3,7 @@
 
     Imágenes estáticas (copia tus archivos con estos nombres exactos):
     - public/images/home/banner-hero.png
+    - public/images/home/portadas/1 HOME - bienvenidos a mw 2.jpg
     - public/images/home/taller-1.png
     - public/images/home/taller-2.png
     - public/images/home/taller-3.png
@@ -24,19 +25,91 @@
 
 @section('content')
 @php
-    $heroImage = asset('images/home/banner-hero.png');
+    $heroSlides = [
+        asset('images/home/banner-hero.png'),
+        asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
+    ];
     $mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
-{{-- Banner principal: exactamente el ancho del viewport, sin desborde horizontal --}}
-<section class="w-full max-w-[100%] overflow-hidden bg-neutral-900">
-    <img
-        src="{{ $heroImage }}"
-        alt="Motoworld"
-        class="block h-auto w-full max-w-full object-contain"
-        onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-    >
+{{-- Banner principal: fade infinito entre portadas --}}
+<section
+    class="home-hero relative w-full max-w-[100%] overflow-hidden bg-neutral-900"
+    x-data="{
+        active: 0,
+        total: {{ count($heroSlides) }},
+        timer: null,
+        start() {
+            this.stop();
+            this.timer = setInterval(() => {
+                this.active = (this.active + 1) % this.total;
+            }, 10000);
+        },
+        stop() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+    }"
+    x-init="start()"
+    aria-label="Banner Motoworld"
+>
+    <div class="home-hero-frame relative w-full overflow-hidden">
+        {{-- La 1.ª imagen define la altura del banner. --}}
+        <img
+            src="{{ $heroSlides[0] }}"
+            alt=""
+            aria-hidden="true"
+            class="home-hero-sizer block h-auto w-full max-w-full"
+        >
+        @foreach ($heroSlides as $index => $slide)
+            <img
+                src="{{ $slide }}"
+                alt="Motoworld"
+                class="home-hero-slide{{ $index === 0 ? ' is-active' : '' }}"
+                :class="{ 'is-active': active === {{ $index }} }"
+                @if ($index === 0) loading="eager" @else loading="lazy" @endif
+                :aria-hidden="active === {{ $index }} ? 'false' : 'true'"
+            >
+        @endforeach
+    </div>
 </section>
+
+<style>
+    .home-hero-frame {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .home-hero-sizer {
+        display: block;
+        width: 100%;
+        height: auto;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .home-hero-slide {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        /* Cubre todo el ancho; si sobra, recorta en Y (y en X si hace falta). */
+        object-fit: cover;
+        object-position: center;
+        opacity: 0;
+        transition: opacity 1.2s ease-in-out;
+        will-change: opacity;
+        pointer-events: none;
+    }
+
+    /* Mismo z-index + solo opacity = crossfade en ambos sentidos. */
+    .home-hero-slide.is-active {
+        opacity: 1;
+    }
+</style>
 
 {{-- Marcas: imágenes desde Brand (admin) --}}
 <section class="bg-white">

@@ -1,7 +1,7 @@
 {{--
     Contacto
 
-    Banner opcional: public/images/contact/banner-contacto.png
+    Portada: public/images/home/portadas/Enllantado.jpg
 --}}
 @extends('layouts.shop')
 
@@ -9,8 +9,9 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/contact/banner-contacto.png'))
-        ? asset('images/contact/banner-contacto.png')
+    $bannerPath = public_path('images/home/portadas/Enllantado.jpg');
+    $banner = file_exists($bannerPath)
+        ? asset('images/home/portadas/Enllantado.jpg')
         : asset('images/services/banner-servicios.png');
 
     $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20';

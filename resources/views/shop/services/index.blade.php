@@ -1,7 +1,7 @@
 {{--
     Servicios / reserva de taller
 
-    Banner: public/images/services/banner-servicios.png
+    Portada: public/images/home/portadas/NUESTROS SERVICIOS.jpg
 --}}
 @extends('layouts.shop')
 
@@ -9,7 +9,10 @@
 
 @section('content')
 @php
-    $banner = asset('images/services/banner-servicios.png');
+    $bannerPath = public_path('images/home/portadas/NUESTROS SERVICIOS.jpg');
+    $banner = file_exists($bannerPath)
+        ? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
+        : asset('images/services/banner-servicios.png');
     $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400';
     $label = 'mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
     $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transparent px-5 py-3 text-sm text-neutral-900 outline-none focus:ring-0 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400';

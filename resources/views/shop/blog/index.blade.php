@@ -1,7 +1,7 @@
 {{--
     Blog — listado
 
-    Banner opcional: public/images/blog/banner-blog.png
+    Portada: public/images/home/portadas/BLOG.jpg
 --}}
 @extends('layouts.shop')
 
@@ -9,8 +9,9 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/blog/banner-blog.png'))
-        ? asset('images/blog/banner-blog.png')
+    $bannerPath = public_path('images/home/portadas/BLOG.jpg');
+    $banner = file_exists($bannerPath)
+        ? asset('images/home/portadas/BLOG.jpg')
         : asset('images/services/banner-servicios.png');
 @endphp
 
