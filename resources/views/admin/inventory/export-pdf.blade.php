@@ -44,7 +44,7 @@
                     <td>#{{ $movement->id }}</td>
                     <td>{{ $movement->created_at?->format('d/m/Y H:i') }}</td>
                     <td class="{{ $isEntry ? 'entry' : 'exit' }}">{{ $movement->type?->label() }}</td>
-                    <td>{{ $product?->sku }}</td>
+                    <td>{{ $movement->variant?->sku ?? $product?->sku }}</td>
                     <td>{{ $product?->name }}</td>
                     <td>{{ $product?->category?->name }}</td>
                     <td>{{ $product?->vehicleModel?->brand?->name }}</td>
