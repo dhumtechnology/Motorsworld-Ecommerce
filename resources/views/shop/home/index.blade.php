@@ -302,7 +302,7 @@
             >
                 @forelse ($categories as $category)
                     @php
-                        $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOS';
+                        $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOCICLETAS';
                         $categoryHref = $isMotos
                             ? route('shop.catalog', ['section' => 'motos'])
                             : route('shop.catalog', [

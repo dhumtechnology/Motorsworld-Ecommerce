@@ -5,7 +5,6 @@
     - public/images/about/banner-nosotros.png
     - public/images/about/mision.png
     - public/images/about/vision.png
-    - public/images/about/calidad.png
 --}}
 @extends('layouts.shop')
 
@@ -24,10 +23,6 @@
     $visionImage = file_exists(public_path('images/about/vision.png'))
         ? asset('images/about/vision.png')
         : asset('images/home/taller-2.png');
-
-    $calidadImage = file_exists(public_path('images/about/calidad.png'))
-        ? asset('images/about/calidad.png')
-        : asset('images/home/taller-3.png');
 
     $policies = [
         [
@@ -141,15 +136,6 @@
 
 {{-- Políticas de calidad --}}
 <section id="politicas-de-calidad" class="relative bg-neutral-100 overflow-hidden">
-    <div class="pointer-events-none absolute inset-y-0 right-0 hidden w-1/3 lg:block opacity-20">
-        <img
-            src="{{ $calidadImage }}"
-            alt=""
-            class="h-full w-full object-cover"
-            loading="lazy"
-        >
-    </div>
-
     <div class="relative mx-auto max-w-[95%] px-4 md:px-8 py-12 md:py-16">
         <div class="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12 items-start">
             <div class="lg:col-span-5">
@@ -161,15 +147,6 @@
                     En Moto World estamos comprometidos con la excelencia en la prestación de nuestros servicios.
                     Nuestra política de calidad está basada en los siguientes principios:
                 </p>
-
-                <div class="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white lg:hidden">
-                    <img
-                        src="{{ $calidadImage }}"
-                        alt="Calidad Motoworld"
-                        class="aspect-[16/10] w-full object-cover"
-                        loading="lazy"
-                    >
-                </div>
             </div>
 
             <div class="lg:col-span-7 space-y-4">

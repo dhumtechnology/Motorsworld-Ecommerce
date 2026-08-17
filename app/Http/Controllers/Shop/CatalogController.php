@@ -20,7 +20,7 @@ use Throwable;
 
 class CatalogController extends Controller
 {
-    private const MOTOS_CATEGORY = 'MOTOS';
+    private const MOTOS_CATEGORY = 'MOTOCICLETAS';
 
     private const PER_PAGE = 12;
 
@@ -43,7 +43,7 @@ class CatalogController extends Controller
             $motosCategoryId = $this->motosCategoryId();
 
             if ($motosCategoryId === null) {
-                Log::channel(self::LOG_CHANNEL)->warning('MOTOS category missing in database', [
+                Log::channel(self::LOG_CHANNEL)->warning('Motocicletas category missing in database', [
                     'expected_name' => self::MOTOS_CATEGORY,
                     'section' => $section,
                 ]);
@@ -266,7 +266,7 @@ class CatalogController extends Controller
 
         $this->motosCategoryIdResolved = true;
         $this->motosCategoryId = QueryResultCache::remember(
-            'catalog.motos_category_id',
+            'catalog.motocicletas_category_id',
             fn (): ?int => $this->resolveMotosCategoryId(),
         );
 

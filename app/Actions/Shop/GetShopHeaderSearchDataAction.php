@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 
 class GetShopHeaderSearchDataAction
 {
-    private const MOTOS_CATEGORY = 'MOTOS';
+    private const MOTOS_CATEGORY = 'MOTOCICLETAS';
 
     private const RECOMMENDED_LIMIT = 6;
 
@@ -41,7 +41,7 @@ class GetShopHeaderSearchDataAction
     private function categories(): array
     {
         return QueryResultCache::remember(
-            'shop.header.search_categories.v2',
+            'shop.header.search_categories.v3',
             function (): array {
                 $categories = Category::query()
                     ->orderByRaw('CASE WHEN UPPER(name) = ? THEN 0 ELSE 1 END', [self::MOTOS_CATEGORY])

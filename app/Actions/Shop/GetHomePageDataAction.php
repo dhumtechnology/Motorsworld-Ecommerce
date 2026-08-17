@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class GetHomePageDataAction
 {
-    private const MOTOS_CATEGORY = 'MOTOS';
+    private const MOTOS_CATEGORY = 'MOTOCICLETAS';
 
     private const POPULAR_LIMIT = 4;
 
@@ -46,7 +46,7 @@ class GetHomePageDataAction
     }
 
     /**
-     * Categorías con imagen para el home (MOTOS primero).
+     * Categorías con imagen para el home (Motocicletas primero).
      *
      * @return Collection<int, Category>
      */
