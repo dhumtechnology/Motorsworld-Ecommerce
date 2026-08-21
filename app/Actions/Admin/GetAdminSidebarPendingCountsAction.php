@@ -9,6 +9,7 @@ use App\Enums\Contacts\ContactMessageStatus;
 use App\Models\Appointments\Appointment;
 use App\Models\Claims\ClaimBookEntry;
 use App\Models\Contacts\ContactMessage;
+use App\Models\Products\Product;
 
 class GetAdminSidebarPendingCountsAction
 {
@@ -17,7 +18,8 @@ class GetAdminSidebarPendingCountsAction
      *     appointments: int,
      *     complaints: int,
      *     claims: int,
-     *     contacts: int
+     *     contacts: int,
+     *     trashed_products: int
      * }
      */
     public function execute(): array
@@ -37,6 +39,7 @@ class GetAdminSidebarPendingCountsAction
             'contacts' => ContactMessage::query()
                 ->where('status', ContactMessageStatus::Pending)
                 ->count(),
+            'trashed_products' => Product::query()->onlyTrashed()->count(),
         ];
     }
 }

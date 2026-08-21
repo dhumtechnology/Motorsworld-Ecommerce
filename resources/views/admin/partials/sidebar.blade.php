@@ -5,6 +5,7 @@
         'complaints' => 0,
         'claims' => 0,
         'contacts' => 0,
+        'trashed_products' => 0,
     ];
 
     $navGroups = [
@@ -14,8 +15,15 @@
                 [
                     'label' => 'Productos',
                     'route' => 'admin.products.index',
-                    'active' => request()->routeIs('admin.products.*'),
+                    'active' => request()->routeIs('admin.products.index', 'admin.products.show', 'admin.products.create', 'admin.products.edit'),
                     'permission' => 'products.view',
+                ],
+                [
+                    'label' => 'Papelera',
+                    'route' => 'admin.products.trash',
+                    'active' => request()->routeIs('admin.products.trash'),
+                    'permission' => 'products.view',
+                    'badge' => (int) ($pendingCounts['trashed_products'] ?? 0),
                 ],
                 [
                     'label' => 'Ofertas',

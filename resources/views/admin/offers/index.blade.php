@@ -89,11 +89,13 @@
                                 {{ number_format($offer->resolvedDiscountPercent((float) ($offer->product?->price_amount ?? 0)), 2) }}%
                             </td>
                             <td class="px-5 py-3 font-semibold text-primary whitespace-nowrap">
-                                {{ number_format((float) $offer->offer_price_amount, 2) }}
-                                <span class="text-xs text-muted">PEN</span>
+                                @php
+                                    $offerCurrency = \App\Support\Currency::normalize($offer->currency ?: $offer->product?->currency);
+                                @endphp
+                                {{ \App\Support\Currency::format((float) $offer->offer_price_amount, $offerCurrency) }}
                                 @if ($offer->product)
                                     <span class="block text-xs text-muted line-through font-normal">
-                                        {{ number_format((float) $offer->product->price_amount, 2) }}
+                                        {{ \App\Support\Currency::format((float) $offer->product->price_amount, $offerCurrency) }}
                                     </span>
                                 @endif
                             </td>

@@ -112,10 +112,6 @@ class BrandController extends Controller
             ? 'Marca eliminada correctamente.'
             : 'No se pudo eliminar la marca.';
 
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
-
         return redirect()
             ->route('admin.brands.index')
             ->with('status', $message);
@@ -130,10 +126,6 @@ class BrandController extends Controller
             $result['deleted'] === 1 => '1 marca eliminada correctamente.',
             default => "{$result['deleted']} marcas eliminadas correctamente.",
         };
-
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
 
         return redirect()
             ->route('admin.brands.index')

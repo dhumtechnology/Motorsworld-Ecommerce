@@ -1,4 +1,6 @@
 @php
+    use App\Support\Currency;
+
     /** @var \App\Models\Products\ProductOffer|null $offer */
     $offer = $offer ?? null;
     $isEdit = $offer !== null;
@@ -12,18 +14,34 @@
     );
 
     $productOptions = collect($products)->map(function ($product) {
+        $currency = Currency::normalize($product->currency);
+
         return [
             'id' => $product->id,
-            'name' => $product->sku.' — '.$product->name.' ('.number_format((float) $product->price_amount, 2).' PEN)',
+            'name' => $product->sku.' — '.$product->name.' ('.Currency::format((float) $product->price_amount, $currency).')',
             'price_amount' => (float) $product->price_amount,
+            'currency' => $currency,
+            'currency_label' => Currency::label($currency),
         ];
     });
 
     $productsMeta = $productOptions->mapWithKeys(fn ($item) => [
         (string) $item['id'] => [
             'price' => $item['price_amount'],
+            'currency' => $item['currency'],
+            'currency_label' => $item['currency_label'],
         ],
     ]);
+
+    $initialCurrencyLabel = '—';
+    if ($selectedProductId !== null) {
+        $selectedMeta = $productsMeta->get((string) $selectedProductId);
+        if (is_array($selectedMeta)) {
+            $initialCurrencyLabel = $selectedMeta['currency_label'];
+        }
+    } elseif ($offer?->product) {
+        $initialCurrencyLabel = Currency::label($offer->currency ?: $offer->product->currency);
+    }
 @endphp
 
 @if ($errors->any())
@@ -63,10 +81,12 @@
             <p class="mt-1.5 text-xs text-muted">Entre 1% y 99.99%.</p>
         </div>
         <div>
-            <label for="offer_price_preview" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Precio final (PEN)</label>
+            <label for="offer_price_preview" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
+                Precio final (<span id="offer-currency-label">{{ $initialCurrencyLabel }}</span>)
+            </label>
             <input id="offer_price_preview" type="text" readonly value="—"
                    class="w-full rounded border border-border bg-secondary px-4 py-2.5 text-sm text-muted cursor-not-allowed">
-            <p class="mt-1.5 text-xs text-muted">Se calcula automáticamente desde el descuento.</p>
+            <p class="mt-1.5 text-xs text-muted">Se calcula automáticamente según el producto y el descuento.</p>
         </div>
     </div>
 
@@ -111,6 +131,7 @@
             const discountInput = document.getElementById('discount_percent');
             const preview = document.getElementById('offer_price_preview');
             const hint = document.getElementById('product-price-hint');
+            const currencyLabel = document.getElementById('offer-currency-label');
             if (!form || !productInput || !discountInput || !preview) return;
 
             let productsMeta = {};
@@ -120,6 +141,14 @@
                 productsMeta = {};
             }
 
+            const formatAmount = (amount, currency) => {
+                const value = Number(amount);
+                if (!Number.isFinite(value)) return '—';
+
+                const symbol = currency === 'USD' ? '$' : 'S/';
+                return symbol + ' ' + value.toFixed(2);
+            };
+
             const syncPreview = () => {
                 const meta = productsMeta[String(productInput.value)] || null;
                 const discount = Number(discountInput.value);
@@ -127,12 +156,20 @@
                 if (!meta) {
                     preview.value = '—';
                     if (hint) hint.textContent = 'Selecciona un producto para calcular el precio final.';
+                    if (currencyLabel) currencyLabel.textContent = '—';
                     return;
                 }
 
                 const listPrice = Number(meta.price);
+                const currency = meta.currency || 'PEN';
+                const currencyLabelText = meta.currency_label || currency;
+
+                if (currencyLabel) {
+                    currencyLabel.textContent = currencyLabelText;
+                }
+
                 if (hint) {
-                    hint.textContent = `Precio de lista: ${listPrice.toFixed(2)} PEN.`;
+                    hint.textContent = `Precio de lista: ${formatAmount(listPrice, currency)} (${currencyLabelText}).`;
                 }
 
                 if (!Number.isFinite(discount) || discount <= 0 || discount >= 100) {
@@ -141,7 +178,7 @@
                 }
 
                 const finalPrice = listPrice * (1 - (discount / 100));
-                preview.value = finalPrice.toFixed(2) + ' PEN';
+                preview.value = formatAmount(finalPrice, currency);
             };
 
             productInput.addEventListener('change', syncPreview);

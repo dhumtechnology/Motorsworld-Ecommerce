@@ -45,8 +45,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Productos
     Route::get('/productos', [ProductController::class, 'index'])->middleware('permission:products.view')->name('products.index');
+    Route::get('/productos/papelera', [ProductController::class, 'trash'])->middleware('permission:products.view')->name('products.trash');
     Route::get('/productos/crear', [ProductController::class, 'create'])->middleware('permission:products.create')->name('products.create');
     Route::post('/productos', [ProductController::class, 'store'])->middleware('permission:products.create')->name('products.store');
+    Route::post('/productos/papelera/restaurar', [ProductController::class, 'bulkRestore'])->middleware('permission:products.update')->name('products.bulk-restore');
+    Route::delete('/productos/papelera', [ProductController::class, 'bulkForceDestroy'])->middleware('permission:products.delete')->name('products.bulk-force-destroy');
+    Route::post('/productos/papelera/{productId}/restaurar', [ProductController::class, 'restore'])->whereNumber('productId')->middleware('permission:products.update')->name('products.restore');
+    Route::delete('/productos/papelera/{productId}', [ProductController::class, 'forceDestroy'])->whereNumber('productId')->middleware('permission:products.delete')->name('products.force-destroy');
     Route::get('/productos/{product}', [ProductController::class, 'show'])->middleware('permission:products.view')->name('products.show');
     Route::get('/productos/{product}/editar', [ProductController::class, 'edit'])->middleware('permission:products.update')->name('products.edit');
     Route::put('/productos/{product}', [ProductController::class, 'update'])->middleware('permission:products.update')->name('products.update');
@@ -64,6 +69,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Categorías
     Route::get('/categorias', [CategoryController::class, 'index'])->middleware('permission:categories.view')->name('categories.index');
+    Route::get('/categorias/orden', [CategoryController::class, 'reorder'])->middleware('permission:categories.update')->name('categories.reorder');
+    Route::put('/categorias/orden', [CategoryController::class, 'updateOrder'])->middleware('permission:categories.update')->name('categories.reorder.update');
     Route::get('/categorias/crear', [CategoryController::class, 'create'])->middleware('permission:categories.create')->name('categories.create');
     Route::post('/categorias', [CategoryController::class, 'store'])->middleware('permission:categories.create')->name('categories.store');
     Route::get('/categorias/{category}', [CategoryController::class, 'show'])->middleware('permission:categories.view')->name('categories.show');

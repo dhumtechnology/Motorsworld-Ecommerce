@@ -4,6 +4,7 @@ namespace App\Services\Products;
 
 use App\Models\Products\Product;
 use App\Models\Products\ProductOffer;
+use App\Support\Currency;
 
 /**
  * Adjunta precios de catálogo y el payload completo de la oferta activa
@@ -35,7 +36,7 @@ class ProductOfferPresenter
         $listPrice = (float) $product->price_amount;
         $discountPercent = $offer->resolvedDiscountPercent($listPrice);
 
-        $product->setAttribute('offer', $this->offerPayload($offer, $discountPercent));
+        $product->setAttribute('offer', $this->offerPayload($product, $offer, $discountPercent));
         $product->setAttribute('discount_percent', $discountPercent);
         $product->setAttribute('offer_reason', $offer->reason);
         $product->setAttribute('offer_starts_at', $offer->starts_at);
@@ -60,7 +61,7 @@ class ProductOfferPresenter
      *     lifecycle_status: string
      * }
      */
-    private function offerPayload(ProductOffer $offer, float $discountPercent): array
+    private function offerPayload(Product $product, ProductOffer $offer, float $discountPercent): array
     {
         return [
             'id' => $offer->id,
@@ -68,7 +69,7 @@ class ProductOfferPresenter
             'offer_price_amount' => (string) $offer->offer_price_amount,
             'discount_percent' => $discountPercent,
             'reason' => $offer->reason,
-            'currency' => $offer->currency ?? 'PEN',
+            'currency' => Currency::normalize($offer->currency ?: $product->currency),
             'starts_at' => $offer->starts_at?->toIso8601String(),
             'ends_at' => $offer->ends_at?->toIso8601String(),
             'starts_at_formatted' => $offer->starts_at?->format('d/m/Y H:i'),

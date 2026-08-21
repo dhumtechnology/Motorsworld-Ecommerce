@@ -117,10 +117,6 @@ class VehicleModelController extends Controller
             ? 'Modelo eliminado correctamente.'
             : 'No se pudo eliminar el modelo.';
 
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
-
         return redirect()
             ->route('admin.models.index')
             ->with('status', $message);
@@ -135,10 +131,6 @@ class VehicleModelController extends Controller
             $result['deleted'] === 1 => '1 modelo eliminado correctamente.',
             default => "{$result['deleted']} modelos eliminados correctamente.",
         };
-
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
 
         return redirect()
             ->route('admin.models.index')

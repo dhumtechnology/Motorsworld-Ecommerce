@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Categories\DeleteCategoriesAction;
 use App\Actions\Admin\Categories\GetCategoryDetailsAction;
+use App\Actions\Admin\Categories\ReorderCategoriesAction;
 use App\Actions\Admin\Categories\UpsertCategoryAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BulkDeleteCategoriesRequest;
 use App\Http\Requests\Admin\CategoryIndexRequest;
+use App\Http\Requests\Admin\ReorderCategoriesRequest;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Products\Category;
@@ -24,6 +26,7 @@ class CategoryController extends Controller
         private readonly UpsertCategoryAction $upsertCategory,
         private readonly DeleteCategoriesAction $deleteCategories,
         private readonly GetCategoryDetailsAction $getCategoryDetails,
+        private readonly ReorderCategoriesAction $reorderCategories,
     ) {}
 
     public function index(CategoryIndexRequest $request): View
@@ -42,6 +45,7 @@ class CategoryController extends Controller
                     });
                 },
             )
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(self::PER_PAGE)
             ->withQueryString();
@@ -116,10 +120,6 @@ class CategoryController extends Controller
             ? 'Categoría eliminada correctamente.'
             : 'No se pudo eliminar la categoría.';
 
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
-
         return redirect()
             ->route('admin.categories.index')
             ->with('status', $message);
@@ -135,12 +135,33 @@ class CategoryController extends Controller
             default => "{$result['deleted']} categorías eliminadas correctamente.",
         };
 
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
-
         return redirect()
             ->route('admin.categories.index')
             ->with('status', $message);
+    }
+
+    public function reorder(): View
+    {
+        $categories = Category::query()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'image', 'sort_order']);
+
+        return view('admin.categories.reorder', [
+            'categories' => $categories,
+        ]);
+    }
+
+    public function updateOrder(ReorderCategoriesRequest $request): JsonResponse|RedirectResponse
+    {
+        $this->reorderCategories->execute($request->ids());
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        return redirect()
+            ->route('admin.categories.reorder')
+            ->with('status', 'Orden de categorías actualizado correctamente.');
     }
 }

@@ -2,36 +2,42 @@
 
 namespace App\Actions\Admin\Products;
 
-use App\Models\Cart\CartItem;
 use App\Models\Products\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
-class DeleteProductsAction
+class RestoreProductsAction
 {
     /**
      * @param  list<int>  $productIds
-     * @return array{deleted: int}
+     * @return array{restored: int}
      */
     public function execute(array $productIds): array
     {
         $productIds = array_values(array_unique(array_map('intval', $productIds)));
 
         if ($productIds === []) {
-            return ['deleted' => 0];
+            return ['restored' => 0];
         }
 
         return DB::transaction(function () use ($productIds) {
             $products = Product::query()
+                ->onlyTrashed()
                 ->whereIn('id', $productIds)
                 ->get();
 
+            if ($products->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'ids' => 'No se encontraron productos archivados para restaurar.',
+                ]);
+            }
+
             foreach ($products as $product) {
-                CartItem::query()->where('product_id', $product->id)->delete();
-                $product->delete();
+                $product->restore();
             }
 
             return [
-                'deleted' => $products->count(),
+                'restored' => $products->count(),
             ];
         });
     }

@@ -25,6 +25,7 @@ class UpsertProductAction
      * @param  array<string, mixed>  $attributes
      * @param  list<array{
      *     id?: int|null,
+     *     sku?: string|null,
      *     color_ids?: list<int>,
      *     new_colors?: list<array{name: string, hex?: string|null}>,
      *     available_stock: int,
@@ -178,6 +179,7 @@ class UpsertProductAction
     /**
      * @param  list<array{
      *     id?: int|null,
+     *     sku?: string|null,
      *     color_ids?: list<int>,
      *     new_colors?: list<array{name: string, hex?: string|null}>,
      *     available_stock: int,
@@ -215,6 +217,8 @@ class UpsertProductAction
      *     available_stock: int,
      *     primary_image?: UploadedFile|null,
      *     secondary_images?: list<UploadedFile>,
+     *     image_order?: list<string>,
+     *     new_images?: list<UploadedFile>,
      *     remove_image_ids?: list<int>
      * }  $payload
      * @param  list<int>  $colorIds
@@ -237,7 +241,10 @@ class UpsertProductAction
             $variant = $product->variants()->with('inventory')->where('id', $variantId)->first();
         }
 
-        $sku = ($this->generateSku)->forVariant($product, $colorNames, $variant);
+        $preferredSku = trim((string) ($payload['sku'] ?? ''));
+        $sku = $preferredSku !== ''
+            ? ($this->generateSku)->resolveVariantSku($preferredSku, $variant)
+            : ($this->generateSku)->forVariant($product, $colorNames, $variant);
 
         if ($variant === null) {
             $variant = ProductVariant::query()->create([
@@ -260,27 +267,13 @@ class UpsertProductAction
         $variant->colors()->sync($sync);
 
         $this->syncVariantStock($product, $variant, max(0, (int) ($payload['available_stock'] ?? 0)));
-        $this->removeVariantImages($variant, $payload['remove_image_ids'] ?? []);
-
-        if (($payload['primary_image'] ?? null) instanceof UploadedFile) {
-            $this->storePrimaryImage($product, $variant, $payload['primary_image']);
-        }
-
-        foreach ($payload['secondary_images'] ?? [] as $file) {
-            if (! $file instanceof UploadedFile) {
-                continue;
-            }
-
-            $sortOrder = (int) $variant->images()->max('sort_order');
-
-            ProductImage::query()->create([
-                'product_id' => $product->id,
-                'product_variant_id' => $variant->id,
-                'path' => $this->storeUploadedFile($product, $file),
-                'sort_order' => max($sortOrder + 1, 1),
-                'is_primary' => false,
-            ]);
-        }
+        $this->syncOrderedGalleryImages(
+            $product,
+            $variant,
+            $payload['image_order'] ?? [],
+            $payload['new_images'] ?? [],
+            $payload['remove_image_ids'] ?? [],
+        );
 
         return $variant->fresh(['colors', 'inventory', 'images']) ?? $variant;
     }
@@ -296,14 +289,14 @@ class UpsertProductAction
         if ($standard === null) {
             $standard = ProductVariant::query()->create([
                 'product_id' => $product->id,
-                'sku' => ($this->generateSku)->forVariant($product, [], null),
+                'sku' => $product->sku,
                 'name' => 'Estándar',
                 'is_active' => true,
             ]);
             $standard->setRelation('inventory', null);
         } else {
             $standard->update([
-                'sku' => ($this->generateSku)->forVariant($product, [], $standard),
+                'sku' => $product->sku,
                 'name' => 'Estándar',
                 'is_active' => true,
             ]);
@@ -432,18 +425,38 @@ class UpsertProductAction
     /**
      * @param  array{
      *     available_stock?: int,
-     *     primary_image?: UploadedFile|null,
-     *     secondary_images?: list<UploadedFile>,
+     *     image_order?: list<string>,
+     *     new_images?: list<UploadedFile>,
      *     remove_image_ids?: list<int>
      * }  $gallery
      */
     private function syncDefaultGallery(Product $product, array $gallery): void
     {
-        $removeIds = $gallery['remove_image_ids'] ?? [];
-        if ($removeIds !== []) {
-            $images = $this->defaultImageQuery($product)
-                ->whereIn('id', $removeIds)
-                ->get();
+        $this->syncOrderedGalleryImages(
+            $product,
+            null,
+            $gallery['image_order'] ?? [],
+            $gallery['new_images'] ?? [],
+            $gallery['remove_image_ids'] ?? [],
+        );
+    }
+
+    /**
+     * @param  list<string>  $imageOrder
+     * @param  list<UploadedFile>  $newImages
+     * @param  list<int>  $removeImageIds
+     */
+    private function syncOrderedGalleryImages(
+        Product $product,
+        ?ProductVariant $variant,
+        array $imageOrder,
+        array $newImages,
+        array $removeImageIds,
+    ): void {
+        if ($removeImageIds !== []) {
+            $images = $variant === null
+                ? $this->defaultImageQuery($product)->whereIn('id', $removeImageIds)->get()
+                : $variant->images()->whereIn('id', $removeImageIds)->get();
 
             foreach ($images as $image) {
                 $this->deleteStoredFile($image->path);
@@ -451,45 +464,67 @@ class UpsertProductAction
             }
         }
 
-        if (($gallery['primary_image'] ?? null) instanceof UploadedFile) {
-            $previousPrimary = $this->defaultImageQuery($product)
-                ->where('is_primary', true)
-                ->get();
-
-            foreach ($previousPrimary as $image) {
-                $this->deleteStoredFile($image->path);
-                $image->delete();
-            }
-
-            $path = $this->storeUploadedFile($product, $gallery['primary_image']);
-
-            ProductImage::query()->create([
-                'product_id' => $product->id,
-                'product_variant_id' => null,
-                'path' => $path,
-                'sort_order' => 0,
-                'is_primary' => true,
-            ]);
-
-            $this->defaultImageQuery($product)
-                ->where('path', '!=', $path)
-                ->update(['is_primary' => false]);
+        if ($imageOrder === []) {
+            return;
         }
 
-        foreach ($gallery['secondary_images'] ?? [] as $file) {
+        $newIndex = 0;
+
+        foreach ($imageOrder as $position => $token) {
+            if (str_starts_with($token, 'existing:')) {
+                $imageId = (int) substr($token, strlen('existing:'));
+
+                $image = $variant === null
+                    ? $this->defaultImageQuery($product)->whereKey($imageId)->first()
+                    : $variant->images()->whereKey($imageId)->first();
+
+                if ($image === null) {
+                    continue;
+                }
+
+                $image->forceFill([
+                    'sort_order' => $position,
+                    'is_primary' => $position === 0,
+                ])->save();
+
+                continue;
+            }
+
+            if (! str_starts_with($token, 'new:')) {
+                continue;
+            }
+
+            $file = $newImages[$newIndex] ?? null;
+            $newIndex++;
+
             if (! $file instanceof UploadedFile) {
                 continue;
             }
 
-            $sortOrder = (int) $this->defaultImageQuery($product)->max('sort_order');
-
             ProductImage::query()->create([
                 'product_id' => $product->id,
-                'product_variant_id' => null,
+                'product_variant_id' => $variant?->id,
                 'path' => $this->storeUploadedFile($product, $file),
-                'sort_order' => max($sortOrder + 1, 1),
-                'is_primary' => false,
+                'sort_order' => $position,
+                'is_primary' => $position === 0,
             ]);
+        }
+
+        $imageQuery = $variant === null
+            ? $this->defaultImageQuery($product)
+            : $variant->images();
+
+        $imageQuery
+            ->where('is_primary', true)
+            ->where('sort_order', '!=', 0)
+            ->update(['is_primary' => false]);
+
+        $primary = $imageQuery->orderBy('sort_order')->first();
+        if ($primary !== null) {
+            $imageQuery
+                ->where('id', '!=', $primary->id)
+                ->update(['is_primary' => false]);
+            $primary->forceFill(['is_primary' => true])->save();
         }
     }
 
@@ -573,51 +608,6 @@ class UpsertProductAction
                 : 'Ajuste desde ficha de producto ('.$variant->colorLabel().')',
             'created_by' => auth()->id(),
         ]);
-    }
-
-    /**
-     * @param  list<int>  $imageIds
-     */
-    private function removeVariantImages(ProductVariant $variant, array $imageIds): void
-    {
-        if ($imageIds === []) {
-            return;
-        }
-
-        $images = $variant->images()
-            ->whereIn('id', $imageIds)
-            ->get();
-
-        foreach ($images as $image) {
-            $this->deleteStoredFile($image->path);
-            $image->delete();
-        }
-    }
-
-    private function storePrimaryImage(Product $product, ProductVariant $variant, UploadedFile $file): void
-    {
-        $previousPrimary = $variant->images()
-            ->where('is_primary', true)
-            ->get();
-
-        foreach ($previousPrimary as $image) {
-            $this->deleteStoredFile($image->path);
-            $image->delete();
-        }
-
-        $path = $this->storeUploadedFile($product, $file);
-
-        ProductImage::query()->create([
-            'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
-            'path' => $path,
-            'sort_order' => 0,
-            'is_primary' => true,
-        ]);
-
-        $variant->images()
-            ->where('path', '!=', $path)
-            ->update(['is_primary' => false]);
     }
 
     private function syncTechnicalSheet(

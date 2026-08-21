@@ -23,13 +23,14 @@
 
     $mapImages = static function ($images) {
         return collect($images)
-            ->sortByDesc(fn ($img) => (bool) (is_array($img) ? ($img['is_primary'] ?? false) : $img->is_primary))
+            ->sortBy(fn ($img) => (int) (is_array($img) ? ($img['sort_order'] ?? 0) : ($img->sort_order ?? 0)))
             ->values()
             ->map(function ($img) {
                 if (is_array($img)) {
                     return [
                         'id' => $img['id'],
                         'path' => $img['path'],
+                        'sort_order' => (int) ($img['sort_order'] ?? 0),
                         'is_primary' => (bool) ($img['is_primary'] ?? false),
                     ];
                 }
@@ -37,6 +38,7 @@
                 return [
                     'id' => $img->id,
                     'path' => $img->path,
+                    'sort_order' => (int) ($img->sort_order ?? 0),
                     'is_primary' => (bool) $img->is_primary,
                 ];
             })
@@ -115,6 +117,15 @@
                class="{{ $fieldClass }}">
     </div>
 
+    <div class="lg:col-span-2">
+        <label for="sku" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">SKU / Código de barras *</label>
+        <input id="sku" name="sku" type="text" required maxlength="100"
+               value="{{ old('sku', $product?->sku) }}"
+               class="{{ $fieldClass }} font-mono uppercase"
+               placeholder="Ej. 7750123456789">
+        <p class="mt-1.5 text-xs text-muted">Debe coincidir con el código de barras del producto. En producto único, también se usa en inventario y pedidos.</p>
+    </div>
+
     <div class="flex items-end gap-2.5">
         <div class="min-w-0 flex-1">
             <x-searchable-select
@@ -187,7 +198,7 @@
             </button>
         </div>
     </div>
-    <p class="lg:col-span-2 -mt-3 text-xs text-muted">Elige primero la marca para filtrar sus modelos.</p>
+    <p class="lg:col-span-2 -mt-3 text-xs text-muted">Elige la marca y luego el modelo. Puedes cambiarlos después de crear el producto.</p>
 
     <div>
         <label for="price_amount" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Precio *</label>

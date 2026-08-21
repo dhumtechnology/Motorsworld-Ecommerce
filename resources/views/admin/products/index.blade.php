@@ -105,9 +105,20 @@
                 data-open-confirm="bulk-delete-modal"
                 class="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-600 transition-colors enabled:hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
             >
-                Eliminar seleccionados
+                Archivar seleccionados
                 <span id="bulk-delete-count" class="hidden">(0)</span>
             </button>
+            <a
+                href="{{ route('admin.products.trash') }}"
+                class="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors"
+            >
+                Papelera
+                @if (($trashedCount ?? 0) > 0)
+                    <span class="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                        {{ $trashedCount > 99 ? '99+' : $trashedCount }}
+                    </span>
+                @endif
+            </a>
         </div>
         <a
             href="{{ route('admin.products.create') }}"
@@ -262,11 +273,11 @@
                                     <button
                                         type="button"
                                         class="inline-flex h-9 w-9 items-center justify-center rounded border border-red-200 bg-red-50/50 text-red-600 hover:bg-red-100 transition-colors"
-                                        title="Eliminar"
-                                        aria-label="Eliminar {{ $product->name }}"
+                                        title="Archivar"
+                                        aria-label="Archivar {{ $product->name }}"
                                         data-open-confirm="single-delete-modal"
                                         data-delete-url="{{ route('admin.products.destroy', $product) }}"
-                                        data-delete-message="¿Eliminar el producto «{{ $product->name }}»? Esta acción no se puede deshacer."
+                                        data-delete-message="¿Archivar el producto «{{ $product->name }}»? Dejará de mostrarse en la tienda, pero se conservará el historial de pedidos."
                                     >
                                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18" />
@@ -298,18 +309,18 @@
 
     <x-confirm-modal
         id="single-delete-modal"
-        title="Eliminar producto"
-        message="¿Seguro que deseas eliminar este producto?"
-        confirm-label="Eliminar"
+        title="Archivar producto"
+        message="¿Archivar este producto? Dejará de mostrarse en la tienda, pero se conservará el historial de pedidos."
+        confirm-label="Archivar"
         method="DELETE"
         :action="route('admin.products.index')"
     />
 
     <x-confirm-modal
         id="bulk-delete-modal"
-        title="Eliminar productos"
-        message="¿Eliminar los productos seleccionados? Esta acción no se puede deshacer."
-        confirm-label="Eliminar seleccionados"
+        title="Archivar productos"
+        message="¿Archivar los productos seleccionados? Dejarán de mostrarse en la tienda, pero se conservará el historial de pedidos."
+        confirm-label="Archivar seleccionados"
         method="DELETE"
         :action="route('admin.products.bulk-destroy')"
     />
@@ -640,8 +651,8 @@
 
                         if (messageEl) {
                             messageEl.textContent = selected.length === 1
-                                ? '¿Eliminar 1 producto seleccionado? Esta acción no se puede deshacer.'
-                                : '¿Eliminar ' + selected.length + ' productos seleccionados? Esta acción no se puede deshacer.';
+                                ? '¿Archivar 1 producto seleccionado? Dejará de mostrarse en la tienda, pero se conservará el historial de pedidos.'
+                                : '¿Archivar ' + selected.length + ' productos seleccionados? Dejarán de mostrarse en la tienda, pero se conservará el historial de pedidos.';
                         }
 
                         if (extra) {

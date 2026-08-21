@@ -7,7 +7,6 @@ use App\Models\Products\Category;
 use App\Models\Products\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class DeleteCategoriesAction
 {
@@ -17,14 +16,14 @@ class DeleteCategoriesAction
 
     /**
      * @param  list<int>  $categoryIds
-     * @return array{deleted: int, blocked: list<string>}
+     * @return array{deleted: int}
      */
     public function execute(array $categoryIds): array
     {
         $categoryIds = array_values(array_unique(array_map('intval', $categoryIds)));
 
         if ($categoryIds === []) {
-            return ['deleted' => 0, 'blocked' => []];
+            return ['deleted' => 0];
         }
 
         return DB::transaction(function () use ($categoryIds) {
@@ -32,29 +31,16 @@ class DeleteCategoriesAction
                 ->whereIn('id', $categoryIds)
                 ->get();
 
-            $blocked = [];
-            $deletable = [];
-
             foreach ($categories as $category) {
-                $products = Product::query()
-                    ->withCount('orderItems')
+                $productIds = Product::query()
                     ->where('category_id', $category->id)
-                    ->get();
+                    ->pluck('id')
+                    ->all();
 
-                if ($products->contains(fn (Product $product) => $product->order_items_count > 0)) {
-                    $blocked[] = $category->name;
-
-                    continue;
+                if ($productIds !== []) {
+                    $this->deleteProducts->execute($productIds);
                 }
 
-                if ($products->isNotEmpty()) {
-                    $this->deleteProducts->execute($products->pluck('id')->all());
-                }
-
-                $deletable[] = $category;
-            }
-
-            foreach ($deletable as $category) {
                 if ($category->image) {
                     $this->deleteStoredFile($category->image);
                 }
@@ -62,15 +48,8 @@ class DeleteCategoriesAction
                 $category->delete();
             }
 
-            if ($deletable === [] && $blocked !== []) {
-                throw ValidationException::withMessages([
-                    'ids' => 'No se pueden eliminar categorías con productos vinculados a pedidos: '.implode(', ', $blocked).'.',
-                ]);
-            }
-
             return [
-                'deleted' => count($deletable),
-                'blocked' => $blocked,
+                'deleted' => $categories->count(),
             ];
         });
     }

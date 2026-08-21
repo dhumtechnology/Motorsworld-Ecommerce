@@ -13,8 +13,6 @@ class UpsertProductOfferAction
     public function execute(array $attributes, ?ProductOffer $offer = null): ProductOffer
     {
         return DB::transaction(function () use ($attributes, $offer) {
-            $attributes['currency'] = 'PEN';
-
             if ($offer === null) {
                 $offer = ProductOffer::query()->create($attributes);
             } else {

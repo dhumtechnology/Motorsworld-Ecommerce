@@ -10,8 +10,6 @@ use Illuminate\Support\Collection;
 
 class GetHomePageDataAction
 {
-    private const MOTOS_CATEGORY = 'MOTOCICLETAS';
-
     private const POPULAR_LIMIT = 4;
 
     public function __construct(
@@ -70,7 +68,7 @@ class GetHomePageDataAction
     }
 
     /**
-     * Categorías con imagen para el home (Motocicletas primero).
+     * Categorías con imagen para el home, ordenadas desde el admin.
      *
      * @return Collection<int, Category>
      */
@@ -79,7 +77,7 @@ class GetHomePageDataAction
         return Category::query()
             ->whereNotNull('image')
             ->where('image', '!=', '')
-            ->orderByRaw('CASE WHEN UPPER(name) = ? THEN 0 ELSE 1 END', [self::MOTOS_CATEGORY])
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->get(['id', 'name', 'description', 'image']);
     }
