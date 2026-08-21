@@ -43,6 +43,14 @@ return [
         'order_expiration_hours' => (int) env('CULQI_ORDER_EXPIRATION_HOURS', 24),
     ],
 
+    'mercadopago' => [
+        // true = simula pagos sin llaves (desarrollo local)
+        'fake' => (bool) env('MERCADOPAGO_FAKE', true),
+        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
+        'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),
+        'webhook_secret' => env('MERCADOPAGO_WEBHOOK_SECRET'),
+    ],
+
     'decolecta' => [
         'token' => env('DECOLECTA_API_TOKEN'),
         'base_url' => env('DECOLECTA_BASE_URL', 'https://api.decolecta.com/v1'),

@@ -4,294 +4,295 @@
 
 @section('content')
 @php
-    $fieldClass = 'w-full rounded border border-neutral-300 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600';
-    $labelClass = 'block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-1.5';
+    $fieldClass = 'w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-sm transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20';
+    $labelClass = 'mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
     $chargeCurrencySymbol = \App\Support\Currency::symbol($currency ?? 'PEN');
 @endphp
 
-<div class="mx-auto max-w-6xl px-4 py-10 text-neutral-900 font-title">
-    <h1 class="text-3xl font-black uppercase tracking-wide mb-8">Checkout</h1>
+<div class="relative overflow-hidden">
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-neutral-900 via-neutral-900/90 to-transparent"></div>
 
-    @if ($errors->any())
-        <div class="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {{ $errors->first() }}
-        </div>
-    @endif
-
-    @if (! $culqiFake && ! $culqiPublicKey)
-        <div class="mb-6 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Falta configurar <code class="font-mono">CULQI_PUBLIC_KEY</code> y <code class="font-mono">CULQI_SECRET_KEY</code>,
-            o activa <code class="font-mono">CULQI_FAKE=true</code> para probar sin Culqi.
-        </div>
-    @endif
-
-    <div class="grid gap-8 lg:grid-cols-12">
-        <div class="lg:col-span-7">
-            <form id="checkout-form" method="POST" action="{{ route('shop.checkout.pay') }}" data-submit-lock="async" class="rounded-lg border border-neutral-200 bg-white p-5 sm:p-6 space-y-6 shadow-sm">
-                @csrf
-                <input type="hidden" name="culqi_token" id="culqi_token" value="">
-
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900 mb-4">Datos del comprador</h2>
-                    @guest
-                        <p class="mb-4 text-sm text-neutral-600">
-                            No necesitas iniciar sesión. Usa tu correo para asociar la compra.
-                            Si más adelante te registras con el mismo correo, recuperarás tu historial.
-                        </p>
-                    @endguest
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="customer_email">Correo *</label>
-                            <input id="customer_email" name="customer_email" type="email" required
-                                   value="{{ old('customer_email', $user?->email) }}"
-                                   @disabled($user !== null)
-                                   class="{{ $fieldClass }} {{ $user ? 'bg-neutral-100 cursor-not-allowed' : '' }}">
-                            @if ($user)
-                                <input type="hidden" name="customer_email" value="{{ $user->email }}">
-                            @endif
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="customer_document">Documento (DNI) *</label>
-                            <input id="customer_document" name="customer_document" required
-                                   value="{{ old('customer_document', $profile?->document) }}"
-                                   @disabled($profile?->document)
-                                   class="{{ $fieldClass }} {{ $profile?->document ? 'bg-neutral-100 cursor-not-allowed' : '' }}">
-                            @if ($profile?->document)
-                                <input type="hidden" name="customer_document" value="{{ $profile->document }}">
-                            @endif
-                        </div>
-                        <div>
-                            <label class="{{ $labelClass }}" for="first_name">Nombre *</label>
-                            <input id="first_name" name="first_name" required value="{{ old('first_name', $profile?->first_name) }}"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClass }}" for="last_name">Apellido *</label>
-                            <input id="last_name" name="last_name" required value="{{ old('last_name', $profile?->last_name) }}"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="phone">Teléfono *</label>
-                            <input id="phone" name="phone" required value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900 mb-4">Entrega *</h2>
-                    <div class="space-y-2 mb-4">
-                        @foreach ([
-                            'pickup' => ['label' => 'Recojo en tienda', 'hint' => 'Retiras tu pedido en Motoworld.'],
-                            'delivery' => ['label' => 'Delivery', 'hint' => 'Enviamos a la dirección que indiques.'],
-                        ] as $value => $meta)
-                            <label class="flex items-start gap-3 rounded-md border border-neutral-300 bg-white px-3 py-3 cursor-pointer transition-colors hover:border-orange-500 has-[:checked]:border-orange-600 has-[:checked]:bg-orange-50">
-                                <input
-                                    type="radio"
-                                    name="fulfillment_method"
-                                    value="{{ $value }}"
-                                    class="mt-1 text-orange-600 focus:ring-orange-600"
-                                    data-fulfillment-option
-                                    @checked(old('fulfillment_method', 'delivery') === $value)
-                                >
-                                <span>
-                                    <span class="block text-sm font-semibold text-neutral-800">{{ $meta['label'] }}</span>
-                                    <span class="block text-xs text-neutral-500 mt-0.5">{{ $meta['hint'] }}</span>
-                                </span>
-                            </label>
-                        @endforeach
-                    </div>
-
-                    <div id="delivery-address-fields" class="grid gap-4 sm:grid-cols-2">
-                        <div class="sm:col-span-2">
-                            <label class="{{ $labelClass }}" for="address_line1">Dirección *</label>
-                            <input id="address_line1" name="address_line1" value="{{ old('address_line1') }}"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClass }}" for="address_city">Ciudad *</label>
-                            <input id="address_city" name="address_city" value="{{ old('address_city', 'Lima') }}"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClass }}" for="postal_code">C.P.</label>
-                            <input id="postal_code" name="postal_code" value="{{ old('postal_code', '15001') }}"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900 mb-4">Método de pago</h2>
-                    <div class="space-y-2">
-                        @foreach ([
-                            'card' => 'Tarjeta de crédito/débito',
-                            'yape' => 'Yape',
-                        ] as $value => $label)
-                            <label class="flex items-center gap-3 rounded-md border border-neutral-300 bg-white px-3 py-3 cursor-pointer transition-colors hover:border-orange-500 has-[:checked]:border-orange-600 has-[:checked]:bg-orange-50">
-                                <input type="radio" name="payment_method" value="{{ $value }}" class="text-orange-600 focus:ring-orange-600" @checked(old('payment_method', 'card') === $value)>
-                                <span class="text-sm font-semibold text-neutral-800">{{ $label }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div id="card-fields" class="space-y-4 rounded-md border border-neutral-200 bg-neutral-50 p-4">
-                        <div>
-                            <label class="{{ $labelClass }}" for="card_email">Email del cargo</label>
-                            <input id="card_email" type="email"
-                                   value="{{ old('customer_email', $user?->email) }}"
-                                   class="{{ $fieldClass }}">
-                            <p class="mt-1 text-xs text-neutral-500">Por defecto usa el correo del comprador.</p>
-                        </div>
-                    <div>
-                        <label class="{{ $labelClass }}" for="card_number">Número de tarjeta</label>
-                        <input id="card_number" inputmode="numeric" placeholder="4111111111111111" autocomplete="cc-number"
-                               class="{{ $fieldClass }}">
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div>
-                            <label class="{{ $labelClass }}" for="card_exp_month">Mes</label>
-                            <input id="card_exp_month" placeholder="09" maxlength="2"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClass }}" for="card_exp_year">Año</label>
-                            <input id="card_exp_year" placeholder="2030" maxlength="4"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                        <div>
-                            <label class="{{ $labelClass }}" for="card_cvv">CVV</label>
-                            <input id="card_cvv" placeholder="123" maxlength="4" autocomplete="cc-csc"
-                                   class="{{ $fieldClass }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="yape-fields" class="hidden space-y-4 rounded-md border border-neutral-200 bg-neutral-50 p-4">
-                    <div>
-                        <label class="{{ $labelClass }}" for="yape_phone">Celular Yape</label>
-                        <input id="yape_phone" placeholder="900000001"
-                               class="{{ $fieldClass }}">
-                    </div>
-                    <div>
-                        <label class="{{ $labelClass }}" for="yape_otp">OTP</label>
-                        <input id="yape_otp" placeholder="123456" maxlength="6"
-                               class="{{ $fieldClass }}">
-                    </div>
-                </div>
-
-                <p id="payment-error" class="hidden text-sm text-red-600"></p>
-
-                <button type="submit" id="pay-button"
-                        class="w-full rounded bg-orange-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-white hover:bg-orange-700 transition-colors disabled:opacity-50">
-                    Pagar {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}
-                </button>
-            </form>
+    <div class="relative mx-auto max-w-6xl px-4 py-10 md:py-14 text-neutral-900 font-title">
+        <div class="mb-8 md:mb-10">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-500">Pago seguro</p>
+            <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-wide text-white">Checkout</h1>
+            <p class="mt-2 max-w-xl text-sm text-white/70">Tarjeta de crédito/débito o Yape · Mercado Pago</p>
         </div>
 
-        <div class="lg:col-span-5 space-y-4">
-            <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900">Tu carrito</h2>
+        @if ($errors->any())
+            <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
-            <div class="rounded-lg border border-neutral-200 bg-white overflow-hidden divide-y divide-neutral-100 shadow-sm">
-                @foreach ($lines as $line)
-                    @php
-                        $lineCurrencySymbol = \App\Support\Currency::symbol($line['currency'] ?? 'PEN');
-                        $img = $line['product']->catalogImageUrl();
-                    @endphp
-                    <div class="flex gap-4 p-4 items-center">
-                        @if ($img)
-                            <img src="{{ $img }}" alt="" class="h-16 w-16 rounded object-cover border border-neutral-200">
-                        @else
-                            <div class="h-16 w-16 rounded bg-neutral-100 border border-neutral-200"></div>
-                        @endif
-                        <div class="flex-1 font-secondary min-w-0">
-                            <p class="font-bold truncate text-neutral-900">{{ $line['product']->name }}</p>
-                            @if (! empty($line['color_label']))
-                                <p class="text-xs text-neutral-600">Color: {{ $line['color_label'] }}</p>
-                            @endif
-                            <p class="text-xs text-neutral-500">Cantidad: {{ $line['quantity'] }}</p>
+        @if (! $mpFake && ! $mpPublicKey)
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Configura <code class="font-mono">MERCADOPAGO_PUBLIC_KEY</code> y <code class="font-mono">MERCADOPAGO_ACCESS_TOKEN</code>,
+                o usa <code class="font-mono">MERCADOPAGO_FAKE=true</code> para probar sin llaves.
+            </div>
+        @endif
+
+        <div class="grid gap-8 lg:grid-cols-12 lg:items-start">
+            <div class="lg:col-span-7">
+                <form
+                    id="checkout-form"
+                    method="POST"
+                    action="{{ route('shop.checkout.pay') }}"
+                    data-submit-lock="async"
+                    class="space-y-5 rounded-3xl border border-neutral-200/80 bg-white/95 p-5 sm:p-7 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.45)] backdrop-blur"
+                >
+                    @csrf
+                    <input type="hidden" name="payment_method" id="payment_method" value="card">
+                    <input type="hidden" name="mp_token" id="mp_token" value="">
+                    <input type="hidden" name="mp_payment_method_id" id="mp_payment_method_id" value="">
+                    <input type="hidden" name="mp_installments" id="mp_installments" value="1">
+                    <input type="hidden" name="mp_issuer_id" id="mp_issuer_id" value="">
+                    <input type="hidden" name="mp_form_data" id="mp_form_data" value="">
+
+                    {{-- Comprador --}}
+                    <section class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-xs font-black text-white">1</span>
+                            <h2 class="text-sm font-black uppercase tracking-[0.14em] text-neutral-900">Tus datos</h2>
                         </div>
-                        <div class="text-right shrink-0 font-secondary text-orange-600">
-                            <p class="font-bold">
-                                {{ $lineCurrencySymbol }} {{ number_format($line['line_total'], 2) }}
+
+                        @guest
+                            <p class="text-sm text-neutral-600">
+                                No necesitas cuenta. Usa tu correo para asociar la compra.
                             </p>
-                            @if ($line['is_on_sale'])
-                                <p class="text-xs text-neutral-400 line-through">
-                                    {{ $lineCurrencySymbol }} {{ number_format($line['list_unit_price'] * $line['quantity'], 2) }}
+                        @endguest
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="sm:col-span-2">
+                                <label class="{{ $labelClass }}" for="customer_email">Correo *</label>
+                                <input id="customer_email" name="customer_email" type="email" required
+                                       value="{{ old('customer_email', $user?->email) }}"
+                                       @disabled($user !== null)
+                                       class="{{ $fieldClass }} {{ $user ? 'bg-neutral-100 cursor-not-allowed' : '' }}">
+                                @if ($user)
+                                    <input type="hidden" name="customer_email" value="{{ $user->email }}">
+                                @endif
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="{{ $labelClass }}" for="customer_document">Documento (DNI) *</label>
+                                <input id="customer_document" name="customer_document" required
+                                       value="{{ old('customer_document', $profile?->document) }}"
+                                       @disabled($profile?->document)
+                                       class="{{ $fieldClass }} {{ $profile?->document ? 'bg-neutral-100 cursor-not-allowed' : '' }}">
+                                @if ($profile?->document)
+                                    <input type="hidden" name="customer_document" value="{{ $profile->document }}">
+                                @endif
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="first_name">Nombre *</label>
+                                <input id="first_name" name="first_name" required value="{{ old('first_name', $profile?->first_name) }}"
+                                       class="{{ $fieldClass }}">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="last_name">Apellido *</label>
+                                <input id="last_name" name="last_name" required value="{{ old('last_name', $profile?->last_name) }}"
+                                       class="{{ $fieldClass }}">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="{{ $labelClass }}" for="phone">Teléfono *</label>
+                                <input id="phone" name="phone" required value="{{ old('phone', $profile?->phone) }}" placeholder="999999999"
+                                       class="{{ $fieldClass }}">
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- Entrega --}}
+                    <section class="space-y-4 border-t border-neutral-100 pt-5">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-xs font-black text-white">2</span>
+                            <h2 class="text-sm font-black uppercase tracking-[0.14em] text-neutral-900">Entrega</h2>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            @foreach ([
+                                'pickup' => ['label' => 'Recojo en tienda', 'hint' => 'Retiras en Motoworld'],
+                                'delivery' => ['label' => 'Delivery', 'hint' => 'Enviamos a tu dirección'],
+                            ] as $value => $meta)
+                                <label class="group relative flex cursor-pointer flex-col gap-1 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 transition hover:border-orange-400 has-[:checked]:border-orange-600 has-[:checked]:bg-orange-50 has-[:checked]:shadow-sm">
+                                    <input
+                                        type="radio"
+                                        name="fulfillment_method"
+                                        value="{{ $value }}"
+                                        class="sr-only"
+                                        data-fulfillment-option
+                                        @checked(old('fulfillment_method', 'delivery') === $value)
+                                    >
+                                    <span class="text-sm font-bold text-neutral-900">{{ $meta['label'] }}</span>
+                                    <span class="text-xs text-neutral-500">{{ $meta['hint'] }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <div id="delivery-address-fields" class="grid gap-4 sm:grid-cols-2">
+                            <div class="sm:col-span-2">
+                                <label class="{{ $labelClass }}" for="address_line1">Dirección *</label>
+                                <input id="address_line1" name="address_line1" value="{{ old('address_line1') }}"
+                                       class="{{ $fieldClass }}">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="address_city">Ciudad *</label>
+                                <input id="address_city" name="address_city" value="{{ old('address_city', 'Lima') }}"
+                                       class="{{ $fieldClass }}">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="postal_code">C.P.</label>
+                                <input id="postal_code" name="postal_code" value="{{ old('postal_code', '15001') }}"
+                                       class="{{ $fieldClass }}">
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- Pago: un solo formulario de tarjeta (crédito+débito) + Yape aparte --}}
+                    <section class="space-y-4 border-t border-neutral-100 pt-5">
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-xs font-black text-white">3</span>
+                            <h2 class="text-sm font-black uppercase tracking-[0.14em] text-neutral-900">Pago</h2>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2" id="payment-method-tabs">
+                            <button type="button" data-pay-method="card"
+                                    class="rounded-2xl border border-orange-600 bg-orange-50 px-4 py-3 text-left text-sm font-bold text-neutral-900">
+                                Tarjeta
+                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">Crédito o débito · un solo formulario</span>
+                            </button>
+                            <button type="button" data-pay-method="yape"
+                                    class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-bold text-neutral-900">
+                                Yape
+                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">Celular + código OTP</span>
+                            </button>
+                        </div>
+
+                        <div id="card-payment-panel" class="space-y-3">
+                            @if ($mpFake)
+                                <div class="space-y-4 rounded-2xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-4">
+                                    <div>
+                                        <label class="{{ $labelClass }}" for="fake_card_number">Número de tarjeta</label>
+                                        <input id="fake_card_number" inputmode="numeric" placeholder="5031 7557 3456 0604" class="{{ $fieldClass }}">
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="{{ $labelClass }}" for="fake_exp">Vence</label>
+                                            <input id="fake_exp" placeholder="11/25" class="{{ $fieldClass }}">
+                                        </div>
+                                        <div>
+                                            <label class="{{ $labelClass }}" for="fake_cvv">CVV</label>
+                                            <input id="fake_cvv" placeholder="123" maxlength="4" class="{{ $fieldClass }}">
+                                        </div>
+                                        <div>
+                                            <label class="{{ $labelClass }}" for="fake_doc">DNI</label>
+                                            <input id="fake_doc" placeholder="12345678" class="{{ $fieldClass }}" value="{{ old('customer_document', $profile?->document) }}">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-neutral-500">Modo fake: no se envía a Mercado Pago.</p>
+                                </div>
+                            @else
+                                <div id="cardPaymentBrick_container" class="min-h-[200px] rounded-2xl border border-neutral-200 bg-neutral-50/60 p-2 sm:p-3"></div>
+                                <p class="text-xs text-neutral-500">Visa, Mastercard, etc. (crédito o débito) en el mismo formulario.</p>
+                            @endif
+                        </div>
+
+                        <div id="yape-payment-panel" class="hidden space-y-4 rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-4">
+                            <p class="text-sm text-neutral-600">
+                                Abre Yape, genera el código de aprobación e ingrésalo junto a tu celular.
+                            </p>
+                            <div>
+                                <label class="{{ $labelClass }}" for="yape_phone">Celular Yape *</label>
+                                <input id="yape_phone" name="yape_phone" inputmode="tel" placeholder="999999999"
+                                       value="{{ old('phone', $profile?->phone) }}" class="{{ $fieldClass }}">
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="yape_otp">Código OTP (6 dígitos) *</label>
+                                <input id="yape_otp" name="yape_otp" inputmode="numeric" placeholder="123456" maxlength="6" class="{{ $fieldClass }}">
+                            </div>
+                            @if ($mpFake)
+                                <p class="text-xs text-neutral-500">Modo fake: cualquier OTP simula el pago.</p>
+                            @endif
+                        </div>
+                    </section>
+
+                    <p id="payment-error" class="hidden rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"></p>
+
+                    <button
+                        type="submit"
+                        id="pay-button"
+                        class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
+                    >
+                        <span class="relative z-10">Pagar {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
+                    </button>
+
+                    <p class="text-center text-[11px] text-neutral-400">
+                        Procesado por Mercado Pago · Datos de tarjeta tokenizados (PCI)
+                    </p>
+                </form>
+            </div>
+
+            <aside class="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <h2 class="mb-4 text-sm font-black uppercase tracking-[0.14em] text-neutral-900">Resumen</h2>
+                    <div class="divide-y divide-neutral-100">
+                        @foreach ($lines as $line)
+                            @php
+                                $lineCurrencySymbol = \App\Support\Currency::symbol($line['currency'] ?? 'PEN');
+                                $img = $line['product']->catalogImageUrl();
+                            @endphp
+                            <div class="flex gap-3 py-3 first:pt-0 last:pb-0">
+                                @if ($img)
+                                    <img src="{{ $img }}" alt="" class="h-14 w-14 rounded-xl object-cover border border-neutral-200">
+                                @else
+                                    <div class="h-14 w-14 rounded-xl bg-neutral-100 border border-neutral-200"></div>
+                                @endif
+                                <div class="min-w-0 flex-1 font-secondary">
+                                    <p class="truncate text-sm font-bold text-neutral-900">{{ $line['product']->name }}</p>
+                                    <p class="text-xs text-neutral-500">× {{ $line['quantity'] }}</p>
+                                </div>
+                                <p class="shrink-0 text-sm font-bold text-orange-600">
+                                    {{ $lineCurrencySymbol }} {{ number_format($line['line_total'], 2) }}
                                 </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="rounded-3xl border border-neutral-800 bg-neutral-950 p-5 text-white shadow-sm" data-checkout-totals>
+                    @if ($totals->hasPen() || $totals->hasUsd())
+                        <div class="space-y-2 text-sm text-white/70">
+                            @if ($totals->hasPen())
+                                <div class="flex justify-between"><span>Subtotal soles</span><span class="text-white">S/ {{ number_format($totals->totalPen, 2) }}</span></div>
+                            @endif
+                            @if ($totals->hasUsd())
+                                <div class="flex justify-between"><span>Subtotal dólares</span><span class="text-white">$ {{ number_format($totals->totalUsd, 2) }}</span></div>
                             @endif
                         </div>
-                    </div>
-                @endforeach
-            </div>
+                    @endif
 
-            <div class="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm space-y-4" data-checkout-totals>
-                @if ($totals->hasPen() || $totals->hasUsd())
-                    <div class="space-y-2">
-                        @if ($totals->hasPen())
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-neutral-600">Subtotal en soles</span>
-                                <span class="font-semibold text-neutral-900">S/ {{ number_format($totals->totalPen, 2) }}</span>
+                    @if ($totals->hasRate)
+                        <div class="mt-4 border-t border-white/10 pt-4 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-xs font-bold uppercase tracking-widest text-white/60">Total</span>
+                                <div class="inline-flex rounded-full border border-white/15 p-0.5 text-[11px] font-bold uppercase">
+                                    <button type="button" data-total-currency="PEN" class="rounded-full px-2.5 py-1 bg-orange-600 text-white">Soles</button>
+                                    <button type="button" data-total-currency="USD" class="rounded-full px-2.5 py-1 text-white/60">USD</button>
+                                </div>
                             </div>
-                        @endif
-                        @if ($totals->hasUsd())
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-neutral-600">Subtotal en dólares</span>
-                                <span class="font-semibold text-neutral-900">$ {{ number_format($totals->totalUsd, 2) }}</span>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-
-                @if ($totals->hasRate)
-                    <div class="border-t border-neutral-100 pt-4 space-y-3">
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="uppercase font-bold tracking-widest text-sm text-neutral-700">Total</span>
-                            <div class="inline-flex rounded border border-neutral-200 p-0.5 text-xs font-bold uppercase tracking-wide">
-                                <button
-                                    type="button"
-                                    data-total-currency="PEN"
-                                    class="rounded px-2.5 py-1 transition-colors bg-orange-600 text-white"
-                                >
-                                    Soles
-                                </button>
-                                <button
-                                    type="button"
-                                    data-total-currency="USD"
-                                    class="rounded px-2.5 py-1 transition-colors text-neutral-600 hover:text-neutral-900"
-                                >
-                                    Dólares
-                                </button>
-                            </div>
+                            <p class="text-right text-2xl font-black" data-grand-total
+                               data-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
+                               data-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}">
+                                S/ {{ number_format($totals->grandPen, 2) }}
+                            </p>
                         </div>
-
-                        <p
-                            class="text-right text-xl font-black text-neutral-900"
-                            data-grand-total
-                            data-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
-                            data-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}"
-                        >
-                            S/ {{ number_format($totals->grandPen, 2) }}
-                        </p>
-
-                        <p class="text-xs text-neutral-500 text-right">
-                            TC venta SUNAT:
-                            <span class="font-mono text-neutral-700">{{ number_format((float) $totals->sellRate, 4) }}</span>
-                            @if ($totals->rateDate)
-                                <span class="text-neutral-400">· {{ $totals->rateDate }}</span>
-                            @endif
-                        </p>
-                    </div>
-                @else
-                    <div class="border-t border-neutral-100 pt-4 flex items-center justify-between">
-                        <span class="uppercase font-bold tracking-widest text-sm text-neutral-700">Total</span>
-                        <span class="text-xl font-black text-neutral-900">
-                            {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}
-                        </span>
-                    </div>
-                @endif
-            </div>
+                    @else
+                        <div class="mt-4 border-t border-white/10 pt-4 flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-widest text-white/60">Total</span>
+                            <span class="text-2xl font-black">{{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
+                        </div>
+                    @endif
+                </div>
+            </aside>
         </div>
     </div>
 </div>
@@ -301,69 +302,58 @@
 (function () {
     const root = document.querySelector('[data-checkout-totals]');
     if (!root) return;
-
     const totalEl = root.querySelector('[data-grand-total]');
     const buttons = root.querySelectorAll('[data-total-currency]');
     if (!totalEl || !buttons.length) return;
-
-    const format = (value) => Number(value).toLocaleString('es-PE', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-
+    const format = (value) => Number(value).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const setCurrency = (currency) => {
         const isPen = currency === 'PEN';
         totalEl.textContent = (isPen ? 'S/ ' : '$ ') + format(totalEl.dataset[isPen ? 'pen' : 'usd']);
-
         buttons.forEach((button) => {
             const active = button.dataset.totalCurrency === currency;
             button.classList.toggle('bg-orange-600', active);
             button.classList.toggle('text-white', active);
-            button.classList.toggle('text-neutral-600', !active);
+            button.classList.toggle('text-white/60', !active);
         });
     };
-
-    buttons.forEach((button) => {
-        button.addEventListener('click', () => setCurrency(button.dataset.totalCurrency));
-    });
+    buttons.forEach((button) => button.addEventListener('click', () => setCurrency(button.dataset.totalCurrency)));
 })();
 </script>
 @endif
 
-@if ($culqiFake || $culqiPublicKey)
 <script>
-    window.MotoworldCheckout = {
-        publicKey: @json($culqiPublicKey),
-        amountCents: {{ $amountCents }},
-        fake: @json((bool) $culqiFake),
-    };
+window.MotoworldCheckout = {
+    publicKey: @json($mpPublicKey),
+    amount: {{ (float) $amount }},
+    fake: @json((bool) $mpFake),
+    locale: 'es-PE',
+};
 </script>
+
+@if (! $mpFake && $mpPublicKey)
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+@endif
+
 <script>
 (function () {
     const form = document.getElementById('checkout-form');
-    const tokenInput = document.getElementById('culqi_token');
-    const cardFields = document.getElementById('card-fields');
-    const yapeFields = document.getElementById('yape-fields');
+    if (!form) return;
+
+    const cfg = window.MotoworldCheckout;
     const errorEl = document.getElementById('payment-error');
     const payButton = document.getElementById('pay-button');
-    const publicKey = window.MotoworldCheckout.publicKey;
-    const amountCents = window.MotoworldCheckout.amountCents;
-    const fake = window.MotoworldCheckout.fake;
+    const paymentMethodInput = document.getElementById('payment_method');
+    const mpToken = document.getElementById('mp_token');
+    const mpPaymentMethodId = document.getElementById('mp_payment_method_id');
+    const mpInstallments = document.getElementById('mp_installments');
+    const mpIssuerId = document.getElementById('mp_issuer_id');
+    const mpFormData = document.getElementById('mp_form_data');
+    const cardPanel = document.getElementById('card-payment-panel');
+    const yapePanel = document.getElementById('yape-payment-panel');
 
-    function selectedMethod() {
-        return form.querySelector('input[name="payment_method"]:checked')?.value || 'card';
-    }
-
-    function toggleFields() {
-        const method = selectedMethod();
-        cardFields.classList.toggle('hidden', method !== 'card');
-        yapeFields.classList.toggle('hidden', method !== 'yape');
-    }
-
-    form.querySelectorAll('input[name="payment_method"]').forEach((el) => {
-        el.addEventListener('change', toggleFields);
-    });
-    toggleFields();
+    let selectedPayMethod = 'card';
+    let cardBrickController = null;
+    let mp = null;
 
     const deliveryFields = document.getElementById('delivery-address-fields');
     const addressLine = document.getElementById('address_line1');
@@ -375,9 +365,7 @@
 
     function toggleFulfillment() {
         const isDelivery = selectedFulfillment() === 'delivery';
-        if (deliveryFields) {
-            deliveryFields.classList.toggle('hidden', !isDelivery);
-        }
+        if (deliveryFields) deliveryFields.classList.toggle('hidden', !isDelivery);
         if (addressLine) addressLine.required = isDelivery;
         if (addressCity) addressCity.required = isDelivery;
     }
@@ -391,99 +379,169 @@
         errorEl.textContent = message;
         errorEl.classList.remove('hidden');
         payButton.disabled = false;
+        if (typeof window.unlockSubmitLock === 'function') {
+            window.unlockSubmitLock(form);
+        }
     }
+
+    function setPayMethod(method) {
+        selectedPayMethod = method;
+        paymentMethodInput.value = method;
+
+        document.querySelectorAll('[data-pay-method]').forEach((btn) => {
+            const active = btn.dataset.payMethod === method;
+            btn.classList.toggle('border-orange-600', active);
+            btn.classList.toggle('bg-orange-50', active);
+            btn.classList.toggle('border-neutral-200', !active);
+            btn.classList.toggle('bg-white', !active);
+        });
+
+        cardPanel.classList.toggle('hidden', method !== 'card');
+        yapePanel.classList.toggle('hidden', method !== 'yape');
+    }
+
+    document.querySelectorAll('[data-pay-method]').forEach((btn) => {
+        btn.addEventListener('click', () => setPayMethod(btn.dataset.payMethod));
+    });
+    setPayMethod('card');
 
     function randomId(prefix) {
         return prefix + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
     }
 
-    async function createCardToken() {
-        if (fake) {
-            return randomId('tkn_test_fake_');
-        }
-
-        const buyerEmail = document.getElementById('customer_email')?.value
-            || document.getElementById('card_email').value;
-
-        if (document.getElementById('card_email') && !document.getElementById('card_email').value) {
-            document.getElementById('card_email').value = buyerEmail;
-        }
-
-        const response = await fetch('https://secure.culqi.com/v2/tokens', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + publicKey,
+    function payerPayload() {
+        return {
+            email: document.getElementById('customer_email')?.value,
+            identification: {
+                type: 'DNI',
+                number: document.getElementById('customer_document')?.value,
             },
-            body: JSON.stringify({
-                card_number: document.getElementById('card_number').value.replace(/\s+/g, ''),
-                cvv: document.getElementById('card_cvv').value,
-                expiration_month: document.getElementById('card_exp_month').value.padStart(2, '0'),
-                expiration_year: document.getElementById('card_exp_year').value,
-                email: document.getElementById('card_email').value || buyerEmail,
-            }),
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.id) {
-            throw new Error(data.user_message || data.merchant_message || 'No se pudo tokenizar la tarjeta.');
-        }
-        return data.id;
+        };
     }
 
-    async function createYapeToken() {
-        if (fake) {
-            return randomId('ype_test_fake_');
-        }
-
-        const response = await fetch('https://secure.culqi.com/v2/tokens/yape', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + publicKey,
-            },
-            body: JSON.stringify({
-                amount: String(amountCents),
-                number_phone: document.getElementById('yape_phone').value.replace(/\D+/g, ''),
-                otp: document.getElementById('yape_otp').value,
-            }),
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.id) {
-            throw new Error(data.user_message || data.merchant_message || 'No se pudo generar el token Yape.');
-        }
-        return data.id;
-    }
-
-    form.addEventListener('submit', async function (event) {
-        const method = selectedMethod();
-
-        if (method !== 'card' && method !== 'yape') {
+    async function mountCardBrick() {
+        if (cfg.fake || !cfg.publicKey || typeof MercadoPago === 'undefined') {
             return;
         }
 
+        mp = new MercadoPago(cfg.publicKey, { locale: cfg.locale || 'es-PE' });
+
+        try {
+            const bricksBuilder = mp.bricks();
+            cardBrickController = await bricksBuilder.create('cardPayment', 'cardPaymentBrick_container', {
+                initialization: {
+                    amount: Number(cfg.amount),
+                },
+                customization: {
+                    visual: {
+                        hidePaymentButton: true,
+                        style: {
+                            theme: 'default',
+                            customVariables: {
+                                baseColor: '#ff6600',
+                                formBackgroundColor: 'transparent',
+                            },
+                        },
+                    },
+                },
+                callbacks: {
+                    onReady: () => {},
+                    onError: (error) => {
+                        console.error(error);
+                        showError(error?.message || 'Error en el formulario de tarjeta.');
+                    },
+                    onSubmit: () => Promise.resolve(),
+                },
+            });
+            window.cardPaymentBrickController = cardBrickController;
+        } catch (err) {
+            console.error(err);
+            showError('No se pudo cargar el formulario de tarjeta de Mercado Pago.');
+        }
+    }
+
+    mountCardBrick();
+
+    form.addEventListener('submit', async function (event) {
         event.preventDefault();
         errorEl.classList.add('hidden');
         payButton.disabled = true;
 
         try {
-            const token = method === 'card'
-                ? await createCardToken()
-                : await createYapeToken();
+            if (selectedPayMethod === 'yape') {
+                const phone = (document.getElementById('yape_phone')?.value || '').replace(/\D+/g, '');
+                const otp = (document.getElementById('yape_otp')?.value || '').replace(/\D+/g, '');
 
-            tokenInput.value = token;
+                if (phone.length < 9) {
+                    throw new Error('Ingresa un celular Yape válido.');
+                }
+                if (otp.length !== 6) {
+                    throw new Error('El OTP de Yape debe tener 6 dígitos.');
+                }
+
+                let token;
+                if (cfg.fake) {
+                    token = randomId('ype_test_fake_');
+                } else {
+                    if (!mp) {
+                        mp = new MercadoPago(cfg.publicKey, { locale: cfg.locale || 'es-PE' });
+                    }
+                    const yape = mp.yape({ phoneNumber: phone, otp: otp });
+                    const yapeResult = await yape.create();
+                    token = yapeResult?.id || yapeResult?.token;
+                    if (!token) {
+                        throw new Error('No se pudo generar el token Yape. Revisa celular y OTP.');
+                    }
+                }
+
+                paymentMethodInput.value = 'yape';
+                mpToken.value = token;
+                mpPaymentMethodId.value = 'yape';
+                mpInstallments.value = '1';
+                mpIssuerId.value = '';
+                mpFormData.value = JSON.stringify({
+                    token,
+                    payment_method_id: 'yape',
+                    installments: 1,
+                    payer: payerPayload(),
+                });
+            } else {
+                let formData;
+
+                if (cfg.fake) {
+                    const token = randomId('tkn_test_fake_');
+                    formData = {
+                        token,
+                        payment_method_id: 'visa',
+                        installments: 1,
+                        payer: payerPayload(),
+                    };
+                } else {
+                    if (!cardBrickController || typeof cardBrickController.getFormData !== 'function') {
+                        throw new Error('El formulario de tarjeta aún no está listo.');
+                    }
+                    formData = await cardBrickController.getFormData();
+                    if (!formData?.token) {
+                        throw new Error('Completa los datos de la tarjeta.');
+                    }
+                }
+
+                paymentMethodInput.value = 'card';
+                mpToken.value = formData.token;
+                mpPaymentMethodId.value = formData.payment_method_id || '';
+                mpInstallments.value = String(formData.installments || 1);
+                mpIssuerId.value = formData.issuer_id != null ? String(formData.issuer_id) : '';
+                mpFormData.value = JSON.stringify({
+                    ...formData,
+                    payer: formData.payer || payerPayload(),
+                });
+            }
+
             form.submit();
         } catch (err) {
-            showError(err.message || 'Error al preparar el pago.');
-            if (typeof window.unlockSubmitLock === 'function') {
-                window.unlockSubmitLock(form);
-            } else {
-                payButton.disabled = false;
-            }
+            showError(err?.message || 'No se pudo preparar el pago.');
         }
     });
 })();
 </script>
-@endif
 @endsection

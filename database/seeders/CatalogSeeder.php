@@ -61,13 +61,11 @@ class CatalogSeeder extends Seeder
     ];
 
     /**
-     * Solo datos de sistema: categorías y marcas.
-     * Productos, modelos, ofertas e inventario demo quedan en pausa (usar seedDemo()).
+     * Catálogo completo: categorías, marcas, modelos, productos, ofertas e inventario demo.
      */
     public function run(): void
     {
-        $this->seedCategories();
-        $this->seedBrands();
+        $this->seedDemo();
     }
 
     /**

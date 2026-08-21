@@ -25,7 +25,9 @@ class CreateOrderFromCartAction
     ) {}
 
     /**
-     * Congela precios del carrito, crea el pedido y vacía el carrito.
+     * Congela precios del carrito y crea el pedido.
+     * Por defecto vacía el carrito; en checkout con pasarela usar clearCart=false
+     * y vaciarlo solo si el pago queda aprobado o en confirmación.
      *
      * @throws ValidationException
      */
@@ -35,6 +37,7 @@ class CreateOrderFromCartAction
         ?Address $shippingAddress = null,
         ?Address $billingAddress = null,
         ?FulfillmentMethod $fulfillmentMethod = null,
+        bool $clearCart = true,
     ): Order {
         $fulfillmentMethod ??= FulfillmentMethod::Delivery;
 
@@ -52,7 +55,7 @@ class CreateOrderFromCartAction
 
         $exchangeSnapshot = $this->exchangeRates->snapshotForOrder();
 
-        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod, $exchangeSnapshot) {
+        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod, $exchangeSnapshot, $clearCart) {
             $lines = [];
 
             foreach ($cart->items as $item) {
@@ -134,7 +137,9 @@ class CreateOrderFromCartAction
                 'created_at' => now(),
             ]);
 
-            $cart->items()->delete();
+            if ($clearCart) {
+                $cart->items()->delete();
+            }
 
             return $order->load(['items.product', 'items.variant', 'user.customerProfile']);
         });

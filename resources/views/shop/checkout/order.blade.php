@@ -22,11 +22,9 @@
         </div>
     @endif
 
-    @if ($errors->any())
-        <div class="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {{ $errors->first() }}
-        </div>
-    @endif
+    <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        Pago confirmado. Aquí tienes el resumen de tu pedido.
+    </div>
 
     <div class="rounded-lg border border-neutral-200 bg-white divide-y divide-neutral-100 mb-6 shadow-sm">
         @foreach ($order->items as $item)
@@ -122,38 +120,6 @@
                     allowfullscreen
                 ></iframe>
             </div>
-        </div>
-    @endif
-
-    @if ($payment && $payment->status->value === 'pending')
-        <div class="rounded-lg border border-neutral-200 bg-white p-5 space-y-3 mb-6 shadow-sm">
-            @if ($payment->payment_code)
-                <div class="rounded border border-orange-200 bg-orange-50 p-4">
-                    <p class="text-xs uppercase tracking-widest text-orange-600 font-bold mb-1">Código CIP (PagoEfectivo)</p>
-                    <p class="text-2xl font-black tracking-widest text-neutral-900">{{ $payment->payment_code }}</p>
-                    @if ($payment->payment_url)
-                        <a href="{{ $payment->payment_url }}" target="_blank" class="inline-block mt-2 text-sm text-orange-600 hover:text-orange-500">
-                            Abrir instrucciones de pago ↗
-                        </a>
-                    @endif
-                </div>
-            @endif
-
-            @if ($payment->qr_url)
-                <div class="rounded border border-neutral-200 p-4">
-                    <p class="text-xs uppercase tracking-widest text-neutral-500 font-bold mb-3">QR Plin / billeteras</p>
-                    <img src="{{ $payment->qr_url }}" alt="QR de pago" class="mx-auto max-w-[220px] rounded bg-white p-2 border border-neutral-100">
-                </div>
-            @endif
-
-            @if ($culqiFake)
-                <form method="POST" action="{{ route('shop.checkout.orders.simulate', $order) }}" class="pt-2">
-                    @csrf
-                    <button type="submit" class="rounded bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-sky-500">
-                        Simular pago recibido (fake)
-                    </button>
-                </form>
-            @endif
         </div>
     @endif
 

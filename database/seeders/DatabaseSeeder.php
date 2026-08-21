@@ -10,8 +10,7 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seeders de sistema (roles, permisos, admin, categorías, marcas).
-     * Demo (productos, pedidos, citas, inventario, métodos de pago) queda en pausa.
+     * Seeders de sistema + demo (catálogo, pagos, inventario, pedidos, citas).
      */
     public function run(): void
     {
@@ -19,10 +18,10 @@ class DatabaseSeeder extends Seeder
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
             CatalogSeeder::class,
-            // PaymentMethodSeeder::class,
-            // InventoryMovementSeeder::class,
-            // OrderSalesSeeder::class,
-            // AppointmentSeeder::class,
+            PaymentMethodSeeder::class,
+            InventoryMovementSeeder::class,
+            OrderSalesSeeder::class,
+            AppointmentSeeder::class,
         ]);
     }
 }

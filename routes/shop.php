@@ -93,6 +93,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'show'])->name('show');
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
+    Route::get('/pedidos/{order}/estado', [CheckoutController::class, 'paymentStatus'])->name('orders.status');
     Route::post('/pedidos/{order}/simular-pago', [CheckoutController::class, 'simulatePaid'])->name('orders.simulate');
 });
 

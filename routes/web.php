@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Shop\RegisterCustomerController;
 use App\Http\Controllers\Webhooks\CulqiWebhookController;
+use App\Http\Controllers\Webhooks\MercadoPagoWebhookController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -47,3 +48,8 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 
 Route::post('/webhooks/culqi', CulqiWebhookController::class)
     ->name('webhooks.culqi');
+
+Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
+    ->name('webhooks.mercadopago');
+
+Route::get('/webhooks/mercadopago', MercadoPagoWebhookController::class);
