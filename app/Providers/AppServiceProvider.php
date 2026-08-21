@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Admin\GetAdminSidebarPendingCountsAction;
 use App\Actions\Cart\BuildCartLinesAction;
+use App\Actions\Shop\GetShopFooterLinksAction;
 use App\Actions\Shop\GetShopHeaderSearchDataAction;
 use App\Models\Auth\User;
 use App\Services\Cart\CartResolver;
@@ -71,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $searchData = app(GetShopHeaderSearchDataAction::class)->execute();
+            $footerLinks = app(GetShopFooterLinksAction::class)->execute();
 
             $view->with([
                 'cartItemCount' => $count,
@@ -78,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
                 'cartDrawerTotals' => $cartTotals,
                 'searchCategories' => $searchData['searchCategories'],
                 'searchRecommendedProducts' => $searchData['searchRecommendedProducts'],
+                'footerLinks' => $footerLinks,
             ]);
         });
     }

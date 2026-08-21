@@ -63,9 +63,9 @@ class GetHomePageDataAction
     private function brands(): Collection
     {
         return Brand::query()
-            ->whereNotNull('image')
-            ->where('image', '!=', '')
-            ->orderBy('name')
+            ->withLogo()
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get(['id', 'name', 'image']);
     }
 

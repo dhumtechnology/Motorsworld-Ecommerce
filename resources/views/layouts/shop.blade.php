@@ -264,38 +264,23 @@
             </div>    
 
             <div class="md:col-span-2">
-                <x-footer-column 
-                    title="CONÓCENOS" 
-                    :links="[
-                        'NOSOTROS' => route('shop.about'),
-                        'NUESTRO TRABAJO' => '#',
-                        'POLÍTICAS DE CALIDAD' => route('shop.about').'#politicas-de-calidad',
-                        'CONTÁCTANOS' => route('shop.contact'),
-                    ]" 
+                <x-footer-column
+                    title="Clientes"
+                    :links="$footerLinks['clientes']"
                 />
             </div>
 
             <div class="md:col-span-2">
-                <x-footer-column 
-                    title="NUESTROS SERVICIOS" 
-                    :links="[
-                        'REPARACIÓN' => '#',
-                        'INSTALACIÓN DE REPUESTOS' => '#',
-                        'MANTENIMIENTO' => '#',
-                        'ASESORÍAS' => '#'
-                    ]" 
+                <x-footer-column
+                    title="Productos"
+                    :links="$footerLinks['productos']"
                 />
             </div>
 
             <div class="md:col-span-2">
-                <x-footer-column 
-                    title="NUESTROS PRODUCTOS" 
-                    :links="[
-                        'ACCESORIOS' => '#',
-                        'REPUESTOS GENERALES' => '#',
-                        'BATERÍAS' => '#',
-                        'NEUMÁTICOS' => '#'
-                    ]" 
+                <x-footer-column
+                    title="Acerca de"
+                    :links="$footerLinks['acerca_de']"
                 />
             </div>
 

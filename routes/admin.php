@@ -74,6 +74,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Marcas
     Route::get('/marcas', [BrandController::class, 'index'])->middleware('permission:brands.view')->name('brands.index');
+    Route::get('/marcas/orden', [BrandController::class, 'reorder'])->middleware('permission:brands.update')->name('brands.reorder');
+    Route::put('/marcas/orden', [BrandController::class, 'updateOrder'])->middleware('permission:brands.update')->name('brands.reorder.update');
     Route::get('/marcas/crear', [BrandController::class, 'create'])->middleware('permission:brands.create')->name('brands.create');
     Route::post('/marcas', [BrandController::class, 'store'])->middleware('permission:brands.create')->name('brands.store');
     Route::get('/marcas/{brand}', [BrandController::class, 'show'])->middleware('permission:brands.view')->name('brands.show');

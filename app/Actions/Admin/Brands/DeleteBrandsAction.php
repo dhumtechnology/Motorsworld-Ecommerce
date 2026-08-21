@@ -13,6 +13,7 @@ class DeleteBrandsAction
 {
     public function __construct(
         private readonly DeleteProductsAction $deleteProducts,
+        private readonly NormalizeBrandSortOrderAction $normalizeBrandSortOrder,
     ) {}
 
     /**
@@ -65,6 +66,10 @@ class DeleteBrandsAction
 
                 // models.brand_id tiene cascadeOnDelete → elimina modelos asociados.
                 $brand->delete();
+            }
+
+            if ($deletable !== []) {
+                $this->normalizeBrandSortOrder->execute();
             }
 
             if ($deletable === [] && $blocked !== []) {

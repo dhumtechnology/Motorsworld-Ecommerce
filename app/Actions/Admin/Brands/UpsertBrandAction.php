@@ -20,6 +20,7 @@ class UpsertBrandAction
     ): Brand {
         return DB::transaction(function () use ($attributes, $brand, $image, $removeImage) {
             if ($brand === null) {
+                $attributes['sort_order'] = (int) (Brand::query()->max('sort_order') ?? 0) + 1;
                 $brand = Brand::query()->create($attributes);
             } else {
                 $brand->update($attributes);
