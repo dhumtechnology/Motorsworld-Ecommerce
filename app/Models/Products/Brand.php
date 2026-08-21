@@ -21,6 +21,27 @@ class Brand extends Model
             ->where('image', '!=', '');
     }
 
+    /**
+     * Marcas con al menos un producto en la categoría Motocicletas.
+     *
+     * @param  Builder<Brand>  $query
+     */
+    public function scopeWithMotorcycleProducts(Builder $query): void
+    {
+        $categoryId = Category::motocicletasId();
+
+        if ($categoryId === null) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $query->whereHas(
+            'products',
+            fn (Builder $productQuery) => $productQuery->where('category_id', $categoryId),
+        );
+    }
+
     public function hasLogo(): bool
     {
         return filled($this->image);

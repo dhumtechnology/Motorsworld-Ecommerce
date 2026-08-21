@@ -33,8 +33,12 @@ class ServiceController extends Controller
             ->orderBy('name')
             ->get();
 
-        $brands = Brand::query()->orderBy('name')->get(['id', 'name']);
+        $brands = Brand::query()
+            ->withMotorcycleProducts()
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $models = VehicleModel::query()
+            ->withMotorcycleProducts()
             ->orderBy('name')
             ->get(['id', 'name', 'brand_id']);
 

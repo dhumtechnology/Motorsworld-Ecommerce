@@ -4,6 +4,7 @@ namespace App\Http\Requests\Shop;
 
 use App\Actions\Shop\GetAvailableAppointmentSlotsAction;
 use App\Models\Appointments\ServicePackage;
+use App\Models\Products\Brand;
 use App\Models\Products\VehicleModel;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
@@ -71,7 +72,18 @@ class StoreShopAppointmentRequest extends FormRequest
 
             $brandId = (int) $this->input('brand_id');
             $modelId = (int) $this->input('vehicle_model_id');
+
+            $brandOk = Brand::query()
+                ->withMotorcycleProducts()
+                ->whereKey($brandId)
+                ->exists();
+
+            if (! $brandOk) {
+                $validator->errors()->add('brand_id', 'La marca seleccionada no es válida para servicio de taller.');
+            }
+
             $belongs = VehicleModel::query()
+                ->withMotorcycleProducts()
                 ->whereKey($modelId)
                 ->where('brand_id', $brandId)
                 ->exists();
