@@ -118,6 +118,12 @@
             'label' => 'Gestión de contenido',
             'items' => [
                 [
+                    'label' => 'Configuración',
+                    'route' => 'admin.home-banners.index',
+                    'active' => request()->routeIs('admin.home-banners.*'),
+                    'permission' => 'home_banners.view',
+                ],
+                [
                     'label' => 'Blog',
                     'route' => 'admin.blog-posts.index',
                     'active' => request()->routeIs('admin.blog-posts.*'),

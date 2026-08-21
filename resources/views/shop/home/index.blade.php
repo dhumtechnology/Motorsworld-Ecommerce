@@ -18,6 +18,7 @@
     - $popularProducts : Collection<Product> (top por ventas; incluye motos)
     - $brands          : Collection<Brand> — marcas con imagen (id, name, image)
     - $categories      : Collection<Category> — categorías con imagen (id, name, description, image)
+    - $heroSlides      : list<string> — URLs del carrusel (admin o imágenes por defecto)
 --}}
 @extends('layouts.shop')
 
@@ -25,22 +26,33 @@
 
 @section('content')
 @php
-    $heroSlides = [
+    $heroSlides = $heroSlides ?? [
         asset('images/home/banner-hero.png'),
         asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
     ];
     $mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
-{{-- Banner principal: fade infinito entre portadas --}}
+{{-- Banner principal: carrusel con flechas y autoplay --}}
 <section
     class="home-hero relative w-full max-w-[100%] overflow-hidden bg-neutral-900"
     x-data="{
         active: 0,
         total: {{ count($heroSlides) }},
         timer: null,
+        next() {
+            if (this.total === 0) return;
+            this.active = (this.active + 1) % this.total;
+            this.start();
+        },
+        prev() {
+            if (this.total === 0) return;
+            this.active = (this.active - 1 + this.total) % this.total;
+            this.start();
+        },
         start() {
             this.stop();
+            if (this.total <= 1) return;
             this.timer = setInterval(() => {
                 this.active = (this.active + 1) % this.total;
             }, 10000);
@@ -74,6 +86,29 @@
             >
         @endforeach
     </div>
+
+    @if (count($heroSlides) > 1)
+        <button
+            type="button"
+            @click="prev()"
+            aria-label="Banner anterior"
+            class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:left-5"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </button>
+        <button
+            type="button"
+            @click="next()"
+            aria-label="Banner siguiente"
+            class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:right-5"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+    @endif
 </section>
 
 <style>

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Shop;
 
+use App\Models\Content\HomeBanner;
 use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
@@ -21,7 +22,8 @@ class GetHomePageDataAction
      * @return array{
      *     popularProducts: Collection<int, Product>,
      *     brands: Collection<int, Brand>,
-     *     categories: Collection<int, Category>
+     *     categories: Collection<int, Category>,
+     *     heroSlides: list<string>
      * }
      */
     public function execute(): array
@@ -30,7 +32,29 @@ class GetHomePageDataAction
             'popularProducts' => $this->popularProducts->execute(self::POPULAR_LIMIT),
             'brands' => $this->brands(),
             'categories' => $this->categories(),
+            'heroSlides' => $this->heroSlides(),
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function heroSlides(): array
+    {
+        $slides = HomeBanner::query()
+            ->visibleOnHome()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->pluck('image')
+            ->filter(fn (?string $image) => filled($image))
+            ->values()
+            ->all();
+
+        if ($slides === []) {
+            return HomeBanner::defaultSlideUrls();
+        }
+
+        return $slides;
     }
 
     /**

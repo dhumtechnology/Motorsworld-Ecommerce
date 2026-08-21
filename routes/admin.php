@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ClaimBookController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -166,6 +167,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'update'])->middleware('permission:service_packages.update')->name('service-packages.update');
     Route::delete('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'destroy'])->middleware('permission:service_packages.delete')->name('service-packages.destroy');
     Route::delete('/paquetes-de-servicio', [ServicePackageController::class, 'bulkDestroy'])->middleware('permission:service_packages.delete')->name('service-packages.bulk-destroy');
+
+    // Configuración — banners del home
+    Route::get('/configuracion', [HomeBannerController::class, 'index'])->middleware('permission:home_banners.view')->name('home-banners.index');
+    Route::get('/configuracion/crear', [HomeBannerController::class, 'create'])->middleware('permission:home_banners.create')->name('home-banners.create');
+    Route::post('/configuracion', [HomeBannerController::class, 'store'])->middleware('permission:home_banners.create')->name('home-banners.store');
+    Route::get('/configuracion/{homeBanner}/editar', [HomeBannerController::class, 'edit'])->middleware('permission:home_banners.update')->name('home-banners.edit');
+    Route::put('/configuracion/{homeBanner}', [HomeBannerController::class, 'update'])->middleware('permission:home_banners.update')->name('home-banners.update');
+    Route::delete('/configuracion/{homeBanner}', [HomeBannerController::class, 'destroy'])->middleware('permission:home_banners.delete')->name('home-banners.destroy');
+    Route::delete('/configuracion', [HomeBannerController::class, 'bulkDestroy'])->middleware('permission:home_banners.delete')->name('home-banners.bulk-destroy');
 
     // Blog
     Route::get('/blog', [BlogPostController::class, 'index'])->middleware('permission:blog_posts.view')->name('blog-posts.index');
