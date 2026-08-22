@@ -269,62 +269,7 @@
 </section>
 
 {{-- Productos populares --}}
-<section class="bg-white border-t border-neutral-100">
-    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
-        <h2 class="mb-8 md:mb-10 text-center text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
-            Productos populares
-        </h2>
-
-        @if ($popularProducts->isEmpty())
-            <p class="text-center text-sm text-neutral-500">Pronto verás aquí los productos más vendidos.</p>
-        @else
-            <div
-                class="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scroll-smooth scrollbar-none md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0 md:snap-none lg:grid-cols-4"
-            >
-                @foreach ($popularProducts as $product)
-                    @php
-                        $brand = $product->vehicleModel?->brand?->name ?? $product->category?->name ?? 'Motoworld';
-                        $description = \Illuminate\Support\Str::limit(
-                            trim((string) ($product->description ?: $product->name)),
-                            90
-                        );
-                        $price = (float) ($product->effective_price ?? $product->price_amount);
-                        $image = $product->image ?: asset('images/home/product-placeholder.png');
-                    @endphp
-
-                    <a
-                        href="{{ route('shop.product.show', $product) }}"
-                        class="group flex w-[78%] shrink-0 snap-start flex-col overflow-hidden border border-neutral-200 bg-white transition-shadow hover:shadow-md sm:w-[45%] md:w-auto md:min-w-0 md:shrink"
-                    >
-                        <div class="relative aspect-square overflow-hidden bg-neutral-100">
-                            <img
-                                src="{{ $image }}"
-                                alt="{{ $product->name }}"
-                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            >
-                        </div>
-
-                        <div class="grid grid-cols-2 mt-2 gap-0 border-t border-neutral-200 min-h-[5.5rem]">
-                            <div class="flex flex-col justify-center gap-1 px-3 py-3 md:px-4">
-                                <p class="text-sm font-bold uppercase tracking-wider text-neutral-500">
-                                    {{ $brand }}
-                                </p>
-                                <p class="text-xs font-semibold text-neutral-900 leading-snug line-clamp-3">
-                                    {{ $description }}
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center bg-primary px-3 py-3 text-center">
-                                <span class="text-xl font-black text-white tracking-tight">
-                                    S/ {{ number_format($price, 2) }}
-                                </span>
-                            </div>
-                        </div>
-                    </a>
-                @endforeach
-            </div>
-        @endif
-    </div>
-</section>
+<x-popular-products :popular-products="$popularProducts" />
 
 {{-- Mapa a todo el ancho --}}
 <section class="w-full bg-neutral-200" aria-label="Ubicación Motoworld">

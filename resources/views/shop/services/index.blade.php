@@ -364,7 +364,8 @@
     </div>
 </section>
 
-@include('shop.partials.popular-products-carousel')
+{{-- Productos populares --}}
+<x-popular-products :popular-products="$popularProducts" />
 
 <script>
     function serviceBookingForm(config) {
