@@ -56,19 +56,27 @@ trait ParsesProductVariantPayload
                 $removeImageIds = [];
             }
 
-            [$primary, $secondary] = $this->splitImageUploads(
+            $imageOrder = $row['image_order'] ?? [];
+            if (! is_array($imageOrder)) {
+                $imageOrder = [];
+            }
+            $imageOrder = array_values(array_filter(array_map(
+                static fn ($token) => trim((string) $token),
+                $imageOrder,
+            )));
+
+            $newImages = $this->normalizeUploadedFiles(
                 $this->file("variants.{$index}.images", []),
-                $this->file("variants.{$index}.primary_image"),
-                $this->file("variants.{$index}.secondary_images", []),
             );
 
             $payload[] = [
                 'id' => $hasIdentity ? (int) $row['id'] : null,
+                'sku' => trim((string) ($row['sku'] ?? '')),
                 'color_ids' => array_values(array_map('intval', $colorIds)),
                 'new_colors' => $newColors,
                 'available_stock' => (int) ($row['available_stock'] ?? 0),
-                'primary_image' => $primary,
-                'secondary_images' => $secondary,
+                'image_order' => $imageOrder,
+                'new_images' => $newImages,
                 'remove_image_ids' => array_values(array_unique(array_map('intval', $removeImageIds))),
             ];
         }
@@ -79,8 +87,8 @@ trait ParsesProductVariantPayload
     /**
      * @return array{
      *     available_stock: int,
-     *     primary_image: UploadedFile|null,
-     *     secondary_images: list<UploadedFile>,
+     *     image_order: list<string>,
+     *     new_images: list<UploadedFile>,
      *     remove_image_ids: list<int>
      * }
      */
@@ -91,42 +99,22 @@ trait ParsesProductVariantPayload
             $removeImageIds = [];
         }
 
-        [$primary, $secondary] = $this->splitImageUploads(
-            $this->file('default_images', []),
-            $this->file('default_primary_image'),
-            $this->file('default_secondary_images', []),
-        );
+        $imageOrder = $this->input('default_image_order', []);
+        if (! is_array($imageOrder)) {
+            $imageOrder = [];
+        }
+        $imageOrder = array_values(array_filter(array_map(
+            static fn ($token) => trim((string) $token),
+            $imageOrder,
+        )));
+
+        $newImages = $this->normalizeUploadedFiles($this->file('default_images', []));
 
         return [
             'available_stock' => max(0, (int) $this->input('default_available_stock', 0)),
-            'primary_image' => $primary,
-            'secondary_images' => $secondary,
+            'image_order' => $imageOrder,
+            'new_images' => $newImages,
             'remove_image_ids' => array_values(array_unique(array_map('intval', $removeImageIds))),
-        ];
-    }
-
-    /**
-     * Primera imagen = principal; el resto = secundarias.
-     *
-     * @param  mixed  $images
-     * @param  mixed  $legacyPrimary
-     * @param  mixed  $legacySecondary
-     * @return array{0: UploadedFile|null, 1: list<UploadedFile>}
-     */
-    private function splitImageUploads(mixed $images, mixed $legacyPrimary, mixed $legacySecondary): array
-    {
-        $files = $this->normalizeUploadedFiles($images);
-
-        if ($files === []) {
-            $primary = $legacyPrimary instanceof UploadedFile ? $legacyPrimary : null;
-            $secondary = $this->normalizeUploadedFiles($legacySecondary);
-
-            return [$primary, $secondary];
-        }
-
-        return [
-            $files[0],
-            array_values(array_slice($files, 1)),
         ];
     }
 

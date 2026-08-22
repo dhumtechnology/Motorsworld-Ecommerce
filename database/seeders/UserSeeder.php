@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 class UserSeeder extends Seeder
 {
     /**
-     * Seed admin + store customers with roles (idempotent).
+     * Superadmin + clientes demo (rol Usuario) para pedidos y citas.
      */
     public function run(): void
     {
@@ -25,46 +25,51 @@ class UserSeeder extends Seeder
         );
         $admin->syncRoles(['Administrador']);
 
-        $demoCustomer = User::query()->updateOrCreate(
-            ['email' => 'test@example.com'],
+        $customers = [
             [
-                'password_hash' => Hash::make('password'),
-                'status' => UserStatus::Active,
-                'email_verified_at' => now(),
+                'email' => 'cliente1@motoworld.test',
+                'document' => '40111222',
+                'first_name' => 'Ana',
+                'last_name' => 'García',
+                'phone' => '999111222',
             ],
-        );
-        $demoCustomer->syncRoles(['Usuario']);
-        $this->ensureCustomerProfile($demoCustomer, [
-            'first_name' => 'Cliente',
-            'last_name' => 'Demo',
-            'document' => '12345678',
-            'phone' => '999888777',
-        ]);
+            [
+                'email' => 'cliente2@motoworld.test',
+                'document' => '40333444',
+                'first_name' => 'Luis',
+                'last_name' => 'Torres',
+                'phone' => '999333444',
+            ],
+            [
+                'email' => 'cliente3@motoworld.test',
+                'document' => '40555666',
+                'first_name' => 'María',
+                'last_name' => 'Vargas',
+                'phone' => '999555666',
+            ],
+        ];
 
-        if (User::query()->whereHas('roles', fn ($q) => $q->where('slug', 'administrador'))->count() < 2) {
-            User::factory()->count(1)->administrador()->create();
+        foreach ($customers as $data) {
+            $user = User::query()->updateOrCreate(
+                ['email' => $data['email']],
+                [
+                    'password_hash' => Hash::make('password'),
+                    'status' => UserStatus::Active,
+                    'email_verified_at' => now(),
+                ],
+            );
+            $user->syncRoles(['Usuario']);
+
+            CustomerProfile::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'document' => $data['document'],
+                    'first_name' => $data['first_name'],
+                    'last_name' => $data['last_name'],
+                    'phone' => $data['phone'],
+                    'gender' => 'other',
+                ],
+            );
         }
-
-        $customerCount = User::query()
-            ->whereHas('roles', fn ($q) => $q->where('slug', 'usuario'))
-            ->count();
-
-        if ($customerCount < 8) {
-            User::factory()
-                ->count(8 - $customerCount)
-                ->usuario()
-                ->create();
-        }
-    }
-
-    /**
-     * @param  array{first_name: string, last_name: string, document: string, phone: string}  $data
-     */
-    private function ensureCustomerProfile(User $user, array $data): void
-    {
-        CustomerProfile::query()->updateOrCreate(
-            ['user_id' => $user->id],
-            $data,
-        );
     }
 }

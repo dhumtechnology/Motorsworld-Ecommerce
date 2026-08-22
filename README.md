@@ -156,7 +156,7 @@ No uses el CDN de Tailwind: pisa los estilos del proyecto.
 - Email: `admin@motoworld.test`
 - Password: `password`
 
-**Seeders iniciales (`db:seed`):** permisos, rol Administrador (+ rol Usuario para clientes de tienda), superadmin, marcas (KTM, Husqvarna, Royal Enfield, CFMOTO, CFLITE), categorías (Motos, Accesorios, Baterías, Neumáticos, Repuestos) y servicios con sus paquetes.
+**Seeders iniciales (`db:seed`):** permisos, rol Administrador (+ rol Usuario para clientes de tienda), superadmin, marcas (KTM, Husqvarna, Royal Enfield, CFMOTO, CFLITE), categorías (Motocicletas, Accesorios, Baterías, Neumáticos, Repuestos) y servicios con sus paquetes.
 
 ### 4. Verificar la aplicación
 

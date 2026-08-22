@@ -3,6 +3,7 @@
 
     Imágenes estáticas (copia tus archivos con estos nombres exactos):
     - public/images/home/banner-hero.png
+    - public/images/home/portadas/1 HOME - bienvenidos a mw 2.jpg
     - public/images/home/taller-1.png
     - public/images/home/taller-2.png
     - public/images/home/taller-3.png
@@ -17,6 +18,7 @@
     - $popularProducts : Collection<Product> (top por ventas; incluye motos)
     - $brands          : Collection<Brand> — marcas con imagen (id, name, image)
     - $categories      : Collection<Category> — categorías con imagen (id, name, description, image)
+    - $heroSlides      : list<string> — URLs del carrusel (admin o imágenes por defecto)
 --}}
 @extends('layouts.shop')
 
@@ -24,19 +26,125 @@
 
 @section('content')
 @php
-    $heroImage = asset('images/home/banner-hero.png');
+    $heroSlides = $heroSlides ?? [
+        asset('images/home/banner-hero.png'),
+        asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
+    ];
     $mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
-{{-- Banner principal: exactamente el ancho del viewport, sin desborde horizontal --}}
-<section class="w-full max-w-[100%] overflow-hidden bg-neutral-900">
-    <img
-        src="{{ $heroImage }}"
-        alt="Motoworld"
-        class="block h-auto w-full max-w-full object-contain"
-        onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-    >
+{{-- Banner principal: carrusel con flechas y autoplay --}}
+<section
+    class="home-hero relative w-full max-w-[100%] overflow-hidden bg-neutral-900"
+    x-data="{
+        active: 0,
+        total: {{ count($heroSlides) }},
+        timer: null,
+        next() {
+            if (this.total === 0) return;
+            this.active = (this.active + 1) % this.total;
+            this.start();
+        },
+        prev() {
+            if (this.total === 0) return;
+            this.active = (this.active - 1 + this.total) % this.total;
+            this.start();
+        },
+        start() {
+            this.stop();
+            if (this.total <= 1) return;
+            this.timer = setInterval(() => {
+                this.active = (this.active + 1) % this.total;
+            }, 10000);
+        },
+        stop() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+    }"
+    x-init="start()"
+    aria-label="Banner Motoworld"
+>
+    <div class="home-hero-frame relative w-full overflow-hidden">
+        {{-- La 1.ª imagen define la altura del banner. --}}
+        <img
+            src="{{ $heroSlides[0] }}"
+            alt=""
+            aria-hidden="true"
+            class="home-hero-sizer block h-auto w-full max-w-full"
+        >
+        @foreach ($heroSlides as $index => $slide)
+            <img
+                src="{{ $slide }}"
+                alt="Motoworld"
+                class="home-hero-slide{{ $index === 0 ? ' is-active' : '' }}"
+                :class="{ 'is-active': active === {{ $index }} }"
+                @if ($index === 0) loading="eager" @else loading="lazy" @endif
+                :aria-hidden="active === {{ $index }} ? 'false' : 'true'"
+            >
+        @endforeach
+    </div>
+
+    @if (count($heroSlides) > 1)
+        <button
+            type="button"
+            @click="prev()"
+            aria-label="Banner anterior"
+            class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:left-5"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </button>
+        <button
+            type="button"
+            @click="next()"
+            aria-label="Banner siguiente"
+            class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:right-5"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+    @endif
 </section>
+
+<style>
+    .home-hero-frame {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .home-hero-sizer {
+        display: block;
+        width: 100%;
+        height: auto;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .home-hero-slide {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        /* Cubre todo el ancho; si sobra, recorta en Y (y en X si hace falta). */
+        object-fit: cover;
+        object-position: center;
+        opacity: 0;
+        transition: opacity 1.2s ease-in-out;
+        will-change: opacity;
+        pointer-events: none;
+    }
+
+    /* Mismo z-index + solo opacity = crossfade en ambos sentidos. */
+    .home-hero-slide.is-active {
+        opacity: 1;
+    }
+</style>
 
 {{-- Marcas: imágenes desde Brand (admin) --}}
 <section class="bg-white">
@@ -198,7 +306,7 @@
         </h2>
 
         <!-- Contenedor relativo para posicionar las flechas -->
-        <div class="relative group">
+        <div class="relative">
             
             <!-- Flecha Izquierda (Anterior) -->
             <button 
@@ -229,7 +337,7 @@
             >
                 @forelse ($categories as $category)
                     @php
-                        $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOS';
+                        $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOCICLETAS';
                         $categoryHref = $isMotos
                             ? route('shop.catalog', ['section' => 'motos'])
                             : route('shop.catalog', [
@@ -240,12 +348,12 @@
                     <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
                         <a
                             href="{{ $categoryHref }}"
-                            class="group relative block aspect-[3/4] overflow-hidden bg-neutral-200 opacity-80 transition-opacity duration-300 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:opacity-100"
+                            class="group/category relative block aspect-[3/4] overflow-hidden bg-neutral-200 opacity-80 transition-opacity duration-300 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:opacity-100"
                         >
                             <img
                                 src="{{ $category->image }}"
                                 alt="{{ $category->name }}"
-                                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover/category:scale-105"
                                 loading="lazy"
                                 onerror="this.classList.add('opacity-0');"
                             >

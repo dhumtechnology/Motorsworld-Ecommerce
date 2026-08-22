@@ -3,13 +3,16 @@
 namespace App\Actions\Shop;
 
 use App\Enums\Appointments\AppointmentStatus;
+use App\Mail\AppointmentConfirmationMail;
 use App\Models\Appointments\Appointment;
 use App\Models\Appointments\ServicePackage;
 use App\Models\Auth\User;
 use App\Models\Products\VehicleModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class StoreShopAppointmentAction
 {
@@ -68,7 +71,7 @@ class StoreShopAppointmentAction
             ]);
         }
 
-        return DB::transaction(function () use ($data, $user, $appointmentAt): Appointment {
+        $appointment = DB::transaction(function () use ($data, $user, $appointmentAt): Appointment {
             $customer = $this->resolveOrCreateCustomer->execute([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
@@ -98,5 +101,24 @@ class StoreShopAppointmentAction
                 'status' => AppointmentStatus::Pending,
             ]);
         });
+
+        $this->sendConfirmationMail($appointment);
+
+        return $appointment;
+    }
+
+    private function sendConfirmationMail(Appointment $appointment): void
+    {
+        $email = $appointment->displayCustomerEmail();
+
+        if ($email === '' || $email === '—') {
+            return;
+        }
+
+        try {
+            Mail::to($email)->send(new AppointmentConfirmationMail($appointment));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 }

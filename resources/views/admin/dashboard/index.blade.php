@@ -110,7 +110,7 @@
     </div>
 
     {{-- Secondary KPIs --}}
-    <div class="grid gap-4 sm:grid-cols-3 mt-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 mt-4">
         <a href="{{ route('admin.products.index') }}" class="admin-card px-5 py-4 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors">
             <div>
                 <p class="admin-label mb-0">Productos activos</p>
@@ -133,6 +133,26 @@
                 <p class="text-xl font-title text-text mt-1 tabular-nums">{{ number_format($kpis['appointmentsToday'] ?? 0) }}</p>
             </div>
             <span class="text-xs font-bold uppercase tracking-wider text-primary font-secondary">Agenda →</span>
+        </a>
+        <a href="{{ route('admin.claim-book.complaints') }}" class="admin-card px-5 py-4 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors">
+            <div>
+                <p class="admin-label mb-0">Quejas</p>
+                <p class="text-xl font-title text-text mt-1 tabular-nums">{{ number_format($kpis['complaints'] ?? 0) }}</p>
+                <p class="text-xs text-muted mt-1 font-secondary">
+                    {{ number_format($kpis['pendingComplaints'] ?? 0) }} pendientes
+                </p>
+            </div>
+            <span class="text-xs font-bold uppercase tracking-wider text-primary font-secondary">Ver →</span>
+        </a>
+        <a href="{{ route('admin.claim-book.claims') }}" class="admin-card px-5 py-4 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors">
+            <div>
+                <p class="admin-label mb-0">Reclamos</p>
+                <p class="text-xl font-title text-text mt-1 tabular-nums">{{ number_format($kpis['claims'] ?? 0) }}</p>
+                <p class="text-xs text-muted mt-1 font-secondary">
+                    {{ number_format($kpis['pendingClaims'] ?? 0) }} pendientes
+                </p>
+            </div>
+            <span class="text-xs font-bold uppercase tracking-wider text-primary font-secondary">Ver →</span>
         </a>
     </div>
 

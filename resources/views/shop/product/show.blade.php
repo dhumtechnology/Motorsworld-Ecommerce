@@ -184,6 +184,11 @@
 @extends('layouts.shop')
 
 @section('content')
+    @php
+        $discountLabel = ($product->is_on_sale && $product->discount_percent)
+            ? rtrim(rtrim(number_format((float) $product->discount_percent, 2, '.', ''), '0'), '.')
+            : null;
+    @endphp
     <div>
         <div class="px-4 py-2">
             <x-breadcrumb :items="[
@@ -239,7 +244,12 @@
                     </div>
                 </div>
 
-                <div class="flex justify-center h-80 sm:h-full min-h-0 flex-1 rounded-sm overflow-hidden w-full">
+                <div class="flex justify-center h-80 sm:h-full min-h-0 flex-1 rounded-sm overflow-hidden w-full relative">
+                    @if($product->is_on_sale && $discountLabel)
+                        <span class="absolute top-3 left-3 z-10 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-lg font-black uppercase tracking-tight text-white shadow-md">
+                            -{{ $discountLabel }}%
+                        </span>
+                    @endif
                     <img id="product-main-image" :src="mainImage" class="h-full w-full object-cover transition-all duration-200" alt="{{ $product->name }}">
                 </div>
             </div>
@@ -310,10 +320,40 @@
                     Este producto no está disponible para compra por ahora.
                 </div>
 
-                <div class="my-6 flex items-baseline gap-4">
+                @if($product->is_on_sale)
+                    <div class="my-4 rounded-lg border border-primary/25 bg-orange-50 px-4 py-3">
+                        <div class="flex flex-wrap items-start gap-3">
+                            @if($discountLabel)
+                                <span class="inline-flex shrink-0 items-center rounded-md bg-primary px-4 py-2 text-3xl font-black uppercase tracking-tight text-white shadow-sm">
+                                    -{{ $discountLabel }}%
+                                </span>
+                            @endif
+                            <div class="min-w-0 flex-1 space-y-1">
+                                @if($product->offer_reason)
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-primary">Oferta</p>
+                                    <p class="text-lg font-black uppercase leading-snug text-neutral-900">{{ $product->offer_reason }}</p>
+                                @elseif($discountLabel)
+                                    <p class="text-lg font-black uppercase tracking-wide text-primary">¡Oferta especial!</p>
+                                @endif
+                                @if(! empty($product->offer['ends_at_formatted']))
+                                    <p class="text-xs font-semibold text-neutral-600">
+                                        Válida hasta {{ $product->offer['ends_at_formatted'] }}
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="my-6 flex items-baseline gap-4 flex-wrap">
                     <span class="text-3xl font-black tracking-tight">{{ $product->currencySymbol() }} {{ number_format((float) $product->effective_price, 2) }}</span>
                     @if($product->is_on_sale)
-                        <span class="font-bold line-through">{{ $product->currencySymbol() }} {{ number_format((float) $product->list_price, 2) }}</span>
+                        <span class="font-bold line-through text-neutral-500">{{ $product->currencySymbol() }} {{ number_format((float) $product->list_price, 2) }}</span>
+                        @if($discountLabel)
+                            <span class="rounded bg-emerald-100 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-emerald-800">
+                                Ahorras {{ $discountLabel }}%
+                            </span>
+                        @endif
                     @endif
                 </div>
 

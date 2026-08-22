@@ -8,9 +8,14 @@ use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\ClaimBookController;
 use App\Http\Controllers\Shop\ContactController;
+use App\Http\Controllers\Shop\FaqController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\ProductController;
 use App\Http\Controllers\Shop\ServiceController;
+use App\Http\Controllers\Shop\HelpController;
+use App\Http\Controllers\Shop\PaymentPromotionsController;
+use App\Http\Controllers\Shop\PrivacyPolicyController;
+use App\Http\Controllers\Shop\ShippingReturnsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +33,16 @@ Route::get('/nosotros', [AboutController::class, 'index'])->name('about');
 
 Route::get('/contacto', [ContactController::class, 'index'])->name('contact');
 Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/envios-y-devoluciones', [ShippingReturnsController::class, 'index'])->name('shipping-returns');
+
+Route::get('/politica-de-privacidad', [PrivacyPolicyController::class, 'index'])->name('privacy-policy');
+
+Route::get('/ayuda', [HelpController::class, 'index'])->name('help');
+
+Route::get('/formas-de-pago-y-promociones', [PaymentPromotionsController::class, 'index'])->name('payment-promotions');
+
+Route::get('/preguntas-frecuentes', [FaqController::class, 'index'])->name('faq');
 
 Route::get('/libro-de-reclamaciones', [ClaimBookController::class, 'index'])->name('claim-book');
 Route::post('/libro-de-reclamaciones', [ClaimBookController::class, 'store'])->name('claim-book.store');
@@ -71,6 +86,7 @@ Route::prefix('carrito')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('index');
     Route::post('/productos/{product}', [CartController::class, 'store'])->name('items.store');
     Route::patch('/productos/{product}', [CartController::class, 'update'])->name('items.update');
+    Route::delete('/productos/{product}', [CartController::class, 'remove'])->name('items.remove');
     Route::post('/productos/{product}/increment', [CartController::class, 'increment'])->name('items.increment');
     Route::post('/productos/{product}/decrement', [CartController::class, 'decrement'])->name('items.decrement');
 });
@@ -92,6 +108,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'show'])->name('show');
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
+    Route::get('/pedidos/{order}/estado', [CheckoutController::class, 'paymentStatus'])->name('orders.status');
     Route::post('/pedidos/{order}/simular-pago', [CheckoutController::class, 'simulatePaid'])->name('orders.simulate');
 });
 
@@ -100,6 +117,10 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
 | Cuenta del cliente
 |--------------------------------------------------------------------------
 */
+Route::get('/cuenta/password/confirmar/{user}/{token}', [AccountController::class, 'confirmPasswordChange'])
+    ->middleware('signed')
+    ->name('account.password.confirm');
+
 Route::middleware('auth')->prefix('cuenta')->name('account.')->group(function () {
     Route::get('/', [AccountController::class, 'show'])->name('show');
     Route::put('/perfil', [AccountController::class, 'updateProfile'])->name('profile.update');

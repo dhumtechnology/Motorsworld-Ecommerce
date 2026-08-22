@@ -20,6 +20,7 @@ class UpsertCategoryAction
     ): Category {
         return DB::transaction(function () use ($attributes, $category, $image, $removeImage) {
             if ($category === null) {
+                $attributes['sort_order'] = (int) (Category::query()->max('sort_order') ?? 0) + 1;
                 $category = Category::query()->create($attributes);
             } else {
                 $category->update($attributes);

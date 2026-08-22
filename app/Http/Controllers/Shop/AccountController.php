@@ -7,9 +7,11 @@ use App\Actions\Shop\UpdateCustomerProfileAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ChangeOwnPasswordRequest;
 use App\Http\Requests\Shop\UpdateCustomerProfileRequest;
+use App\Models\Auth\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class AccountController extends Controller
 {
@@ -51,7 +53,7 @@ class AccountController extends Controller
 
         return redirect()
             ->route('shop.account.show')
-            ->with('status', 'Tus datos se actualizaron correctamente.');
+            ->with('status', 'Tus datos se actualizaron correctamente. Te enviamos un correo de confirmación.');
     }
 
     public function updatePassword(
@@ -66,6 +68,31 @@ class AccountController extends Controller
 
         return redirect()
             ->route('shop.account.show')
-            ->with('status', 'Tu contraseña se actualizó correctamente.');
+            ->with('status', 'Te enviamos un correo para confirmar el cambio de contraseña. Revisa tu bandeja de entrada.');
+    }
+
+    public function confirmPasswordChange(
+        Request $request,
+        User $user,
+        string $token,
+        ChangeOwnPasswordAction $changePassword,
+    ): RedirectResponse {
+        if (! $request->hasValidSignature()) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'El enlace de confirmación no es válido o ya expiró.']);
+        }
+
+        try {
+            $changePassword->confirm($user, $token);
+        } catch (ValidationException $e) {
+            return redirect()
+                ->route('login')
+                ->withErrors($e->errors());
+        }
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión con la nueva.');
     }
 }

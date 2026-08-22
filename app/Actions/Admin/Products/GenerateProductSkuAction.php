@@ -40,16 +40,31 @@ class GenerateProductSkuAction
         }
 
         $base = $product->sku.'-'.$suffix;
-        $candidate = $base;
+
+        return $this->ensureUniqueVariantSku($base, $ignore);
+    }
+
+    public function resolveVariantSku(string $preferred, ?ProductVariant $ignore = null): string
+    {
+        return $this->ensureUniqueVariantSku(trim($preferred), $ignore);
+    }
+
+    private function ensureUniqueVariantSku(string $sku, ?ProductVariant $ignore = null): string
+    {
+        if ($sku === '') {
+            return $sku;
+        }
+
+        $candidate = $sku;
         $i = 2;
 
         while (
             ProductVariant::query()
                 ->where('sku', $candidate)
-                ->when($ignore !== null, fn ($q) => $q->where('id', '!=', $ignore->id))
+                ->when($ignore !== null, fn ($query) => $query->where('id', '!=', $ignore->id))
                 ->exists()
         ) {
-            $candidate = $base.'-'.$i;
+            $candidate = $sku.'-'.$i;
             $i++;
         }
 

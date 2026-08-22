@@ -61,9 +61,17 @@ class CatalogSeeder extends Seeder
     ];
 
     /**
-     * Catálogo demo idempotente: categorías, marcas, modelos, productos, variantes, inventario e imágenes.
+     * Catálogo completo: categorías, marcas, modelos, productos, ofertas e inventario demo.
      */
     public function run(): void
+    {
+        $this->seedDemo();
+    }
+
+    /**
+     * Catálogo demo completo (productos, variantes, ofertas). No se llama desde DatabaseSeeder.
+     */
+    public function seedDemo(): void
     {
         $categories = $this->seedCategories();
         $brands = $this->seedBrands();
@@ -77,8 +85,13 @@ class CatalogSeeder extends Seeder
      */
     private function seedCategories(): Collection
     {
+        // Renombre histórico: MOTOS / Motos → Motocicletas
+        Category::query()
+            ->whereIn('name', ['MOTOS', 'Motos'])
+            ->update(['name' => 'Motocicletas']);
+
         $definitions = [
-            'MOTOS' => [
+            'Motocicletas' => [
                 'description' => 'Motocicletas nuevas y usadas para ciudad, carretera y aventura.',
                 'image' => '/images/home/need-motos.png',
             ],
@@ -199,7 +212,7 @@ class CatalogSeeder extends Seeder
                 'sku' => 'MW-MOTO-001',
                 'name' => 'Yamaha YZF-R3 2024',
                 'description' => 'Yamaha YZF-R3 2024. Deportiva ligera ideal para ciudad y pista, motor bicilíndrico 321 cc.',
-                'category' => 'MOTOS',
+                'category' => 'Motocicletas',
                 'brand' => 'Yamaha',
                 'model' => 'YZF-R3',
                 'price' => 18999.00,
@@ -215,7 +228,7 @@ class CatalogSeeder extends Seeder
                 'sku' => 'MW-MOTO-002',
                 'name' => 'Honda CB650R',
                 'description' => 'Honda CB650R naked streetfighter. Cuatro cilindros, 649 cc, acabado premium y manejo ágil.',
-                'category' => 'MOTOS',
+                'category' => 'Motocicletas',
                 'brand' => 'Honda',
                 'model' => 'CB650R',
                 'price' => 24999.00,
@@ -227,7 +240,7 @@ class CatalogSeeder extends Seeder
                 'sku' => 'MW-MOTO-003',
                 'name' => 'Kawasaki Ninja 400',
                 'description' => 'Kawasaki Ninja 400. Carenado deportivo, ideal para iniciarse en motos de alta cilindrada.',
-                'category' => 'MOTOS',
+                'category' => 'Motocicletas',
                 'brand' => 'Kawasaki',
                 'model' => 'Ninja 400',
                 'price' => 21999.00,
@@ -239,7 +252,7 @@ class CatalogSeeder extends Seeder
                 'sku' => 'MW-MOTO-004',
                 'name' => 'Bajaj Pulsar NS200',
                 'description' => 'Bajaj Pulsar NS200. Urbana versátil con excelente relación potencia-consumo.',
-                'category' => 'MOTOS',
+                'category' => 'Motocicletas',
                 'brand' => 'Bajaj',
                 'model' => 'Pulsar NS200',
                 'price' => 12999.00,
@@ -251,7 +264,7 @@ class CatalogSeeder extends Seeder
                 'sku' => 'MW-MOTO-005',
                 'name' => 'KTM 390 Duke',
                 'description' => 'KTM 390 Duke. Naked ágil con tecnología ABS y pantalla TFT a color.',
-                'category' => 'MOTOS',
+                'category' => 'Motocicletas',
                 'brand' => 'KTM',
                 'model' => '390 Duke',
                 'price' => 19999.00,

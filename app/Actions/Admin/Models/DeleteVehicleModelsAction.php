@@ -6,7 +6,6 @@ use App\Actions\Admin\Products\DeleteProductsAction;
 use App\Models\Products\Product;
 use App\Models\Products\VehicleModel;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class DeleteVehicleModelsAction
 {
@@ -16,14 +15,14 @@ class DeleteVehicleModelsAction
 
     /**
      * @param  list<int>  $modelIds
-     * @return array{deleted: int, blocked: list<string>}
+     * @return array{deleted: int}
      */
     public function execute(array $modelIds): array
     {
         $modelIds = array_values(array_unique(array_map('intval', $modelIds)));
 
         if ($modelIds === []) {
-            return ['deleted' => 0, 'blocked' => []];
+            return ['deleted' => 0];
         }
 
         return DB::transaction(function () use ($modelIds) {
@@ -31,41 +30,21 @@ class DeleteVehicleModelsAction
                 ->whereIn('id', $modelIds)
                 ->get();
 
-            $blocked = [];
-            $deletableIds = [];
-
             foreach ($models as $model) {
-                $products = Product::query()
-                    ->withCount('orderItems')
+                $productIds = Product::query()
                     ->where('model_id', $model->id)
-                    ->get();
+                    ->pluck('id')
+                    ->all();
 
-                if ($products->contains(fn (Product $product) => $product->order_items_count > 0)) {
-                    $blocked[] = $model->name;
-
-                    continue;
+                if ($productIds !== []) {
+                    $this->deleteProducts->execute($productIds);
                 }
-
-                if ($products->isNotEmpty()) {
-                    $this->deleteProducts->execute($products->pluck('id')->all());
-                }
-
-                $deletableIds[] = $model->id;
             }
 
-            if ($deletableIds !== []) {
-                VehicleModel::query()->whereIn('id', $deletableIds)->delete();
-            }
-
-            if ($deletableIds === [] && $blocked !== []) {
-                throw ValidationException::withMessages([
-                    'ids' => 'No se pueden eliminar modelos con productos vinculados a pedidos: '.implode(', ', $blocked).'.',
-                ]);
-            }
+            $deleted = VehicleModel::query()->whereIn('id', $modelIds)->delete();
 
             return [
-                'deleted' => count($deletableIds),
-                'blocked' => $blocked,
+                'deleted' => $deleted,
             ];
         });
     }

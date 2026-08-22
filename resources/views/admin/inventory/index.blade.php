@@ -78,17 +78,21 @@
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="export-excel-btn" disabled
-                    class="rounded border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-emerald-700 transition-colors enabled:hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40">
-                Exportar Excel <span id="export-count" class="hidden">(0)</span>
+            <button type="button" id="export-excel-btn"
+                    class="rounded border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-100 transition-colors">
+                Exportar Excel <span id="export-count" class="text-emerald-600/80"></span>
             </button>
-            <button type="button" id="export-pdf-btn" disabled
-                    class="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-600 transition-colors enabled:hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40">
+            <button type="button" id="export-pdf-btn"
+                    class="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold uppercase tracking-wide text-red-600 hover:bg-red-100 transition-colors">
                 Exportar PDF
             </button>
             <a href="{{ route('admin.inventory.import') }}"
                class="rounded border border-sky-200 bg-sky-50/40 px-4 py-2 text-sm font-bold uppercase tracking-wide text-sky-700 hover:bg-sky-100 transition-colors">
                 Importar
+            </a>
+            <a href="{{ route('admin.inventory.template', ['format' => 'xlsx']) }}"
+               class="rounded border border-border px-4 py-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-text hover:border-border-strong transition-colors">
+                Plantilla Excel
             </a>
         </div>
         <a href="{{ route('admin.inventory.create') }}"
@@ -114,7 +118,7 @@
                 <span class="text-text font-bold">{{ $movements->total() }}</span>
                 {{ $movements->total() === 1 ? 'movimiento' : 'movimientos' }}
                 @if ($hasActiveFilters)<span class="text-muted">(filtrados)</span>@endif
-                <span class="text-muted">· Selecciona filas para exportar</span>
+                <span class="text-muted">· Exporta lo filtrado, o marca filas para exportar solo esa selección</span>
             </p>
         </div>
 
@@ -227,30 +231,36 @@
 
             const syncExportUi = () => {
                 const count = selected().length;
-                if (excelBtn) excelBtn.disabled = count === 0;
-                if (pdfBtn) pdfBtn.disabled = count === 0;
                 if (countEl) {
-                    if (count > 0) {
-                        countEl.textContent = '(' + count + ')';
-                        countEl.classList.remove('hidden');
-                    } else {
-                        countEl.classList.add('hidden');
-                    }
+                    countEl.textContent = count > 0 ? '(' + count + ' seleccionados)' : '(filtrados)';
                 }
             };
 
+            const appendHidden = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                idsBox.appendChild(input);
+            };
+
             const submitExport = (format) => {
-                const rows = selected();
-                if (!form || rows.length === 0) return;
+                if (!form || !formatInput || !idsBox) return;
                 formatInput.value = format;
                 idsBox.innerHTML = '';
-                rows.forEach((cb) => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'ids[]';
-                    input.value = cb.value;
-                    idsBox.appendChild(input);
-                });
+
+                const rows = selected();
+                if (rows.length > 0) {
+                    rows.forEach((cb) => appendHidden('ids[]', cb.value));
+                } else if (filterForm) {
+                    appendHidden('scope', 'filtered');
+                    const data = new FormData(filterForm);
+                    data.forEach((value, name) => {
+                        if (value === null || value === undefined) return;
+                        appendHidden(name, String(value));
+                    });
+                }
+
                 form.submit();
             };
 

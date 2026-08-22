@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'currency',
     'culqi_charge_id',
     'culqi_order_id',
+    'mp_payment_id',
     'payment_code',
     'qr_url',
     'payment_url',

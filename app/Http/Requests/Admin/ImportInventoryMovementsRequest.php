@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\Validator;
 
 class ImportInventoryMovementsRequest extends FormRequest
 {
@@ -17,7 +19,7 @@ class ImportInventoryMovementsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'max:5120', 'mimes:csv,txt,xlsx,xls'],
+            'file' => ['required', 'file', 'max:5120'],
         ];
     }
 
@@ -28,8 +30,24 @@ class ImportInventoryMovementsRequest extends FormRequest
     {
         return [
             'file.required' => 'Selecciona un archivo CSV o Excel.',
-            'file.mimes' => 'El archivo debe ser CSV o Excel (.csv, .xlsx, .xls).',
             'file.max' => 'El archivo no puede superar 5 MB.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $file = $this->file('file');
+
+            if (! $file instanceof UploadedFile) {
+                return;
+            }
+
+            $extension = strtolower($file->getClientOriginalExtension() ?: '');
+
+            if (! in_array($extension, ['csv', 'txt', 'xlsx', 'xls'], true)) {
+                $validator->errors()->add('file', 'El archivo debe ser CSV o Excel (.csv, .xlsx, .xls).');
+            }
+        });
     }
 }

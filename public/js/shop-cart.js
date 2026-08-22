@@ -21,7 +21,7 @@
                 badge = document.createElement('span');
                 badge.setAttribute('data-cart-badge', '');
                 badge.className =
-                    'absolute -right-2 -top-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center';
+                    'absolute -left-3 -top-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-600 text-white text-[9px] font-black leading-4 text-center';
                 mark.appendChild(badge);
             }
 
@@ -439,6 +439,7 @@
             store: root.dataset.storeUrl,
             increment: root.dataset.incrementUrl,
             decrement: root.dataset.decrementUrl,
+            remove: button.dataset.removeUrl || root.dataset.removeUrl,
         };
 
         const url = urls[action];
@@ -460,6 +461,8 @@
             optimisticQty = previousQty + 1;
         } else if (action === 'decrement') {
             optimisticQty = Math.max(0, previousQty - 1);
+        } else if (action === 'remove') {
+            optimisticQty = 0;
         }
 
         if (root.hasAttribute('data-product-cart') || root.hasAttribute('data-cart-line')) {
@@ -471,7 +474,8 @@
                 product_variant_id: variantId,
                 ...(action === 'store' ? { quantity: 1 } : {}),
             };
-            const data = await cartRequest(url, 'POST', body);
+            const method = action === 'remove' ? 'DELETE' : 'POST';
+            const data = await cartRequest(url, method, body);
 
             updateBadge(Number(data.item_count || 0));
             updateCartDrawer(data);

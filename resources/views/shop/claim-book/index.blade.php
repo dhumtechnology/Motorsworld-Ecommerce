@@ -1,7 +1,7 @@
 {{--
     Libro de reclamaciones (hoja virtual)
 
-    Banner: public/images/services/banner-servicios.png (fallback)
+    Portada: public/images/home/portadas/Scaneo de motocicleta.jpg
 --}}
 @extends('layouts.shop')
 
@@ -9,8 +9,9 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/contact/banner-contacto.png'))
-        ? asset('images/contact/banner-contacto.png')
+    $bannerPath = public_path('images/home/portadas/Scaneo de motocicleta.jpg');
+    $banner = file_exists($bannerPath)
+        ? asset('images/home/portadas/Scaneo de motocicleta.jpg')
         : asset('images/services/banner-servicios.png');
 
     $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20';

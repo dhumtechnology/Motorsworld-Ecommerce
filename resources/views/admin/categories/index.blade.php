@@ -56,15 +56,26 @@
             Eliminar seleccionados
             <span id="bulk-delete-count" class="hidden">(0)</span>
         </button>
-        <a
-            href="{{ route('admin.categories.create') }}"
-            class="inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors"
-        >
+        <div class="flex flex-wrap items-center gap-2">
+            @can('categories.update')
+                <a href="{{ route('admin.categories.reorder') }}"
+                   class="inline-flex items-center gap-2 rounded border border-border bg-surface px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-text hover:border-primary hover:text-primary transition-colors">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+                    </svg>
+                    Ordenar categorías
+                </a>
+            @endcan
+            <a
+                href="{{ route('admin.categories.create') }}"
+                class="inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors"
+            >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
             </svg>
             Agregar categoría
-        </a>
+            </a>
+        </div>
     </div>
 
     @if ($errors->any())
@@ -98,6 +109,7 @@
                             >
                         </th>
                         <th scope="col" class="px-5 py-3 font-bold">ID</th>
+                        <th scope="col" class="px-5 py-3 font-bold w-16">Orden</th>
                         <th scope="col" class="px-5 py-3 font-bold">Imagen</th>
                         <th scope="col" class="px-5 py-3 font-bold">Nombre</th>
                         <th scope="col" class="px-5 py-3 font-bold">Descripción</th>
@@ -127,6 +139,9 @@
                                 >
                                     #{{ $category->id }}
                                 </span>
+                            </td>
+                            <td class="px-5 py-3 font-mono text-muted">
+                                {{ $category->sort_order }}
                             </td>
                             <td class="px-5 py-3">
                                 @if ($category->image)
@@ -189,7 +204,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-12 text-center text-muted">
+                            <td colspan="8" class="px-5 py-12 text-center text-muted">
                                 No se encontraron categorías.
                             </td>
                         </tr>

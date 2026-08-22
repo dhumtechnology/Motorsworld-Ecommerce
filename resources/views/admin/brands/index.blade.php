@@ -51,11 +51,22 @@
             Eliminar seleccionados
             <span id="bulk-delete-count" class="hidden">(0)</span>
         </button>
-        <a href="{{ route('admin.brands.create') }}"
-           class="inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors">
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
-            Agregar marca
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            @can('brands.update')
+                <a href="{{ route('admin.brands.reorder') }}"
+                   class="inline-flex items-center gap-2 rounded border border-border bg-surface px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-text hover:border-primary hover:text-primary transition-colors">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+                    </svg>
+                    Ordenar marcas
+                </a>
+            @endcan
+            <a href="{{ route('admin.brands.create') }}"
+               class="inline-flex items-center gap-2 rounded bg-primary px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" /></svg>
+                Agregar marca
+            </a>
+        </div>
     </div>
 
     @if ($errors->any())
@@ -78,7 +89,7 @@
                         <th scope="col" class="px-5 py-3 font-bold w-12">
                             <input type="checkbox" id="select-all-items" class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary" @disabled($brands->isEmpty())>
                         </th>
-                        <th scope="col" class="px-5 py-3 font-bold">ID</th>
+                        <th scope="col" class="px-5 py-3 font-bold w-14">Orden</th>
                         <th scope="col" class="px-5 py-3 font-bold w-16">Img</th>
                         <th scope="col" class="px-5 py-3 font-bold">Nombre</th>
                         <th scope="col" class="px-5 py-3 font-bold">Modelos</th>
@@ -99,16 +110,8 @@
                                     class="h-4 w-4 rounded border-border-strong bg-surface text-primary focus:ring-primary"
                                 >
                             </td>
-                            <td class="px-5 py-3 font-mono text-muted">
-                                <span
-                                    role="link"
-                                    tabindex="0"
-                                    class="text-sky-700 cursor-pointer select-none hover:underline"
-                                    title="Doble clic para ver detalle"
-                                    ondblclick="window.location.href='{{ route('admin.brands.show', $brand) }}'"
-                                >
-                                    #{{ $brand->id }}
-                                </span>
+                            <td class="px-5 py-3 font-mono text-muted text-xs">
+                                {{ $brand->sort_order }}
                             </td>
                             <td class="px-5 py-3">
                                 @if ($brand->image)
@@ -117,7 +120,17 @@
                                     <div class="h-10 w-10 rounded border border-border bg-secondary flex items-center justify-center text-muted text-xs">—</div>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 font-semibold text-text">{{ $brand->name }}</td>
+                            <td class="px-5 py-3 font-semibold text-text">
+                                <span
+                                    role="link"
+                                    tabindex="0"
+                                    class="cursor-pointer select-none hover:text-sky-700 hover:underline"
+                                    title="Doble clic para ver detalle"
+                                    ondblclick="window.location.href='{{ route('admin.brands.show', $brand) }}'"
+                                >
+                                    {{ $brand->name }}
+                                </span>
+                            </td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center rounded border border-border bg-secondary px-2 py-0.5 text-xs font-bold text-text-soft">{{ $brand->vehicle_models_count }}</span>
                             </td>

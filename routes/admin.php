@@ -5,8 +5,11 @@ use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ClaimBookController;
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -42,8 +45,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Productos
     Route::get('/productos', [ProductController::class, 'index'])->middleware('permission:products.view')->name('products.index');
+    Route::get('/productos/papelera', [ProductController::class, 'trash'])->middleware('permission:products.view')->name('products.trash');
     Route::get('/productos/crear', [ProductController::class, 'create'])->middleware('permission:products.create')->name('products.create');
     Route::post('/productos', [ProductController::class, 'store'])->middleware('permission:products.create')->name('products.store');
+    Route::post('/productos/papelera/restaurar', [ProductController::class, 'bulkRestore'])->middleware('permission:products.update')->name('products.bulk-restore');
+    Route::delete('/productos/papelera', [ProductController::class, 'bulkForceDestroy'])->middleware('permission:products.delete')->name('products.bulk-force-destroy');
+    Route::post('/productos/papelera/{productId}/restaurar', [ProductController::class, 'restore'])->whereNumber('productId')->middleware('permission:products.update')->name('products.restore');
+    Route::delete('/productos/papelera/{productId}', [ProductController::class, 'forceDestroy'])->whereNumber('productId')->middleware('permission:products.delete')->name('products.force-destroy');
     Route::get('/productos/{product}', [ProductController::class, 'show'])->middleware('permission:products.view')->name('products.show');
     Route::get('/productos/{product}/editar', [ProductController::class, 'edit'])->middleware('permission:products.update')->name('products.edit');
     Route::put('/productos/{product}', [ProductController::class, 'update'])->middleware('permission:products.update')->name('products.update');
@@ -61,6 +69,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Categorías
     Route::get('/categorias', [CategoryController::class, 'index'])->middleware('permission:categories.view')->name('categories.index');
+    Route::get('/categorias/orden', [CategoryController::class, 'reorder'])->middleware('permission:categories.update')->name('categories.reorder');
+    Route::put('/categorias/orden', [CategoryController::class, 'updateOrder'])->middleware('permission:categories.update')->name('categories.reorder.update');
     Route::get('/categorias/crear', [CategoryController::class, 'create'])->middleware('permission:categories.create')->name('categories.create');
     Route::post('/categorias', [CategoryController::class, 'store'])->middleware('permission:categories.create')->name('categories.store');
     Route::get('/categorias/{category}', [CategoryController::class, 'show'])->middleware('permission:categories.view')->name('categories.show');
@@ -71,6 +81,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Marcas
     Route::get('/marcas', [BrandController::class, 'index'])->middleware('permission:brands.view')->name('brands.index');
+    Route::get('/marcas/orden', [BrandController::class, 'reorder'])->middleware('permission:brands.update')->name('brands.reorder');
+    Route::put('/marcas/orden', [BrandController::class, 'updateOrder'])->middleware('permission:brands.update')->name('brands.reorder.update');
     Route::get('/marcas/crear', [BrandController::class, 'create'])->middleware('permission:brands.create')->name('brands.create');
     Route::post('/marcas', [BrandController::class, 'store'])->middleware('permission:brands.create')->name('brands.store');
     Route::get('/marcas/{brand}', [BrandController::class, 'show'])->middleware('permission:brands.view')->name('brands.show');
@@ -165,6 +177,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/paquetes-de-servicio/{servicePackage}', [ServicePackageController::class, 'destroy'])->middleware('permission:service_packages.delete')->name('service-packages.destroy');
     Route::delete('/paquetes-de-servicio', [ServicePackageController::class, 'bulkDestroy'])->middleware('permission:service_packages.delete')->name('service-packages.bulk-destroy');
 
+    // Configuración — banners del home
+    Route::get('/configuracion', [HomeBannerController::class, 'index'])->middleware('permission:home_banners.view')->name('home-banners.index');
+    Route::get('/configuracion/crear', [HomeBannerController::class, 'create'])->middleware('permission:home_banners.create')->name('home-banners.create');
+    Route::post('/configuracion', [HomeBannerController::class, 'store'])->middleware('permission:home_banners.create')->name('home-banners.store');
+    Route::get('/configuracion/{homeBanner}/editar', [HomeBannerController::class, 'edit'])->middleware('permission:home_banners.update')->name('home-banners.edit');
+    Route::put('/configuracion/{homeBanner}', [HomeBannerController::class, 'update'])->middleware('permission:home_banners.update')->name('home-banners.update');
+    Route::delete('/configuracion/{homeBanner}', [HomeBannerController::class, 'destroy'])->middleware('permission:home_banners.delete')->name('home-banners.destroy');
+    Route::delete('/configuracion', [HomeBannerController::class, 'bulkDestroy'])->middleware('permission:home_banners.delete')->name('home-banners.bulk-destroy');
+
     // Blog
     Route::get('/blog', [BlogPostController::class, 'index'])->middleware('permission:blog_posts.view')->name('blog-posts.index');
     Route::get('/blog/crear', [BlogPostController::class, 'create'])->middleware('permission:blog_posts.create')->name('blog-posts.create');
@@ -173,6 +194,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/blog/{blogPost}', [BlogPostController::class, 'update'])->middleware('permission:blog_posts.update')->name('blog-posts.update');
     Route::delete('/blog/{blogPost}', [BlogPostController::class, 'destroy'])->middleware('permission:blog_posts.delete')->name('blog-posts.destroy');
     Route::delete('/blog', [BlogPostController::class, 'bulkDestroy'])->middleware('permission:blog_posts.delete')->name('blog-posts.bulk-destroy');
+
+    // Incidencias (quejas / reclamos)
+    Route::get('/libro-reclamaciones/quejas', [ClaimBookController::class, 'complaints'])->middleware('permission:claim_book_entries.view')->name('claim-book.complaints');
+    Route::get('/libro-reclamaciones/reclamos', [ClaimBookController::class, 'claims'])->middleware('permission:claim_book_entries.view')->name('claim-book.claims');
+    Route::get('/libro-reclamaciones/{claimBookEntry}', [ClaimBookController::class, 'show'])->middleware('permission:claim_book_entries.view')->name('claim-book.show');
+    Route::put('/libro-reclamaciones/{claimBookEntry}', [ClaimBookController::class, 'update'])->middleware('permission:claim_book_entries.update')->name('claim-book.update');
+    Route::post('/libro-reclamaciones/{claimBookEntry}/responder', [ClaimBookController::class, 'reply'])->middleware('permission:claim_book_entries.update')->name('claim-book.reply');
+
+    // Contactos (mensajes del formulario de contacto)
+    Route::get('/contactos', [ContactMessageController::class, 'index'])->middleware('permission:contact_messages.view')->name('contacts.index');
+    Route::get('/contactos/{contactMessage}', [ContactMessageController::class, 'show'])->middleware('permission:contact_messages.view')->name('contacts.show');
+    Route::put('/contactos/{contactMessage}', [ContactMessageController::class, 'update'])->middleware('permission:contact_messages.update')->name('contacts.update');
+    Route::post('/contactos/{contactMessage}/responder', [ContactMessageController::class, 'reply'])->middleware('permission:contact_messages.update')->name('contacts.reply');
 
     // Inventario
     Route::get('/inventario', [InventoryController::class, 'index'])->middleware('permission:inventory_movements.view')->name('inventory.index');

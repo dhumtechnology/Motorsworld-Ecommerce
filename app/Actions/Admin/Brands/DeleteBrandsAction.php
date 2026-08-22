@@ -7,24 +7,24 @@ use App\Models\Products\Brand;
 use App\Models\Products\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class DeleteBrandsAction
 {
     public function __construct(
         private readonly DeleteProductsAction $deleteProducts,
+        private readonly NormalizeBrandSortOrderAction $normalizeBrandSortOrder,
     ) {}
 
     /**
      * @param  list<int>  $brandIds
-     * @return array{deleted: int, blocked: list<string>}
+     * @return array{deleted: int}
      */
     public function execute(array $brandIds): array
     {
         $brandIds = array_values(array_unique(array_map('intval', $brandIds)));
 
         if ($brandIds === []) {
-            return ['deleted' => 0, 'blocked' => []];
+            return ['deleted' => 0];
         }
 
         return DB::transaction(function () use ($brandIds) {
@@ -33,32 +33,20 @@ class DeleteBrandsAction
                 ->whereIn('id', $brandIds)
                 ->get();
 
-            $blocked = [];
-            $deletable = [];
-
             foreach ($brands as $brand) {
                 $modelIds = $brand->vehicleModels->pluck('id')->all();
-                $products = $modelIds === []
-                    ? collect()
-                    : Product::query()
-                        ->withCount('orderItems')
+
+                if ($modelIds !== []) {
+                    $productIds = Product::query()
                         ->whereIn('model_id', $modelIds)
-                        ->get();
+                        ->pluck('id')
+                        ->all();
 
-                if ($products->contains(fn (Product $product) => $product->order_items_count > 0)) {
-                    $blocked[] = $brand->name;
-
-                    continue;
+                    if ($productIds !== []) {
+                        $this->deleteProducts->execute($productIds);
+                    }
                 }
 
-                if ($products->isNotEmpty()) {
-                    $this->deleteProducts->execute($products->pluck('id')->all());
-                }
-
-                $deletable[] = $brand;
-            }
-
-            foreach ($deletable as $brand) {
                 if ($brand->image) {
                     $this->deleteStoredFile($brand->image);
                 }
@@ -67,15 +55,12 @@ class DeleteBrandsAction
                 $brand->delete();
             }
 
-            if ($deletable === [] && $blocked !== []) {
-                throw ValidationException::withMessages([
-                    'ids' => 'No se pueden eliminar marcas con productos vinculados a pedidos: '.implode(', ', $blocked).'.',
-                ]);
+            if ($brands->isNotEmpty()) {
+                $this->normalizeBrandSortOrder->execute();
             }
 
             return [
-                'deleted' => count($deletable),
-                'blocked' => $blocked,
+                'deleted' => $brands->count(),
             ];
         });
     }

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Shop;
 
+use App\Actions\Shop\StoreContactMessageAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\StoreContactRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ContactController extends Controller
 {
@@ -29,14 +29,17 @@ class ContactController extends Controller
         ]);
     }
 
-    public function store(StoreContactRequest $request): RedirectResponse
-    {
-        $data = $request->contactData();
-
-        Log::channel('stack')->info('Contact form submitted', $data);
+    public function store(
+        StoreContactRequest $request,
+        StoreContactMessageAction $storeContactMessage,
+    ): RedirectResponse {
+        $entry = $storeContactMessage->execute(
+            $request->contactData(),
+            $request->user(),
+        );
 
         return redirect()
             ->route('shop.contact')
-            ->with('status', 'Gracias por escribirnos. Te responderemos pronto.');
+            ->with('status', "Gracias por escribirnos. Registramos tu mensaje con código {$entry->code}. Te responderemos pronto.");
     }
 }

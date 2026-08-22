@@ -46,6 +46,11 @@
             };
 
             const isOptionVisibleForFilter = (btn) => {
+                const currentValue = valueInput.value || '';
+                if (currentValue !== '' && btn.dataset.value === currentValue) {
+                    return true;
+                }
+
                 const sourceId = root.dataset.filterSource;
                 if (!sourceId) return true;
 
@@ -391,12 +396,22 @@
         const pendingKey = () => 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
         const normalizeName = (value) => String(value || '').trim().toLowerCase();
 
-        const toPending = (file) => ({
+        const toExistingGalleryItem = (img) => ({
+            key: 'e-' + img.id,
+            type: 'existing',
+            id: Number(img.id),
+            path: img.path,
+        });
+
+        const toPendingGalleryItem = (file) => ({
             key: pendingKey(),
+            type: 'pending',
             file,
             name: file.name,
             url: URL.createObjectURL(file),
         });
+
+        const buildGalleryItems = (images) => (images || []).map(toExistingGalleryItem);
 
         const syncInputFiles = (input, pendingList) => {
             if (!input) return;
@@ -414,9 +429,10 @@
             color_ids: (v.color_ids || []).map(String),
             new_colors: Array.isArray(v.new_colors) ? v.new_colors.filter((c) => (c.name || '').trim()) : [],
             available_stock: Number(v.available_stock || 0),
-            images: v.images || [],
-            remove_image_ids: v.remove_image_ids || [],
-            pendingImages: [],
+            galleryItems: buildGalleryItems(v.images || []),
+            remove_image_ids: Array.isArray(v.remove_image_ids)
+                ? v.remove_image_ids.map(Number)
+                : [],
             dropActive: false,
             colorQuery: '',
             colorPickerOpen: false,
@@ -432,17 +448,17 @@
                 ? (initialVariants.length ? initialVariants : [mapVariant({ available_stock: config.defaultStock || 0 }, 0)])
                 : initialVariants,
             availableColors: config.colors || [],
-            defaultImages: config.defaultImages || [],
+            defaultGalleryItems: buildGalleryItems(config.defaultImages || []),
             defaultRemoveImageIds: [],
-            pendingDefaultImages: [],
             defaultDropActive: false,
             defaultStock: Number(config.defaultStock || 0),
             removedVariantIds: [],
             initialColoredVariantIds: (config.coloredVariantIds || []).map(Number),
+            draggingGalleryKey: null,
+            dragOverGalleryKey: null,
             init() {
                 const form = this.$el.closest('form');
                 form?.addEventListener('submit', (event) => {
-                    // Evita crear el mismo producto dos veces (doble clic / Enter mientras sube).
                     if (form.dataset.submitting === '1') {
                         event.preventDefault();
                         return;
@@ -486,14 +502,75 @@
                 }
                 return true;
             },
+            visibleGalleryItems(items, removeIds) {
+                return (items || []).filter((item) => {
+                    if (item.type === 'pending') return true;
+                    return !removeIds.includes(Number(item.id));
+                });
+            },
+            galleryOrderTokens(items, removeIds) {
+                const visible = this.visibleGalleryItems(items, removeIds);
+                let newIndex = 0;
+
+                return visible.map((item) => {
+                    if (item.type === 'existing') {
+                        return 'existing:' + item.id;
+                    }
+
+                    return 'new:' + (newIndex++);
+                });
+            },
+            onGalleryDragStart(key) {
+                this.draggingGalleryKey = key;
+            },
+            onGalleryDragEnd() {
+                this.draggingGalleryKey = null;
+                this.dragOverGalleryKey = null;
+            },
+            onGalleryDragOver(event, key) {
+                event.preventDefault();
+                if (this.draggingGalleryKey && this.draggingGalleryKey !== key) {
+                    this.dragOverGalleryKey = key;
+                }
+            },
+            onGalleryDrop(items, targetKey) {
+                const fromKey = this.draggingGalleryKey;
+                this.onGalleryDragEnd();
+
+                if (!fromKey || fromKey === targetKey) return;
+
+                const fromIndex = items.findIndex((item) => item.key === fromKey);
+                const toIndex = items.findIndex((item) => item.key === targetKey);
+
+                if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+                const [moved] = items.splice(fromIndex, 1);
+                items.splice(toIndex, 0, moved);
+            },
+            appendGalleryFiles(items, fileList) {
+                Array.from(fileList || [])
+                    .filter(isImageFile)
+                    .forEach((file) => items.push(toPendingGalleryItem(file)));
+            },
+            syncGalleryInput(input, items, removeIds) {
+                const pending = this.visibleGalleryItems(items, removeIds)
+                    .filter((item) => item.type === 'pending');
+                syncInputFiles(input, pending);
+            },
             syncAllImageInputs() {
                 if (this.productMode === 'unique') {
-                    syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages);
+                    this.syncGalleryInput(
+                        this.$refs.defaultImagesInput,
+                        this.defaultGalleryItems,
+                        this.defaultRemoveImageIds,
+                    );
                     return;
                 }
+
                 this.variants.forEach((variant) => {
-                    const input = this.$el.querySelector(`[data-variant-key="${variant._key}"] input[type="file"]`);
-                    syncInputFiles(input, variant.pendingImages);
+                    const root = this.$el.querySelector(`[data-variant-key="${variant._key}"]`);
+                    const input = root?.querySelector('input[type="file"]');
+                    this.syncGalleryInput(input, variant.galleryItems, variant.remove_image_ids);
                 });
             },
             colorById(colorId) {
@@ -570,22 +647,12 @@
             removeNewColor(variant, index) {
                 variant.new_colors.splice(index, 1);
             },
-            visibleDefaultImages() {
-                return (this.defaultImages || []).filter(
-                    (img) => !this.defaultRemoveImageIds.includes(Number(img.id))
-                );
-            },
-            visibleVariantImages(variant) {
-                return (variant.images || []).filter(
-                    (img) => !variant.remove_image_ids.includes(Number(img.id))
-                );
-            },
             addVariant(fromModeSwitch = false) {
                 const carryStock = fromModeSwitch || this.variants.length === 0
                     ? Number(this.defaultStock || 0)
                     : 0;
-                const carryPending = (fromModeSwitch || this.variants.length === 0)
-                    ? this.pendingDefaultImages.splice(0)
+                const carryItems = (fromModeSwitch || this.variants.length === 0)
+                    ? this.defaultGalleryItems.splice(0)
                     : [];
 
                 this.variants.push({
@@ -595,9 +662,8 @@
                     color_ids: [],
                     new_colors: [],
                     available_stock: carryStock,
-                    images: [],
+                    galleryItems: carryItems,
                     remove_image_ids: [],
-                    pendingImages: carryPending,
                     dropActive: false,
                     colorQuery: '',
                     colorPickerOpen: false,
@@ -611,61 +677,100 @@
                 }
                 this.variants.splice(index, 1);
             },
-            toggleRemoveImage(variant, imageId, checked) {
-                if (!imageId) return;
-                const id = Number(imageId);
-                if (checked) {
-                    if (!variant.remove_image_ids.includes(id)) variant.remove_image_ids.push(id);
-                } else {
-                    variant.remove_image_ids = variant.remove_image_ids.filter((x) => x !== id);
+            removeDefaultGalleryItem(item) {
+                if (item.type === 'existing') {
+                    const id = Number(item.id);
+                    if (!this.defaultRemoveImageIds.includes(id)) {
+                        this.defaultRemoveImageIds.push(id);
+                    }
+                    return;
                 }
-            },
-            toggleDefaultRemoveImage(imageId, checked) {
-                if (!imageId) return;
-                const id = Number(imageId);
-                if (checked) {
-                    if (!this.defaultRemoveImageIds.includes(id)) this.defaultRemoveImageIds.push(id);
-                } else {
-                    this.defaultRemoveImageIds = this.defaultRemoveImageIds.filter((x) => x !== id);
+
+                const index = this.defaultGalleryItems.findIndex((entry) => entry.key === item.key);
+                if (index >= 0) {
+                    const [removed] = this.defaultGalleryItems.splice(index, 1);
+                    if (removed?.url) URL.revokeObjectURL(removed.url);
                 }
+
+                this.$nextTick(() => {
+                    this.syncGalleryInput(
+                        this.$refs.defaultImagesInput,
+                        this.defaultGalleryItems,
+                        this.defaultRemoveImageIds,
+                    );
+                });
             },
-            appendPending(list, fileList) {
-                Array.from(fileList || [])
-                    .filter(isImageFile)
-                    .forEach((file) => list.push(toPending(file)));
+            removeVariantGalleryItem(variant, item) {
+                if (item.type === 'existing') {
+                    const id = Number(item.id);
+                    if (!variant.remove_image_ids.includes(id)) {
+                        variant.remove_image_ids.push(id);
+                    }
+                    return;
+                }
+
+                const index = variant.galleryItems.findIndex((entry) => entry.key === item.key);
+                if (index >= 0) {
+                    const [removed] = variant.galleryItems.splice(index, 1);
+                    if (removed?.url) URL.revokeObjectURL(removed.url);
+                }
+
+                this.$nextTick(() => {
+                    const root = this.$el.querySelector(`[data-variant-key="${variant._key}"]`);
+                    const input = root?.querySelector('input[type="file"]');
+                    this.syncGalleryInput(input, variant.galleryItems, variant.remove_image_ids);
+                });
             },
             onDefaultDrop(event) {
+                const types = Array.from(event.dataTransfer?.types || []);
+                if (!types.includes('Files')) {
+                    this.defaultDropActive = false;
+                    return;
+                }
+
                 this.defaultDropActive = false;
-                this.appendPending(this.pendingDefaultImages, event.dataTransfer?.files);
-                this.$nextTick(() => syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages));
+                this.appendGalleryFiles(this.defaultGalleryItems, event.dataTransfer?.files);
+                this.$nextTick(() => {
+                    this.syncGalleryInput(
+                        this.$refs.defaultImagesInput,
+                        this.defaultGalleryItems,
+                        this.defaultRemoveImageIds,
+                    );
+                });
             },
             onDefaultInputChange(event) {
-                this.appendPending(this.pendingDefaultImages, event.target.files);
-                this.$nextTick(() => syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages));
-            },
-            removePendingDefaultImage(index) {
-                const [removed] = this.pendingDefaultImages.splice(index, 1);
-                if (removed?.url) URL.revokeObjectURL(removed.url);
-                this.$nextTick(() => syncInputFiles(this.$refs.defaultImagesInput, this.pendingDefaultImages));
+                this.appendGalleryFiles(this.defaultGalleryItems, event.target.files);
+                event.target.value = '';
+                this.$nextTick(() => {
+                    this.syncGalleryInput(
+                        this.$refs.defaultImagesInput,
+                        this.defaultGalleryItems,
+                        this.defaultRemoveImageIds,
+                    );
+                });
             },
             onVariantDrop(variant, event) {
+                const types = Array.from(event.dataTransfer?.types || []);
+                if (!types.includes('Files')) {
+                    variant.dropActive = false;
+                    return;
+                }
+
                 variant.dropActive = false;
-                this.appendPending(variant.pendingImages, event.dataTransfer?.files);
+                this.appendGalleryFiles(variant.galleryItems, event.dataTransfer?.files);
                 this.$nextTick(() => {
-                    const input = this.$el.querySelector(`[data-variant-key="${variant._key}"] input[type="file"]`);
-                    syncInputFiles(input, variant.pendingImages);
+                    const root = this.$el.querySelector(`[data-variant-key="${variant._key}"]`);
+                    const input = root?.querySelector('input[type="file"]');
+                    this.syncGalleryInput(input, variant.galleryItems, variant.remove_image_ids);
                 });
             },
             onVariantInputChange(variant, event) {
-                this.appendPending(variant.pendingImages, event.target.files);
-                this.$nextTick(() => syncInputFiles(event.target, variant.pendingImages));
-            },
-            removePendingVariantImage(variant, index) {
-                const [removed] = variant.pendingImages.splice(index, 1);
-                if (removed?.url) URL.revokeObjectURL(removed.url);
+                this.appendGalleryFiles(variant.galleryItems, event.target.files);
+                event.target.value = '';
                 this.$nextTick(() => {
-                    const input = this.$el.querySelector(`[data-variant-key="${variant._key}"] input[type="file"]`);
-                    syncInputFiles(input, variant.pendingImages);
+                    const root = this.$el.querySelector(`[data-variant-key="${variant._key}"]`);
+                    const input = root?.querySelector('input[type="file"]');
+                    this.syncGalleryInput(input, variant.galleryItems, variant.remove_image_ids);
                 });
             },
         };

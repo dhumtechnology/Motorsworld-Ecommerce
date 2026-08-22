@@ -94,14 +94,6 @@
                     ← Volver al catálogo
                 </a>
             </p>
-
-            @if (app()->environment('local'))
-                <div class="mt-8 pt-6 border-t border-neutral-800 text-xs text-neutral-500 space-y-2">
-                    <p class="font-bold uppercase tracking-wider text-neutral-400">Cuentas de prueba (seeders)</p>
-                    <p><span class="text-neutral-300">Cliente:</span> test@example.com / password</p>
-                    <p><span class="text-neutral-300">Admin:</span> admin@motoworld.test / password</p>
-                </div>
-            @endif
         </div>
     </div>
 @endsection

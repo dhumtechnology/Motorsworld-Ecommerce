@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Actions\Admin\GetAdminSidebarPendingCountsAction;
 use App\Actions\Cart\BuildCartLinesAction;
+use App\Actions\Shop\GetShopFooterLinksAction;
 use App\Actions\Shop\GetShopHeaderSearchDataAction;
 use App\Models\Auth\User;
 use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
 use App\Services\Payments\Culqi\CulqiClient;
+use App\Services\Payments\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -20,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(CulqiClient::class, fn () => CulqiClient::fromConfig());
+        $this->app->singleton(MercadoPagoClient::class, fn () => MercadoPagoClient::fromConfig());
     }
 
     /**
@@ -27,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureSharedHostingPublicDisk();
+
         Gate::before(function ($user, string $ability) {
             if (! $user instanceof User) {
                 return null;
@@ -41,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
             if ($user instanceof User && ! $user->relationLoaded('roles')) {
                 $user->load('roles.permissions');
             }
+
+            $view->with(
+                'sidebarPendingCounts',
+                app(GetAdminSidebarPendingCountsAction::class)->execute(),
+            );
         });
 
         View::composer('layouts.shop', function ($view): void {
@@ -61,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $searchData = app(GetShopHeaderSearchDataAction::class)->execute();
+            $footerLinks = app(GetShopFooterLinksAction::class)->execute();
 
             $view->with([
                 'cartItemCount' => $count,
@@ -68,7 +80,35 @@ class AppServiceProvider extends ServiceProvider
                 'cartDrawerTotals' => $cartTotals,
                 'searchCategories' => $searchData['searchCategories'],
                 'searchRecommendedProducts' => $searchData['searchRecommendedProducts'],
+                'footerLinks' => $footerLinks,
             ]);
         });
+    }
+
+    /**
+     * Deploy típico: /laravel (app) + /public_html (web).
+     * Sin symlink, las imágenes públicas deben vivir en public_html/storage.
+     */
+    private function configureSharedHostingPublicDisk(): void
+    {
+        if (env('FILESYSTEM_PUBLIC_ROOT')) {
+            return;
+        }
+
+        $publicHtml = dirname(base_path()).DIRECTORY_SEPARATOR.'public_html';
+        if (! is_dir($publicHtml)) {
+            return;
+        }
+
+        $storageRoot = $publicHtml.DIRECTORY_SEPARATOR.'storage';
+        if (! is_dir($storageRoot)) {
+            @mkdir($storageRoot, 0755, true);
+        }
+
+        if (! is_dir($storageRoot)) {
+            return;
+        }
+
+        config(['filesystems.disks.public.root' => $storageRoot]);
     }
 }

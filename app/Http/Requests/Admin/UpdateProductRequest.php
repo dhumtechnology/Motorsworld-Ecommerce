@@ -5,9 +5,12 @@ namespace App\Http\Requests\Admin;
 use App\Enums\Products\ProductStatus;
 use App\Http\Requests\Admin\Concerns\ParsesProductVariantPayload;
 use App\Models\Products\Product;
+use App\Models\Products\ProductVariant;
+use App\Models\Products\VehicleModel;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -27,6 +30,12 @@ class UpdateProductRequest extends FormRequest
         $product = $this->route('product');
 
         return [
+            'sku' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('products', 'sku')->ignore($product->id),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'additional_information' => ['nullable', 'string'],
@@ -59,6 +68,7 @@ class UpdateProductRequest extends FormRequest
                 'integer',
                 Rule::exists('product_variants', 'id')->where('product_id', $product->id),
             ],
+            'variants.*.sku' => ['required_with:variants', 'string', 'max:100', 'distinct'],
             'variants.*.color_ids' => ['nullable', 'array'],
             'variants.*.color_ids.*' => ['integer', 'exists:colors,id'],
             'variants.*.new_colors' => ['nullable', 'array'],
@@ -80,6 +90,99 @@ class UpdateProductRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'sku' => trim((string) $this->input('sku', '')),
+        ]);
+
+        if ($this->filled('model_id') && ! $this->filled('brand_id')) {
+            $brandId = VehicleModel::query()
+                ->whereKey((int) $this->input('model_id'))
+                ->value('brand_id');
+
+            if ($brandId) {
+                $this->merge(['brand_id' => (int) $brandId]);
+            }
+        }
+
+        if (! $this->filled('brand_id')) {
+            $this->merge(['model_id' => null]);
+        }
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $this->validateVariantSkus($validator);
+        });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'sku' => 'SKU / código de barras',
+            'brand_id' => 'marca',
+            'model_id' => 'modelo',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'sku.required' => 'Indica el SKU / código de barras.',
+            'sku.unique' => 'Ese SKU / código de barras ya está en uso.',
+            'model_id.exists' => 'El modelo no pertenece a la marca seleccionada.',
+            'variants.*.sku.required_with' => 'Indica el SKU / código de barras de cada variante.',
+            'variants.*.sku.distinct' => 'Cada variante debe tener un SKU / código de barras distinto.',
+        ];
+    }
+
+    private function validateVariantSkus(Validator $validator): void
+    {
+        if ($validator->errors()->isNotEmpty()) {
+            return;
+        }
+
+        $rows = $this->input('variants', []);
+        if (! is_array($rows)) {
+            return;
+        }
+
+        foreach ($rows as $index => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $sku = trim((string) ($row['sku'] ?? ''));
+            if ($sku === '') {
+                continue;
+            }
+
+            $variantId = isset($row['id']) && $row['id'] !== ''
+                ? (int) $row['id']
+                : null;
+
+            $exists = ProductVariant::query()
+                ->where('sku', $sku)
+                ->when($variantId, fn ($query) => $query->where('id', '!=', $variantId))
+                ->exists();
+
+            if ($exists) {
+                $validator->errors()->add(
+                    "variants.{$index}.sku",
+                    'Ese SKU / código de barras ya está en uso.',
+                );
+            }
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -87,6 +190,7 @@ class UpdateProductRequest extends FormRequest
     {
         return [
             'name' => trim((string) $this->input('name')),
+            'sku' => trim((string) $this->input('sku')),
             'description' => $this->nullableString('description'),
             'additional_information' => $this->nullableString('additional_information'),
             'price_amount' => $this->input('price_amount'),

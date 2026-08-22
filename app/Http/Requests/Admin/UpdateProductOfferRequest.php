@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Products\Product;
+use App\Support\Currency;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -90,7 +91,7 @@ class UpdateProductOfferRequest extends FormRequest
             'discount_percent' => $discount,
             'offer_price_amount' => $this->calculatedOfferPrice($listPrice),
             'reason' => trim((string) $this->input('reason')),
-            'currency' => 'PEN',
+            'currency' => Currency::normalize($product->currency),
             'starts_at' => $this->input('starts_at'),
             'ends_at' => $this->input('ends_at'),
         ];

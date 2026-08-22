@@ -39,7 +39,7 @@
 
             <div>
                 <h4 class="text-sm font-semibold text-text">Stock e imágenes</h4>
-                <p class="mt-1 text-xs text-muted">Un solo stock y una galería. La primera imagen es la principal.</p>
+                <p class="mt-1 text-xs text-muted">Un solo stock y una galería. Arrastra las imágenes para ordenar; la primera es la principal.</p>
             </div>
 
             <div class="max-w-xs">
@@ -71,7 +71,7 @@
             </div>
 
             <div class="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
-                 x-show="variants.length > 0 && defaultImages.length > 0 && !variants.some(v => v.id)"
+                 x-show="variants.length > 0 && visibleGalleryItems(defaultGalleryItems, defaultRemoveImageIds).length > 0 && !variants.some(v => v.id)"
                  x-cloak>
                 Al guardar, las imágenes del producto único (si las había) pasarán a la primera variante.
             </div>
@@ -81,15 +81,12 @@
                     <input type="hidden" :name="`variants[${index}][id]`" :value="variant.id || ''">
 
                     <div class="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
-                        <div>
+                        <div class="min-w-0 flex-1">
                             <p class="text-base font-semibold text-text">
                                 Variante <span x-text="index + 1"></span>
                                 <span class="text-muted font-normal text-sm" x-show="variantLabel(variant)">
                                     — <span x-text="variantLabel(variant)"></span>
                                 </span>
-                            </p>
-                            <p class="text-xs text-muted mt-1" x-show="variant.sku">
-                                SKU: <span class="font-mono" x-text="variant.sku"></span>
                             </p>
                         </div>
                         <button type="button" @click="removeVariant(index)"
@@ -97,6 +94,15 @@
                                 x-show="variants.length > 1">
                             Quitar variante
                         </button>
+                    </div>
+
+                    <div class="max-w-md">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">SKU / Código de barras *</label>
+                        <input type="text" required maxlength="100"
+                               :name="`variants[${index}][sku]`"
+                               x-model="variant.sku"
+                               class="{{ $fieldClass }} font-mono uppercase"
+                               placeholder="Ej. 7750123456789">
                     </div>
 
                     <div class="max-w-xs">
@@ -196,7 +202,7 @@
 
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imágenes</label>
-                        <p class="text-xs text-muted mb-3">La primera imagen es la principal; las siguientes son secundarias.</p>
+                        <p class="text-xs text-muted mb-3">Arrastra las imágenes para ordenar; la primera es la principal.</p>
                         @include('admin.products._image-dropzone', ['scope' => 'variant'])
                     </div>
                 </div>

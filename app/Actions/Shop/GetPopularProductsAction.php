@@ -4,28 +4,23 @@ namespace App\Actions\Shop;
 
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Products\ProductStatus;
-use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Services\Products\ProductOfferPresenter;
-use App\Support\QueryResultCache;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
-class GetPopularNonMotoProductsAction
+class GetPopularProductsAction
 {
-    private const MOTOS_CATEGORY = 'MOTOS';
-
     public function __construct(
         private readonly ProductOfferPresenter $offerPresenter,
     ) {}
 
     /**
+     * Top productos por ventas (motos y accesorios). Si no hay ventas, últimos activos.
+     *
      * @return Collection<int, Product>
      */
     public function execute(int $limit = 10): Collection
     {
-        $motosCategoryId = $this->motosCategoryId();
-
         $rankedIds = Product::query()
             ->toBase()
             ->select('products.id')
@@ -36,10 +31,6 @@ class GetPopularNonMotoProductsAction
                 OrderStatus::Cancelled->value,
                 OrderStatus::Refunded->value,
             ])
-            ->when(
-                $motosCategoryId !== null,
-                fn ($q) => $q->where('products.category_id', '!=', $motosCategoryId),
-            )
             ->groupBy('products.id')
             ->orderByRaw('SUM(order_items.quantity) DESC')
             ->limit($limit)
@@ -48,10 +39,6 @@ class GetPopularNonMotoProductsAction
         if ($rankedIds->isEmpty()) {
             return Product::query()
                 ->active()
-                ->when(
-                    $motosCategoryId !== null,
-                    fn (Builder $q) => $q->where('category_id', '!=', $motosCategoryId),
-                )
                 ->with(['category', 'vehicleModel.brand', 'inventory', 'activeOffer', 'primaryImage'])
                 ->latest('id')
                 ->limit($limit)
@@ -68,19 +55,5 @@ class GetPopularNonMotoProductsAction
             ->sortBy(fn (Product $product): int => array_search($product->id, $orderById, true))
             ->values()
             ->map(fn (Product $product) => $this->offerPresenter->apply($product));
-    }
-
-    private function motosCategoryId(): ?int
-    {
-        return QueryResultCache::remember(
-            'catalog.motos_category_id',
-            function (): ?int {
-                $id = Category::query()
-                    ->whereRaw('UPPER(name) = ?', [self::MOTOS_CATEGORY])
-                    ->value('id');
-
-                return $id !== null ? (int) $id : null;
-            },
-        );
     }
 }

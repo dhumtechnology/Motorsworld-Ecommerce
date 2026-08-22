@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" href="{{ asset('favicon.ico') }}?v={{ file_exists(public_path('favicon.ico')) ? filemtime(public_path('favicon.ico')) : '1' }}" type="image/x-icon">
     <title>@yield('title', config('app.name'))</title>
 
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -75,6 +76,22 @@
 
                 <div class="relative h-full">
                     @auth
+                        @php
+                            $authProfile = auth()->user()?->customerProfile;
+                            $nameParts = preg_split(
+                                '/\s+/u',
+                                trim(($authProfile?->first_name ?? '').' '.($authProfile?->last_name ?? '')),
+                                -1,
+                                PREG_SPLIT_NO_EMPTY,
+                            ) ?: [];
+                            $authInitials = '';
+                            foreach (array_slice($nameParts, 0, 2) as $namePart) {
+                                $authInitials .= mb_strtoupper(mb_substr($namePart, 0, 1));
+                            }
+                            if ($authInitials === '') {
+                                $authInitials = mb_strtoupper(mb_substr((string) auth()->user()?->email, 0, 2));
+                            }
+                        @endphp
                         <div
                             x-data="{ open: false }"
                             class="relative h-full"
@@ -90,9 +107,9 @@
                                 aria-haspopup="true"
                                 :aria-expanded="open.toString()"
                             >
-                                <svg class="h-5 w-5" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M8.125 15.0625H8.73633C9.893 15.5592 11.1613 15.8438 12.5 15.8438C13.8372 15.8438 15.1095 15.5595 16.2637 15.0625H16.875C19.9458 15.0625 22.4375 17.5542 22.4375 20.625V22.6562C22.4375 23.3979 21.8354 24 21.0938 24H3.90625C3.16459 24 2.5625 23.3979 2.5625 22.6562V20.625C2.5625 17.5542 5.05424 15.0625 8.125 15.0625ZM12.5 1C15.3999 1 17.75 3.35014 17.75 6.25C17.75 9.14986 15.3999 11.5 12.5 11.5C9.60014 11.5 7.25 9.14986 7.25 6.25C7.25 3.35014 9.60014 1 12.5 1Z" fill="none" stroke="currentColor" stroke-width="2"/>
-                                </svg>
+                                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-bold tracking-wide text-orange-600 shadow-sm" aria-hidden="true">
+                                    {{ $authInitials }}
+                                </span>
                             </button>
 
                             <div
@@ -247,38 +264,23 @@
             </div>    
 
             <div class="md:col-span-2">
-                <x-footer-column 
-                    title="CONÓCENOS" 
-                    :links="[
-                        'NOSOTROS' => route('shop.about'),
-                        'NUESTRO TRABAJO' => '#',
-                        'POLÍTICAS DE CALIDAD' => route('shop.about').'#politicas-de-calidad',
-                        'CONTÁCTANOS' => route('shop.contact'),
-                    ]" 
+                <x-footer-column
+                    title="Clientes"
+                    :links="$footerLinks['clientes']"
                 />
             </div>
 
             <div class="md:col-span-2">
-                <x-footer-column 
-                    title="NUESTROS SERVICIOS" 
-                    :links="[
-                        'REPARACIÓN' => '#',
-                        'INSTALACIÓN DE REPUESTOS' => '#',
-                        'MANTENIMIENTO' => '#',
-                        'ASESORÍAS' => '#'
-                    ]" 
+                <x-footer-column
+                    title="Productos"
+                    :links="$footerLinks['productos']"
                 />
             </div>
 
             <div class="md:col-span-2">
-                <x-footer-column 
-                    title="NUESTROS PRODUCTOS" 
-                    :links="[
-                        'ACCESORIOS' => '#',
-                        'REPUESTOS GENERALES' => '#',
-                        'BATERÍAS' => '#',
-                        'NEUMÁTICOS' => '#'
-                    ]" 
+                <x-footer-column
+                    title="Acerca de"
+                    :links="$footerLinks['acerca_de']"
                 />
             </div>
 

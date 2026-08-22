@@ -45,6 +45,6 @@ class ProfileController extends Controller
 
         return redirect()
             ->route('admin.profile.show')
-            ->with('status', 'Tu contraseña se actualizó correctamente.');
+            ->with('status', 'Te enviamos un correo para confirmar el cambio de contraseña. Revisa tu bandeja de entrada.');
     }
 }

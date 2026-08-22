@@ -40,6 +40,9 @@ class ImportInventoryMovementsAction
                 try {
                     $this->importRow($row, $createdBy);
                     $imported++;
+                } catch (ValidationException $e) {
+                    $messages = collect($e->errors())->flatten()->filter()->values();
+                    $errors[] = "Fila {$line}: ".($messages->first() ?: 'Datos inválidos.');
                 } catch (\Throwable $e) {
                     $errors[] = "Fila {$line}: ".$e->getMessage();
                 }

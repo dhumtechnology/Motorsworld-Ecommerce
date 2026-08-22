@@ -19,6 +19,14 @@ final class Currency
         return in_array($code, ['USD', 'PEN'], true) ? $code : 'PEN';
     }
 
+    public static function label(?string $currency): string
+    {
+        return match (self::normalize($currency)) {
+            'USD' => 'USD (Dólares)',
+            default => 'PEN (Soles)',
+        };
+    }
+
     /**
      * Convierte montos entre PEN y USD usando el tipo de cambio venta (USD→PEN)
      * congelado en la compra. Si no hay tasa, no convierte (devuelve el monto original

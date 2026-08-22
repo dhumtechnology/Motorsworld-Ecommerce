@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\Brands\DeleteBrandsAction;
 use App\Actions\Admin\Brands\GetBrandDetailsAction;
+use App\Actions\Admin\Brands\ReorderBrandsAction;
 use App\Actions\Admin\Brands\UpsertBrandAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BrandIndexRequest;
 use App\Http\Requests\Admin\BulkDeleteBrandsRequest;
+use App\Http\Requests\Admin\ReorderBrandsRequest;
 use App\Http\Requests\Admin\StoreBrandRequest;
 use App\Http\Requests\Admin\UpdateBrandRequest;
 use App\Models\Products\Brand;
@@ -24,6 +26,7 @@ class BrandController extends Controller
         private readonly UpsertBrandAction $upsertBrand,
         private readonly DeleteBrandsAction $deleteBrands,
         private readonly GetBrandDetailsAction $getBrandDetails,
+        private readonly ReorderBrandsAction $reorderBrands,
     ) {}
 
     public function index(BrandIndexRequest $request): View
@@ -34,6 +37,7 @@ class BrandController extends Controller
                 $request->searchTerm(),
                 fn (Builder $query, string $search) => $query->where('name', 'like', '%'.$search.'%'),
             )
+            ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(self::PER_PAGE)
             ->withQueryString();
@@ -108,10 +112,6 @@ class BrandController extends Controller
             ? 'Marca eliminada correctamente.'
             : 'No se pudo eliminar la marca.';
 
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
-
         return redirect()
             ->route('admin.brands.index')
             ->with('status', $message);
@@ -127,12 +127,33 @@ class BrandController extends Controller
             default => "{$result['deleted']} marcas eliminadas correctamente.",
         };
 
-        if ($result['blocked'] !== []) {
-            $message .= ' No se eliminaron (productos en pedidos): '.implode(', ', $result['blocked']).'.';
-        }
-
         return redirect()
             ->route('admin.brands.index')
             ->with('status', $message);
+    }
+
+    public function reorder(): View
+    {
+        $brands = Brand::query()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'image', 'sort_order']);
+
+        return view('admin.brands.reorder', [
+            'brands' => $brands,
+        ]);
+    }
+
+    public function updateOrder(ReorderBrandsRequest $request): JsonResponse|RedirectResponse
+    {
+        $this->reorderBrands->execute($request->ids());
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        return redirect()
+            ->route('admin.brands.reorder')
+            ->with('status', 'Orden de marcas actualizado correctamente.');
     }
 }

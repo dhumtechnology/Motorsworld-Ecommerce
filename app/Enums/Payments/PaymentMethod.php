@@ -20,14 +20,22 @@ enum PaymentMethod: string
     }
 
     /**
-     * Métodos que requieren token Culqi (tkn_ / ype_) generado en el frontend.
+     * Métodos que requieren token generado en el frontend (Culqi o Mercado Pago).
      */
-    public function requiresCulqiToken(): bool
+    public function requiresPaymentToken(): bool
     {
         return match ($this) {
             self::Card, self::Yape => true,
             self::Plin, self::PagoEfectivo => false,
         };
+    }
+
+    /**
+     * @deprecated Usa requiresPaymentToken()
+     */
+    public function requiresCulqiToken(): bool
+    {
+        return $this->requiresPaymentToken();
     }
 
     /**

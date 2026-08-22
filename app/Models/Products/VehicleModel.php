@@ -4,6 +4,7 @@ namespace App\Models\Products;
 
 use App\Models\Appointments\Appointment;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,5 +36,26 @@ class VehicleModel extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'vehicle_model_id');
+    }
+
+    /**
+     * Modelos con al menos un producto en la categoría Motocicletas.
+     *
+     * @param  Builder<VehicleModel>  $query
+     */
+    public function scopeWithMotorcycleProducts(Builder $query): void
+    {
+        $categoryId = Category::motocicletasId();
+
+        if ($categoryId === null) {
+            $query->whereRaw('0 = 1');
+
+            return;
+        }
+
+        $query->whereHas(
+            'products',
+            fn (Builder $productQuery) => $productQuery->where('category_id', $categoryId),
+        );
     }
 }
