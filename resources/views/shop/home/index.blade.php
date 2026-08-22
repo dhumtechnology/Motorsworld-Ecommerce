@@ -15,7 +15,7 @@
     - public/images/home/need-repuestos.png
 
     Variables:
-    - $popularProducts : Collection<Product> (top por ventas; incluye motos)
+    - $popularProducts : Collection<Product> (top 10 por ventas; incluye motos)
     - $brands          : Collection<Brand> — marcas con imagen (id, name, image)
     - $categories      : Collection<Category> — categorías con imagen (id, name, description, image)
     - $heroSlides      : list<string> — URLs del carrusel (admin o imágenes por defecto)
@@ -377,7 +377,7 @@
 </section>
 
 {{-- Productos populares --}}
-<x-popular-products :popular-products="$popularProducts" />
+<x-popular-products :popular-products="$popularProducts" :cart-quantities="$cartQuantities ?? []" />
 
 {{-- Mapa a todo el ancho --}}
 <section class="w-full bg-neutral-200" aria-label="Ubicación Motoworld">

@@ -384,7 +384,7 @@
 </section>
 
 {{-- Productos populares --}}
-<x-popular-products :popular-products="$popularProducts" />
+<x-popular-products :popular-products="$popularProducts" :cart-quantities="$cartQuantities ?? []" />
 
 <script>
     function serviceBookingForm(config) {

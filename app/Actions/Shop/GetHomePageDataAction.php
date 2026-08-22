@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 
 class GetHomePageDataAction
 {
-    private const POPULAR_LIMIT = 4;
+    private const POPULAR_LIMIT = 10;
 
     public function __construct(
         private readonly GetPopularProductsAction $popularProducts,

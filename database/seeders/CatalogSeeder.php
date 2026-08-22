@@ -117,14 +117,21 @@ class CatalogSeeder extends Seeder
             ],
         ];
 
+        $sortOrder = 0;
+
         return collect($definitions)->map(
-            fn (array $data, string $name) => Category::query()->updateOrCreate(
-                ['name' => $name],
-                [
-                    'description' => $data['description'],
-                    'image' => $data['image'],
-                ],
-            ),
+            function (array $data, string $name) use (&$sortOrder) {
+                $sortOrder++;
+
+                return Category::query()->updateOrCreate(
+                    ['name' => $name],
+                    [
+                        'description' => $data['description'],
+                        'image' => $data['image'],
+                        'sort_order' => $sortOrder,
+                    ],
+                );
+            },
         );
     }
 
@@ -145,13 +152,22 @@ class CatalogSeeder extends Seeder
             'Universal' => 'https://placehold.co/120x120/64748B/ffffff/png?text=Universal',
         ];
 
+        $sortOrder = 0;
+
         return collect($images)->mapWithKeys(
-            fn (string $image, string $name) => [
-                $name => Brand::query()->updateOrCreate(
-                    ['name' => $name],
-                    ['image' => $image],
-                ),
-            ],
+            function (string $image, string $name) use (&$sortOrder) {
+                $sortOrder++;
+
+                return [
+                    $name => Brand::query()->updateOrCreate(
+                        ['name' => $name],
+                        [
+                            'image' => $image,
+                            'sort_order' => $sortOrder,
+                        ],
+                    ),
+                ];
+            },
         );
     }
 

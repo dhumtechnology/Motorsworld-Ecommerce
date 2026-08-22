@@ -330,5 +330,6 @@
     </style>
 
     <script src="{{ asset('js/shop-cart.js') }}?v={{ @filemtime(public_path('js/shop-cart.js')) ?: time() }}" defer></script>
+    @stack('scripts')
 </body>
 </html>

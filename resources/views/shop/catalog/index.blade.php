@@ -1,6 +1,6 @@
 {{--
     Catalogo shop.catalog
-    Variables: $products, $section, $filters, $filterOptions, $popularProducts, $cartQuantities
+    Variables: $products, $section, $filters, $filterOptions, $popularProducts (10), $cartQuantities
     Filtros: categories[], brands[], models[], price_min, price_max, search, section
 --}}
 @extends('layouts.shop')
@@ -125,7 +125,7 @@
         </div>
     </div>
 
-    @include('shop.partials.popular-products-carousel')
+    <x-popular-products :popular-products="$popularProducts" :cart-quantities="$cartQuantities ?? []" />
 
     <script>
         (function () {
