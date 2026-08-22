@@ -53,20 +53,76 @@
             <div class="overflow-hidden">
                 <div data-popular-track class="flex">
                     @foreach ($products as $popularProduct)
-                        <div class="popular-slide w-full sm:w-1/2 lg:w-1/4 shrink-0 px-2 md:px-4 flex justify-center" data-real="1">
-                            <x-card
-                                class="max-w-[240px] w-full"
-                                :title="$popularProduct->name ?? $popularProduct->sku"
-                                :category="$popularProduct->category?->name ?? 'Producto'"
-                                :price="$popularProduct->effective_price"
-                                :oldPrice="$popularProduct->is_on_sale ? $popularProduct->list_price : null"
-                                :image="$popularProduct->image ?? 'https://via.placeholder.com/300?text=MotoWorld'"
-                                :isSale="$popularProduct->is_on_sale"
-                                :discountPercent="$popularProduct->discount_percent"
-                                :currency="$popularProduct->currency ?? 'PEN'"
-                                :href="route('shop.product.show', $popularProduct)"
-                                :cartQty="($cartQuantities[$popularProduct->id] ?? 0)"
-                            />
+                        @php
+                            $brand = $popularProduct->vehicleModel?->brand?->name
+                                ?? $popularProduct->category?->name
+                                ?? 'Motoworld';
+                            $description = \Illuminate\Support\Str::limit(
+                                trim((string) ($popularProduct->description ?: $popularProduct->name)),
+                                90,
+                            );
+                            $price = (float) ($popularProduct->effective_price ?? $popularProduct->price_amount);
+                            $oldPrice = $popularProduct->is_on_sale
+                                ? (float) $popularProduct->list_price
+                                : null;
+                            $currencySymbol = \App\Support\Currency::symbol($popularProduct->currency ?? 'PEN');
+                            $image = $popularProduct->image ?: asset('images/home/product-placeholder.png');
+                            $cartQty = (int) ($cartQuantities[$popularProduct->id] ?? 0);
+                        @endphp
+
+                        <div class="popular-slide w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 shrink-0 px-1.5 sm:px-2 md:px-3" data-real="1">
+                            <a
+                                href="{{ route('shop.product.show', $popularProduct) }}"
+                                class="group flex h-full w-full flex-col overflow-hidden border border-neutral-200 bg-white transition-shadow hover:shadow-md"
+                            >
+                                <div class="relative aspect-square overflow-hidden bg-neutral-100">
+                                    @if ($popularProduct->is_on_sale && $popularProduct->discount_percent)
+                                        <span class="absolute top-2 left-2 z-10 bg-primary px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white rounded-xs">
+                                            -{{ rtrim(rtrim(number_format((float) $popularProduct->discount_percent, 2, '.', ''), '0'), '.') }}%
+                                        </span>
+                                    @elseif ($popularProduct->is_on_sale)
+                                        <span class="absolute top-2 left-2 z-10 bg-primary px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white rounded-xs">
+                                            Oferta
+                                        </span>
+                                    @endif
+
+                                    @if ($cartQty > 0)
+                                        <span
+                                            class="absolute top-2 right-2 z-10 flex h-7 min-w-[28px] items-center justify-center rounded-full bg-neutral-900 px-2 text-xs font-black text-white shadow-sm"
+                                            title="En tu carrito"
+                                        >
+                                            {{ $cartQty }}
+                                        </span>
+                                    @endif
+
+                                    <img
+                                        src="{{ $image }}"
+                                        alt="{{ $popularProduct->name }}"
+                                        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    >
+                                </div>
+
+                                <div class="mt-auto flex min-h-[4.5rem] border-t border-neutral-200">
+                                    <div class="flex min-w-0 flex-1 flex-col justify-center p-2 md:p-2.5">
+                                        <p class="truncate text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                                            {{ $brand }}
+                                        </p>
+                                        <p class="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-tight text-neutral-900 md:text-xs">
+                                            {{ $description }}
+                                        </p>
+                                    </div>
+                                    <div class="flex shrink-0 flex-col items-center justify-center bg-primary px-2 text-center sm:px-3">
+                                        <span class="whitespace-nowrap text-xs font-black tracking-tight text-white sm:text-sm md:text-base">
+                                            {{ $currencySymbol }} {{ number_format($price, 2) }}
+                                        </span>
+                                        @if ($oldPrice)
+                                            <span class="whitespace-nowrap text-[10px] font-semibold text-white/75 line-through sm:text-xs">
+                                                {{ $currencySymbol }} {{ number_format($oldPrice, 2) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </a>
                         </div>
                     @endforeach
                 </div>
@@ -87,13 +143,15 @@
                 const nextBtn = scope.querySelector('[data-popular-next]');
                 if (!track || !prevBtn || !nextBtn) return;
 
-                const mq = window.matchMedia('(min-width: 1024px)');
+                const mqLg = window.matchMedia('(min-width: 1024px)');
+                const mqMd = window.matchMedia('(min-width: 768px)');
                 const mqSm = window.matchMedia('(min-width: 640px)');
 
                 function itemsPerPage() {
-                    if (mq.matches) return 4;
-                    if (mqSm.matches) return 2;
-                    return 1;
+                    if (mqLg.matches) return 5;
+                    if (mqMd.matches) return 4;
+                    if (mqSm.matches) return 3;
+                    return 2;
                 }
 
                 let perPage = itemsPerPage();
