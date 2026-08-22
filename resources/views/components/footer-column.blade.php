@@ -25,8 +25,6 @@
         @foreach($links as $text => $url)
             <li>
                 <a href="{{ $url }}" class="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 uppercase font-bold text-xs tracking-wide">
-                    <span class="w-2 h-2 bg-orange-600 inline-block shrink-0 rounded-sm"></span>
-                    
                     <span>{{ $text }}</span>
                 </a>
             </li>
