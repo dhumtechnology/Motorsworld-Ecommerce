@@ -697,7 +697,7 @@
         </div>
     </div>
 
-    @include('shop.partials.popular-products-carousel')
+    <x-popular-products :popular-products="$popularProducts" :cart-quantities="$cartQuantities ?? []" />
 
     <script>
         document.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => {
