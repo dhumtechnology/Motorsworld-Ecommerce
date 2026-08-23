@@ -238,8 +238,8 @@
         @yield('content')
     </main>
 
-    <footer class="text-white py-14 bg-black">
-        <div class="mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 max-w-[95%] px-4 md:px-8">
+    <footer class="text-white pt-14 pb-8 bg-black">
+        <div class="mx-auto grid grid-cols-1 pb-8 md:grid-cols-12 gap-8 max-w-[95%] px-4 md:px-8">
             
             <div class="flex flex-col gap-3 md:col-span-3">
                 <x-logo href="{{ route('shop.home') }}" size="lg" />
@@ -351,10 +351,9 @@
                         height="112"
                     >
                 </a>
-                <x-payments-methods-cards/>
             </div>
-
         </div>
+        <x-payments-methods-cards/>
     </footer>
 
     <a
