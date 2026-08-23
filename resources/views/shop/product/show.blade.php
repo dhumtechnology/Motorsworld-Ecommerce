@@ -583,111 +583,40 @@
                 </div>
 
                 {{-- Tab: Ficha técnica --}}
-                <div x-show="currentTab === 'technical'" class="space-y-4" style="display: none;" x-data="{ openModal: false }">
+                <div x-show="currentTab === 'technical'" class="space-y-4" style="display: none;">
                     @if($product->technical_sheet)
                         <p class="text-neutral-700">
-                            Previsualiza la ficha técnica de este producto o descárgala directamente.
+                            Descarga la ficha técnica de este producto.
                         </p>
 
-                        <!-- Tarjeta de vista previa pequeña -->
-                        <div class="relative max-w-sm rounded-lg border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group bg-neutral-50">
-                            
-                            <!-- Marco / Preview miniatura -->
-                            <div class="h-64 w-full overflow-hidden relative">
-                                <!-- Mostramos la primera página del PDF en la vista previa -->
-                                <iframe 
-                                    src="{{ $product->technical_sheet }}#toolbar=0&navpanes=0&scrollbar=0" 
-                                    class="w-full h-full pointer-events-none select-none opacity-90 group-hover:opacity-100 transition-opacity"
-                                    title="Vista previa ficha técnica">
-                                </iframe>
-
-                                <!-- Capa interactiva para abrir el modal -->
-                                <button 
-                                    type="button"
-                                    @click="openModal = true"
-                                    class="absolute inset-0 w-full h-full bg-black/20 group-hover:bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                                >
-                                    <span class="bg-black/70 px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 backdrop-blur-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        Ampliar vista previa
-                                    </span>
-                                </button>
+                        <!-- Contenedor con nombre del archivo y botón -->
+                        <div class="flex items-center justify-between p-4 max-w-md rounded-lg border border-neutral-200 bg-neutral-50 shadow-sm">
+                            <div class="flex items-center gap-3 truncate pr-4">
+                                <!-- Icono de documento PDF -->
+                                <svg class="w-6 h-6 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                
+                                <!-- Nombre del archivo subido -->
+                                <span class="text-sm font-medium text-neutral-800 truncate" title="{{ basename($product->technical_sheet) }}">
+                                    {{ basename($product->technical_sheet) }}
+                                </span>
                             </div>
 
-                            <!-- Botones de acción inferiores -->
-                            <div class="p-3 bg-white border-t border-neutral-200 flex items-center justify-between gap-2">
-                                <button 
-                                    type="button"
-                                    @click="openModal = true"
-                                    class="text-xs font-bold text-neutral-700 hover:text-black flex items-center gap-1"
-                                >
-                                    Ampliar
-                                </button>
-
-                                <a 
-                                    href="{{ $product->technical_sheet }}" 
-                                    download
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-black transition-colors"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                    Descargar PDF
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Modal para vista ampliada -->
-                        <template x-teleport="body">
-                            <div 
-                                x-show="openModal" 
-                                x-cloak
-                                x-transition:enter="transition ease-out duration-150"
-                                x-transition:enter-start="opacity-0"
-                                x-transition:enter-end="opacity-100"
-                                x-transition:leave="transition ease-in duration-100"
-                                x-transition:leave-start="opacity-100"
-                                x-transition:leave-end="opacity-0"
-                                class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4"
-                                @keydown.escape.window="openModal = false"
+                            <!-- Botón Descargar -->
+                            <a 
+                                href="{{ $product->technical_sheet }}" 
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-black transition-colors shrink-0"
                             >
-                                <!-- Forzamos una altura exacta (92vh) y flexbox estricto -->
-                                <div class="relative w-full h-full max-h-[92vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
-                                    
-                                    <!-- Cabecera del modal (shrink-0 asegura que conserve su tamaño y no encoja el PDF) -->
-                                    <div class="flex items-center justify-between px-6 py-3 border-b border-neutral-200 bg-neutral-50 shrink-0 h-14">
-                                        <h3 class="font-bold text-neutral-800 text-base sm:text-lg">Ficha Técnica</h3>
-                                        <div class="flex items-center gap-3">
-                                            <button 
-                                                type="button"
-                                                @click="openModal = false"
-                                                class="text-neutral-500 hover:text-black text-2xl font-bold leading-none p-1"
-                                            >
-                                                &times;
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Cuerpo del modal (h-[calc(100%-3.5rem)] calcula exactamente el alto disponible sin desbordar) -->
-                                    <div class="w-full h-[calc(100%-3.5rem)] bg-neutral-100 overflow-hidden relative" style="transform: translateZ(0);">
-                                        <object 
-                                            data="{{ $product->technical_sheet }}#toolbar=1&navpanes=0&scrollbar=1" 
-                                            type="application/pdf"
-                                            class="w-full h-full block border-0"
-                                            style="will-change: transform;"
-                                        >
-                                            <iframe 
-                                                src="{{ $product->technical_sheet }}" 
-                                                class="w-full h-full border-0"
-                                            >
-                                                <p>Tu navegador no soporta vista previa. <a href="{{ $product->technical_sheet }}" target="_blank">Haz clic aquí para descargar el PDF.</a></p>
-                                            </iframe>
-                                        </object>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </template>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Descargar
+                            </a>
+                        </div>
 
                     @else
                         <p class="text-black italic">No hay ficha técnica disponible para este artículo.</p>

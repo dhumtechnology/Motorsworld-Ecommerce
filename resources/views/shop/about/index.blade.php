@@ -44,14 +44,13 @@
 <section class="relative w-full overflow-hidden bg-neutral-900">
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
         <img
-            src="images/about/banner-servicios.png"
+            src="images/about/NOSOTROS.jpg"
             alt="Nosotros Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
         >
         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
         <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motoworld</p>
             <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
                 Nosotros
             </h1>
@@ -70,9 +69,9 @@
             Quiénes somos
         </h2>
         <p class="mt-5 text-sm md:text-base leading-relaxed text-neutral-600 text-justify">
-            Desde hace 3 años Moto World ha logrado posicionarse como uno de los talleres de motocicletas más
+            Desde el 2022, Moto World ha logrado posicionarse como uno de los talleres de motocicletas más
             importantes en Lima, brindando la confianza y seguridad al motociclista peruano. Contamos con el
-            respaldo de sólidas marcas con representación a nivel internacional.
+            respaldo de sólidas marcas con representación a nivel nacional e internacional.
         </p>
     </div>
 </section>
@@ -91,7 +90,7 @@
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="images/about/mision-motoworld.png"
+                        src="images/about/MISION.jpg"
                         alt="Misión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
