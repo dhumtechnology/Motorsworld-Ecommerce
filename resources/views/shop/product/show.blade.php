@@ -243,7 +243,7 @@ RELACIONES CARGADAS EN $product
                         -{{ $discountLabel }}%
                     </span>
                     @endif
-                    <img id="product-main-image" :src="mainImage" class="h-full w-full object-cover transition-all duration-200" alt="{{ $product->name }}">
+                    <img id="product-main-image" :src="mainImage" class="h-full transition-all duration-200" alt="{{ $product->name }}">
                 </div>
             </div>
 
