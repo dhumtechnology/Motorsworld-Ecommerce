@@ -26,11 +26,11 @@
 
 @section('content')
 @php
-    $heroSlides = $heroSlides ?? [
-        asset('images/home/banner-hero.png'),
-        asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
-    ];
-    $mapEmbedUrl = config('shop.map_embed_url');
+$heroSlides = $heroSlides ?? [
+asset('images/home/banner-hero.png'),
+asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
+];
+$mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
 {{-- Banner principal: carrusel con flechas y autoplay --}}
@@ -65,49 +65,44 @@
         },
     }"
     x-init="start()"
-    aria-label="Banner Motoworld"
->
+    aria-label="Banner Motoworld">
     <div class="home-hero-frame relative w-full overflow-hidden">
         {{-- La 1.ª imagen define la altura del banner. --}}
         <img
             src="{{ $heroSlides[0] }}"
             alt=""
             aria-hidden="true"
-            class="home-hero-sizer block h-auto w-full max-w-full"
-        >
+            class="home-hero-sizer block h-auto w-full max-w-full">
         @foreach ($heroSlides as $index => $slide)
-            <img
-                src="{{ $slide }}"
-                alt="Motoworld"
-                class="home-hero-slide{{ $index === 0 ? ' is-active' : '' }}"
-                :class="{ 'is-active': active === {{ $index }} }"
-                @if ($index === 0) loading="eager" @else loading="lazy" @endif
-                :aria-hidden="active === {{ $index }} ? 'false' : 'true'"
-            >
+        <img
+            src="{{ $slide }}"
+            alt="Motoworld"
+            class="home-hero-slide{{ $index === 0 ? ' is-active' : '' }}"
+            :class="{ 'is-active': active === {{ $index }} }"
+            @if ($index===0) loading="eager" @else loading="lazy" @endif
+            :aria-hidden="active === {{ $index }} ? 'false' : 'true'">
         @endforeach
     </div>
 
     @if (count($heroSlides) > 1)
-        <button
-            type="button"
-            @click="prev()"
-            aria-label="Banner anterior"
-            class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:left-5"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-        </button>
-        <button
-            type="button"
-            @click="next()"
-            aria-label="Banner siguiente"
-            class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:right-5"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-        </button>
+    <button
+        type="button"
+        @click="prev()"
+        aria-label="Banner anterior"
+        class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:left-5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+    </button>
+    <button
+        type="button"
+        @click="next()"
+        aria-label="Banner siguiente"
+        class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-md transition-all hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 sm:right-5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
     @endif
 </section>
 
@@ -155,41 +150,45 @@
     </div>
 
     @if ($brands->isEmpty())
-        <div class="w-full bg-neutral-100 px-4 py-10 text-center text-sm text-neutral-500">
-            Pronto verás aquí las marcas autorizadas.
-        </div>
+    <div class="w-full bg-neutral-100 px-4 py-10 text-center text-sm text-neutral-500">
+        Pronto verás aquí las marcas autorizadas.
+    </div>
     @else
-        @php
-            $brandStrip = $brands->values();
-            while ($brandStrip->isNotEmpty() && $brandStrip->count() < 5) {
-                $brandStrip = $brandStrip->concat($brands);
-            }
-            // Dos vueltas idénticas = loop circular sin salto.
-            $brandLoop = $brandStrip->concat($brandStrip);
+    @php
+    $brandStrip = $brands->values();
+    while ($brandStrip->isNotEmpty() && $brandStrip->count() < 5) {
+        $brandStrip=$brandStrip->concat($brands);
+        }
+        // Dos vueltas idénticas = loop circular sin salto.
+        $brandLoop = $brandStrip->concat($brandStrip);
         @endphp
         <div class="brands-marquee-viewport w-full overflow-hidden bg-neutral-100" aria-label="Marcas autorizadas">
             <div class="brands-marquee-track">
                 @foreach ($brandLoop as $index => $brand)
-                    <div class="brands-marquee-item" @if ($index >= $brandStrip->count()) aria-hidden="true" @endif>
-                        <img
-                            src="{{ $brand->image }}"
-                            alt="{{ $brand->name }}"
-                            title="{{ $brand->name }}"
-                            class="brands-marquee-logo"
-                            loading="eager"
-                            onerror="this.classList.add('opacity-0');"
-                        >
-                    </div>
+                <div class="brands-marquee-item" @if ($index>= $brandStrip->count()) aria-hidden="true" @endif>
+                    <img
+                        src="{{ $brand->image }}"
+                        alt="{{ $brand->name }}"
+                        title="{{ $brand->name }}"
+                        class="brands-marquee-logo"
+                        loading="eager"
+                        onerror="this.classList.add('opacity-0');">
+                </div>
                 @endforeach
             </div>
         </div>
-    @endif
+        @endif
 </section>
 
 <style>
     @keyframes brands-marquee-scroll {
-        from { transform: translate3d(0, 0, 0); }
-        to { transform: translate3d(-50%, 0, 0); }
+        from {
+            transform: translate3d(0, 0, 0);
+        }
+
+        to {
+            transform: translate3d(-50%, 0, 0);
+        }
     }
 
     .brands-marquee-viewport {
@@ -274,7 +273,7 @@
 
 {{-- Tenemos todo lo que necesitas --}}
 <section class="bg-white border-t border-neutral-100"
-         x-data="{
+    x-data="{
              current: 0,
              get total() {
                  return this.$refs.slider ? this.$refs.slider.children.length : 0;
@@ -307,68 +306,63 @@
 
         <!-- Contenedor relativo para posicionar las flechas -->
         <div class="relative">
-            
+
             <!-- Flecha Izquierda (Anterior) -->
-            <button 
-                @click="prev()" 
+            <button
+                @click="prev()"
                 aria-label="Anterior"
-                class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-all hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
+                class="absolute -left-2 md:-left-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-all hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
             </button>
 
             <!-- Flecha Derecha (Siguiente) -->
-            <button 
-                @click="next()" 
+            <button
+                @click="next()"
                 aria-label="Siguiente"
-                class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-all hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
+                class="absolute -right-2 md:-right-5 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-all hover:bg-orange-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
             </button>
 
             <!-- Slider / Carrusel -->
-            <div 
+            <div
                 x-ref="slider"
-                class="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth py-1"
-            >
+                class="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth py-1">
                 @forelse ($categories as $category)
-                    @php
-                        $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOCICLETAS';
-                        $categoryHref = $isMotos
-                            ? route('shop.catalog', ['section' => 'motos'])
-                            : route('shop.catalog', [
-                                'section' => 'accesorios',
-                                'categories' => [$category->id],
-                            ]);
-                    @endphp
-                    <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
-                        <a
-                            href="{{ $categoryHref }}"
-                            class="group/category relative block aspect-[3/4] overflow-hidden bg-neutral-200 opacity-80 transition-opacity duration-300 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:opacity-100"
-                        >
-                            <img
-                                src="{{ $category->image }}"
-                                alt="{{ $category->name }}"
-                                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover/category:scale-105"
-                                loading="lazy"
-                                onerror="this.classList.add('opacity-0');"
-                            >
-                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent"></div>
-                            <div class="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-4">
-                                <p class="text-center text-sm font-black uppercase tracking-[0.12em] text-white font-title drop-shadow">
-                                    {{ $category->name }}
-                                </p>
-                            </div>
-                        </a>
-                    </div>
+                @php
+                $isMotos = strtoupper(trim((string) $category->name)) === 'MOTOCICLETAS';
+                $categoryHref = $isMotos
+                ? route('shop.catalog', ['section' => 'motos'])
+                : route('shop.catalog', [
+                'section' => 'accesorios',
+                'categories' => [$category->id],
+                ]);
+                @endphp
+                <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
+                    <a
+                        href="{{ $categoryHref }}"
+                        class="group/category relative block aspect-[3/4] overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
+                        <img
+                            src="{{ $category->image }}"
+                            alt="{{ $category->name }}"
+                            class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover/category:scale-105"
+                            loading="lazy"
+                            onerror="this.classList.add('opacity-0');">
+
+                        <div class="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-4 transition-colors duration-300 group-hover/category:bg-orange-500">
+                            <p class="text-center text-sm font-black uppercase tracking-[0.12em] text-white font-title drop-shadow">
+                                {{ $category->name }}
+                            </p>
+                        </div>
+                    </a>
+                </div>
                 @empty
-                    <p class="w-full py-8 text-center text-sm text-neutral-500">
-                        Pronto verás aquí las categorías disponibles.
-                    </p>
+                <p class="w-full py-8 text-center text-sm text-neutral-500">
+                    Pronto verás aquí las categorías disponibles.
+                </p>
                 @endforelse
             </div>
 
@@ -388,8 +382,7 @@
             class="absolute inset-0 h-full w-full border-0"
             loading="lazy"
             referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-        ></iframe>
+            allowfullscreen></iframe>
     </div>
 </section>
 @endsection
