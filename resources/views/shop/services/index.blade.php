@@ -31,7 +31,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                 Servicio Técnico Especializado
             </h1>
             <p class="mt-2 text-sm md:text-base text-white/85 max-w-xl">
-                Reserva tu cita de lunes a viernes, de 9:30 a.m. a 6:00 p.m.
+                Horario de atención: Lunes a viernes de 9:30 a.m. a 6:00 p.m.
             </p>
         </div>
     </div>
@@ -89,7 +89,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
     <div class="relative mx-auto max-w-3xl px-4 py-10 md:px-6 md:py-14">
         <div class="mb-8 text-center">
             <h2 class="text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
-                Reserva tu servicio
+                Agenda tu servicio
             </h2>
             <p class="mt-2 text-sm text-neutral-500">
                 Completa tus datos y elige el horario disponible.
@@ -288,7 +288,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                     </span>
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-wider text-neutral-900">Fecha y hora *</h3>
-                        <p class="text-xs text-neutral-500">Solo lunes a viernes · 8:00 a.m. – 6:00 p.m.</p>
+                        <p class="text-xs text-neutral-500">Solo lunes a viernes · 9:30 a.m. – 6:00 p.m.</p>
                     </div>
                 </div>
 
