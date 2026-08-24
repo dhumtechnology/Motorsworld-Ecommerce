@@ -9,13 +9,13 @@
 
 @section('content')
 @php
-    $bannerPath = public_path('images/home/portadas/NUESTROS SERVICIOS.jpg');
-    $banner = file_exists($bannerPath)
-        ? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
-        : asset('images/services/banner-servicios.png');
-    $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400';
-    $label = 'mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
-    $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transparent px-5 py-3 text-sm text-neutral-900 outline-none focus:ring-0 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400';
+$bannerPath = public_path('images/home/portadas/NUESTROS SERVICIOS.jpg');
+$banner = file_exists($bannerPath)
+? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
+: asset('images/services/banner-servicios.png');
+$field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400';
+$label = 'mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
+$datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transparent px-5 py-3 text-sm text-neutral-900 outline-none focus:ring-0 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400';
 @endphp
 
 <section class="relative w-full overflow-hidden bg-neutral-900">
@@ -24,66 +24,63 @@
             src="{{ $banner }}"
             alt="Servicios Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-        >
+            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/20"></div>
         <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Taller Motoworld</p>
             <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Servicios de taller
+                Servicio Técnico Especializado
             </h1>
             <p class="mt-2 text-sm md:text-base text-white/85 max-w-xl">
-                Reserva tu cita de lunes a viernes, de 8:00 a.m. a 6:00 p.m.
+                Reserva tu cita de lunes a viernes, de 9:30 a.m. a 6:00 p.m.
             </p>
         </div>
     </div>
 </section>
 
 @if ($serviceTypes->isNotEmpty())
-    <section class="bg-white border-b border-neutral-100">
-        <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
-            <div class="mb-8 text-center">
-                <h2 class="text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
-                    Nuestros servicios
-                </h2>
-                <p class="mt-2 text-sm text-neutral-500">
-                    Conoce lo que hacemos en el taller Motoworld.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                @foreach ($serviceTypes as $type)
-                    <article class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md">
-                        <div class="aspect-[4/3] overflow-hidden bg-neutral-100">
-                            @if ($type->image)
-                                <img
-                                    src="{{ $type->image }}"
-                                    alt="{{ $type->name }}"
-                                    class="h-full w-full object-cover"
-                                    loading="lazy"
-                                >
-                            @else
-                                <div class="flex h-full w-full items-center justify-center bg-neutral-200 text-neutral-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="p-5">
-                            <h3 class="text-base font-black uppercase tracking-wide text-neutral-900 font-title">
-                                {{ $type->name }}
-                            </h3>
-                            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
-                                {{ $type->description ?: 'Consulta disponibilidad y reserva tu cita en el taller.' }}
-                            </p>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
+<section class="bg-white border-b border-neutral-100">
+    <div class="mx-auto max-w-[95%] px-4 md:px-8 py-10 md:py-14">
+        <div class="mb-8 text-center">
+            <h2 class="text-xl md:text-2xl font-black uppercase tracking-[0.12em] text-neutral-900 font-title">
+                Nuestros servicios
+            </h2>
+            <p class="mt-2 text-sm text-neutral-500">
+                Conoce lo que hacemos en el taller Motoworld.
+            </p>
         </div>
-    </section>
+
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @foreach ($serviceTypes as $type)
+            <article class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md">
+                <div class="aspect-[4/3] overflow-hidden bg-neutral-100">
+                    @if ($type->image)
+                    <img
+                        src="{{ $type->image }}"
+                        alt="{{ $type->name }}"
+                        class="h-full w-full object-cover"
+                        loading="lazy">
+                    @else
+                    <div class="flex h-full w-full items-center justify-center bg-neutral-200 text-neutral-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    @endif
+                </div>
+                <div class="p-5">
+                    <h3 class="text-base font-black uppercase tracking-wide text-neutral-900 font-title">
+                        {{ $type->name }}
+                    </h3>
+                    <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                        {{ $type->description ?: 'Consulta disponibilidad y reserva tu cita en el taller.' }}
+                    </p>
+                </div>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
 @endif
 
 <section class="relative bg-neutral-100">
@@ -100,20 +97,20 @@
         </div>
 
         @if (session('status'))
-            <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                {{ session('status') }}
-            </div>
+        <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {{ session('status') }}
+        </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                <p class="font-bold mb-1">Revisa el formulario:</p>
-                <ul class="list-disc pl-5 space-y-0.5">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p class="font-bold mb-1">Revisa el formulario:</p>
+            <ul class="list-disc pl-5 space-y-0.5">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
         @endif
 
         <form
@@ -134,8 +131,7 @@
                     'appointment_time' => old('appointment_time'),
                 ],
             ]))"
-            @submit="if (submitting) { $event.preventDefault() } else { submitting = true }"
-        >
+            @submit="if (submitting) { $event.preventDefault() } else { submitting = true }">
             @csrf
 
             {{-- Vehículo --}}
@@ -158,7 +154,7 @@
                         <select name="brand_id" x-model="brandId" @change="onBrandChange()" required class="{{ $field }}">
                             <option value="">Selecciona una marca</option>
                             @foreach ($brands as $brand)
-                                <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -168,11 +164,10 @@
                         <select name="vehicle_model_id" x-model="modelId" required class="{{ $field }}" :disabled="!brandId">
                             <option value="">Selecciona un modelo</option>
                             @foreach ($models as $model)
-                                <option
-                                    value="{{ $model->id }}"
-                                    x-show="String(brandId) === '{{ $model->brand_id }}'"
-                                    x-bind:disabled="String(brandId) !== '{{ $model->brand_id }}'"
-                                >{{ $model->name }}</option>
+                            <option
+                                value="{{ $model->id }}"
+                                x-show="String(brandId) === '{{ $model->brand_id }}'"
+                                x-bind:disabled="String(brandId) !== '{{ $model->brand_id }}'">{{ $model->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -259,7 +254,7 @@
                         <select name="service_type_id" x-model="serviceTypeId" @change="onServiceTypeChange()" required class="{{ $field }}">
                             <option value="">Selecciona un tipo</option>
                             @foreach ($serviceTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -269,15 +264,14 @@
                         <select name="service_package_id" x-model="packageId" required class="{{ $field }}" :disabled="!serviceTypeId">
                             <option value="">Selecciona un paquete</option>
                             @foreach ($serviceTypes as $type)
-                                @foreach ($type->packages as $package)
-                                    <option
-                                        value="{{ $package->id }}"
-                                        x-show="String(serviceTypeId) === '{{ $type->id }}'"
-                                        x-bind:disabled="String(serviceTypeId) !== '{{ $type->id }}'"
-                                    >
-                                        {{ $package->name }}@if($package->price) — S/ {{ number_format((float) $package->price, 2) }}@endif
-                                    </option>
-                                @endforeach
+                            @foreach ($type->packages as $package)
+                            <option
+                                value="{{ $package->id }}"
+                                x-show="String(serviceTypeId) === '{{ $type->id }}'"
+                                x-bind:disabled="String(serviceTypeId) !== '{{ $type->id }}'">
+                                {{ $package->name }}@if($package->price) — S/ {{ number_format((float) $package->price, 2) }}@endif
+                            </option>
+                            @endforeach
                             @endforeach
                         </select>
                     </div>
@@ -301,8 +295,7 @@
                 <label class="{{ $label }}">Elige fecha y horario</label>
                 <div
                     class="grid grid-cols-1 divide-y divide-neutral-200 rounded-lg border border-neutral-200 bg-white shadow-sm transition focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 sm:grid-cols-2 sm:divide-x sm:divide-y-0"
-                    :class="{ 'border-red-300': weekendSelected }"
-                >
+                    :class="{ 'border-red-300': weekendSelected }">
                     <input
                         type="date"
                         name="appointment_date"
@@ -310,15 +303,13 @@
                         @change="onDateChange()"
                         required
                         :min="minDate"
-                        class="{{ $datetimePart }} rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
-                    >
+                        class="{{ $datetimePart }} rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none">
                     <select
                         name="appointment_time"
                         x-model="time"
                         required
                         class="{{ $datetimePart }} rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none"
-                        :disabled="!date || loadingSlots || weekendSelected"
-                    >
+                        :disabled="!date || loadingSlots || weekendSelected">
                         <option value="">Horario</option>
                         <template x-for="slot in slots" :key="slot">
                             <option :value="slot" x-text="formatSlot(slot)"></option>
@@ -348,8 +339,7 @@
                     <button
                         type="submit"
                         :disabled="submitting"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-16 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-orange-600"
-                    >
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-16 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:bg-orange-600">
                         <svg
                             x-show="submitting"
                             x-cloak
@@ -357,8 +347,7 @@
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
+                            aria-hidden="true">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                         </svg>
@@ -378,8 +367,7 @@
             class="absolute inset-0 h-full w-full border-0"
             loading="lazy"
             referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-        ></iframe>
+            allowfullscreen></iframe>
     </div>
 </section>
 
@@ -456,7 +444,9 @@
                 this.loadingSlots = true;
                 try {
                     const response = await fetch(this.slotsUrl + '?date=' + encodeURIComponent(this.date), {
-                        headers: { 'Accept': 'application/json' },
+                        headers: {
+                            'Accept': 'application/json'
+                        },
                     });
                     const data = await response.json();
                     this.slots = data.slots || [];
