@@ -359,21 +359,6 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
     </div>
 </section>
 
-<section class="w-full bg-neutral-200" aria-label="Ubicacion Motoworld">
-    <div class="relative w-full aspect-[21/9] min-h-[280px] max-h-[480px]">
-        <iframe
-            title="Mapa Motoworld"
-            src="{{ $mapEmbedUrl }}"
-            class="absolute inset-0 h-full w-full border-0"
-            loading="lazy"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen></iframe>
-    </div>
-</section>
-
-{{-- Productos populares --}}
-<x-popular-products :popular-products="$popularProducts" :cart-quantities="$cartQuantities ?? []" />
-
 <script>
     function serviceBookingForm(config) {
         const toIsoDate = (d) => {
