@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Shop;
 
 use App\Actions\Shop\GetAvailableAppointmentSlotsAction;
-use App\Actions\Shop\GetPopularProductsAction;
 use App\Actions\Shop\StoreShopAppointmentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\StoreShopAppointmentRequest;
@@ -11,7 +10,6 @@ use App\Models\Appointments\ServicePackage;
 use App\Models\Appointments\ServiceType;
 use App\Models\Products\Brand;
 use App\Models\Products\VehicleModel;
-use App\Services\Cart\CartResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,16 +18,28 @@ use Illuminate\Validation\ValidationException;
 
 class ServiceController extends Controller
 {
-    public function index(
-        Request $request,
-        GetPopularProductsAction $popularProducts,
-        CartResolver $cartResolver,
-    ): View {
+    public function index(): View
+    {
+        return view('shop.services.index');
+    }
+
+    public function servicesList(): View
+    {
+        return view('shop.services.list', [
+            'serviceTypes' => ServiceType::query()
+                ->with(['packages' => fn($q) => $q->where('is_active', true)->orderBy('name')])
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
+    public function booking(Request $request): View
+    {
         $user = $request->user();
         $profile = $user?->customerProfile;
 
         $serviceTypes = ServiceType::query()
-            ->with(['packages' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+            ->with(['packages' => fn($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
 
@@ -37,24 +47,19 @@ class ServiceController extends Controller
             ->withMotorcycleProducts()
             ->orderBy('name')
             ->get(['id', 'name']);
+
         $models = VehicleModel::query()
             ->withMotorcycleProducts()
             ->orderBy('name')
             ->get(['id', 'name', 'brand_id']);
 
-        $cart = $cartResolver->resolve($user, $request->session()->getId());
-        $cartQuantities = $cart->items()
-            ->pluck('quantity', 'product_id')
-            ->map(fn ($qty) => (int) $qty)
-            ->all();
-
-        return view('shop.services.index', [
+        return view('shop.services.booking', [
             'serviceTypes' => $serviceTypes,
             'brands' => $brands,
             'models' => $models,
             'packagesByType' => $serviceTypes
-                ->mapWithKeys(fn (ServiceType $type) => [
-                    $type->id => $type->packages->map(fn (ServicePackage $package) => [
+                ->mapWithKeys(fn(ServiceType $type) => [
+                    $type->id => $type->packages->map(fn(ServicePackage $package) => [
                         'id' => $package->id,
                         'name' => $package->name,
                         'price' => $package->price,
@@ -62,7 +67,7 @@ class ServiceController extends Controller
                 ]),
             'modelsByBrand' => $models
                 ->groupBy('brand_id')
-                ->map(fn ($group) => $group->map(fn (VehicleModel $model) => [
+                ->map(fn($group) => $group->map(fn(VehicleModel $model) => [
                     'id' => $model->id,
                     'name' => $model->name,
                 ])->values()),
@@ -73,9 +78,6 @@ class ServiceController extends Controller
                 'customer_phone' => $profile?->phone ?? '',
                 'customer_email' => $user?->email ?? '',
             ],
-            'popularProducts' => $popularProducts->execute(10),
-            'cartQuantities' => $cartQuantities,
-            'mapEmbedUrl' => config('shop.map_embed_url'),
         ]);
     }
 
@@ -90,7 +92,7 @@ class ServiceController extends Controller
         }
 
         return redirect()
-            ->route('shop.services.index')
+            ->route('shop.services.booking')
             ->with('status', 'Tu reserva fue registrada. Te enviamos un correo con la confirmación de tus datos, fecha y hora.');
     }
 

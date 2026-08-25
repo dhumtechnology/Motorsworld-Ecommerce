@@ -60,12 +60,16 @@ Route::get('/producto/{product}', [ProductController::class, 'show'])->name('pro
 |--------------------------------------------------------------------------
 |
 | GET  /servicios              shop.services.index
+| GET  /servicios/lista        shop.services.list
+| GET  /servicios/agendar      shop.services.booking
 | POST /servicios/reservas     shop.services.store
 | GET  /servicios/horarios     shop.services.slots
 |
 */
 Route::prefix('servicios')->name('services.')->group(function () {
     Route::get('/', [ServiceController::class, 'index'])->name('index');
+    Route::get('/lista', [ServiceController::class, 'servicesList'])->name('list');
+    Route::get('/agendar', [ServiceController::class, 'booking'])->name('booking');
     Route::post('/reservas', [ServiceController::class, 'store'])->name('store');
     Route::get('/horarios', [ServiceController::class, 'availableSlots'])->name('slots');
 });
