@@ -10,12 +10,16 @@ use Illuminate\Support\Collection;
 
 class GetAvailableAppointmentSlotsAction
 {
-    public const OPEN_HOUR = 8;
+    public const OPEN_HOUR = 9;
+
+    public const OPEN_MINUTE = 30;
 
     public const CLOSE_HOUR = 18;
 
+    public const SLOT_INTERVAL_MINUTES = 60;
+
     /**
-     * Horarios disponibles (inicio de cita) entre 08:00 y 17:00,
+     * Horarios disponibles (inicio de cita) entre 09:30 y 17:30,
      * de lunes a viernes, de modo que el servicio quepa hasta las 18:00.
      *
      * @return list<string> horas en formato H:i
@@ -40,7 +44,7 @@ class GetAvailableAppointmentSlotsAction
                 AppointmentStatus::Absent,
             ])
             ->pluck('appointment_at')
-            ->map(fn ($at) => Carbon::parse($at)->format('H:i'))
+            ->map(fn($at) => Carbon::parse($at)->format('H:i'))
             ->unique()
             ->all();
 
@@ -48,8 +52,11 @@ class GetAvailableAppointmentSlotsAction
         $slots = [];
         $now = now();
 
-        for ($hour = self::OPEN_HOUR; $hour < self::CLOSE_HOUR; $hour++) {
-            $slot = $day->copy()->setTime($hour, 0, 0);
+        for (
+            $slot = $day->copy()->setTime(self::OPEN_HOUR, self::OPEN_MINUTE, 0);
+            $slot->lt($day->copy()->setTime(self::CLOSE_HOUR, 0, 0));
+            $slot->addMinutes(self::SLOT_INTERVAL_MINUTES)
+        ) {
             $label = $slot->format('H:i');
 
             if (isset($takenLookup[$label])) {
@@ -73,8 +80,12 @@ class GetAvailableAppointmentSlotsAction
     {
         $hours = collect();
 
-        for ($hour = self::OPEN_HOUR; $hour < self::CLOSE_HOUR; $hour++) {
-            $hours->push(sprintf('%02d:00', $hour));
+        for (
+            $slot = Carbon::createFromTime(self::OPEN_HOUR, self::OPEN_MINUTE);
+            $slot->lt(Carbon::createFromTime(self::CLOSE_HOUR, 0));
+            $slot->addMinutes(self::SLOT_INTERVAL_MINUTES)
+        ) {
+            $hours->push($slot->format('H:i'));
         }
 
         return $hours;

@@ -12,46 +12,44 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/about/banner-nosotros.png'))
-        ? asset('images/about/banner-nosotros.png')
-        : asset('images/services/banner-servicios.png');
+$banner = file_exists(public_path('images/about/banner-nosotros.png'))
+? asset('images/about/banner-nosotros.png')
+: asset('images/services/banner-servicios.png');
 
-    $misionImage = file_exists(public_path('images/about/mision.png'))
-        ? asset('images/about/mision.png')
-        : asset('images/home/taller-1.png');
+$misionImage = file_exists(public_path('images/about/mision.png'))
+? asset('images/about/mision.png')
+: asset('images/home/taller-1.png');
 
-    $visionImage = file_exists(public_path('images/about/vision.png'))
-        ? asset('images/about/vision.png')
-        : asset('images/home/taller-2.png');
+$visionImage = file_exists(public_path('images/about/vision.png'))
+? asset('images/about/vision.png')
+: asset('images/home/taller-2.png');
 
-    $policies = [
-        [
-            'title' => 'Satisfacción del cliente',
-            'body' => 'Nos esforzamos por comprender y superar las expectativas de nuestros clientes en cada interacción.',
-        ],
-        [
-            'title' => 'Mejora continua',
-            'body' => 'Buscamos constantemente formas de mejorar nuestros procesos y servicios para ofrecer la mejor calidad posible.',
-        ],
-        [
-            'title' => 'Desarrollo del personal',
-            'body' => 'Invertimos en la capacitación y desarrollo de nuestros empleados para garantizar que tengan las habilidades y conocimientos necesarios para brindar un servicio de alta calidad y a la vanguardia de la tecnología implementada en las motocicletas.',
-        ],
-    ];
+$policies = [
+[
+'title' => 'Satisfacción del cliente',
+'body' => 'Nos esforzamos por comprender y superar las expectativas de nuestros clientes en cada interacción.',
+],
+[
+'title' => 'Mejora continua',
+'body' => 'Buscamos constantemente formas de mejorar nuestros procesos y servicios para ofrecer la mejor calidad posible.',
+],
+[
+'title' => 'Desarrollo del personal',
+'body' => 'Invertimos en la capacitación y desarrollo de nuestros empleados para garantizar que tengan las habilidades y conocimientos necesarios para brindar un servicio de alta calidad y a la vanguardia de la tecnología implementada en las motocicletas.',
+],
+];
 @endphp
 
 {{-- Banner --}}
 <section class="relative w-full overflow-hidden bg-neutral-900">
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
         <img
-            src="images/about/banner-servicios.png"
+            src="images/about/NOSOTROS.jpg"
             alt="Nosotros Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-        >
+            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
         <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
         <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motoworld</p>
             <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
                 Nosotros
             </h1>
@@ -70,9 +68,9 @@
             Quiénes somos
         </h2>
         <p class="mt-5 text-sm md:text-base leading-relaxed text-neutral-600 text-justify">
-            Desde hace 3 años Moto World ha logrado posicionarse como uno de los talleres de motocicletas más
+            Desde el 2022, Moto World ha logrado posicionarse como uno de los talleres de motocicletas más
             importantes en Lima, brindando la confianza y seguridad al motociclista peruano. Contamos con el
-            respaldo de sólidas marcas con representación a nivel internacional.
+            respaldo de sólidas marcas con representación a nivel nacional e internacional.
         </p>
     </div>
 </section>
@@ -91,11 +89,10 @@
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="images/about/mision-motoworld.png"
+                        src="images/about/MISION.jpg"
                         alt="Misión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                    >
+                        loading="lazy">
                 </div>
                 <div class="p-6 md:p-8">
                     <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Nuestra misión</p>
@@ -116,8 +113,7 @@
                         src="images/about/vision.png"
                         alt="Visión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                    >
+                        loading="lazy">
                 </div>
                 <div class="p-6 md:p-8">
                     <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Nuestra visión</p>
@@ -151,21 +147,21 @@
 
             <div class="lg:col-span-7 space-y-4">
                 @foreach ($policies as $index => $policy)
-                    <article class="rounded-2xl border border-neutral-200 bg-white p-5 md:p-6 shadow-sm">
-                        <div class="flex gap-4">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-600 text-sm font-black text-white">
-                                {{ $index + 1 }}
-                            </span>
-                            <div>
-                                <h3 class="text-base font-black uppercase tracking-wide text-neutral-900 font-title">
-                                    {{ $policy['title'] }}
-                                </h3>
-                                <p class="mt-2 text-sm leading-relaxed text-neutral-600">
-                                    {{ $policy['body'] }}
-                                </p>
-                            </div>
+                <article class="rounded-2xl border border-neutral-200 bg-white p-5 md:p-6 shadow-sm">
+                    <div class="flex gap-4">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-600 text-sm font-black text-white">
+                            {{ $index + 1 }}
+                        </span>
+                        <div>
+                            <h3 class="text-base font-black uppercase tracking-wide text-neutral-900 font-title">
+                                {{ $policy['title'] }}
+                            </h3>
+                            <p class="mt-2 text-sm leading-relaxed text-neutral-600">
+                                {{ $policy['body'] }}
+                            </p>
                         </div>
-                    </article>
+                    </div>
+                </article>
                 @endforeach
 
                 <div class="rounded-2xl border border-orange-200 bg-orange-50 p-5 md:p-6">
@@ -195,14 +191,12 @@
         <div class="flex flex-wrap gap-3">
             <a
                 href="{{ route('shop.services.index') }}"
-                class="inline-flex items-center justify-center rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-orange-500 transition-colors"
-            >
+                class="inline-flex items-center justify-center rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-orange-500 transition-colors">
                 Reservar cita
             </a>
             <a
                 href="{{ route('shop.catalog', ['section' => 'accesorios']) }}"
-                class="inline-flex items-center justify-center rounded-xl border border-white/30 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white hover:border-orange-500 hover:text-orange-400 transition-colors"
-            >
+                class="inline-flex items-center justify-center rounded-xl border border-white/30 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white hover:border-orange-500 hover:text-orange-400 transition-colors">
                 Ver tienda
             </a>
         </div>
