@@ -34,7 +34,7 @@ class HandleCulqiWebhookAction
 
         match (true) {
             $type === 'order.status.changed' => $this->handleOrderStatusChanged($data),
-            $type === 'charge.creation.succeeded' => $this->handleChargeSucceeded($data),
+            $type === 'charge.creation.succeeded', $type === 'charge.succeeded' => $this->handleChargeSucceeded($data),
             default => Log::info('Culqi webhook ignorado', ['type' => $type]),
         };
     }

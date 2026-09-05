@@ -109,6 +109,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
     Route::get('/pedidos/{order}/estado', [CheckoutController::class, 'paymentStatus'])->name('orders.status');
+    Route::post('/pedidos/{order}/confirmar-3ds', [CheckoutController::class, 'confirmThreeDS'])->name('orders.confirm3ds');
     Route::post('/pedidos/{order}/simular-pago', [CheckoutController::class, 'simulatePaid'])->name('orders.simulate');
 });
 

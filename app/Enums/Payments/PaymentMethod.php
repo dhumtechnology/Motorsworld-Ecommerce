@@ -20,7 +20,7 @@ enum PaymentMethod: string
     }
 
     /**
-     * Métodos que requieren token generado en el frontend (Culqi o Mercado Pago).
+     * Métodos que requieren token generado en el frontend (Culqi JS / API segura).
      */
     public function requiresPaymentToken(): bool
     {

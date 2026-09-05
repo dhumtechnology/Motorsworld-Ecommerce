@@ -44,7 +44,7 @@ return [
     ],
 
     'mercadopago' => [
-        // true = simula pagos sin llaves (desarrollo local)
+        // Legado: el checkout usa Culqi. Se mantiene por cobros históricos.
         'fake' => (bool) env('MERCADOPAGO_FAKE', true),
         'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
         'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),

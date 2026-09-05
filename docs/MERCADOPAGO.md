@@ -1,6 +1,10 @@
-# Mercado Pago — Motoworld (paso a paso)
+# Mercado Pago — legado (el checkout usa Culqi)
 
-Checkout actual: **tarjeta (crédito/débito) + Yape** vía Payment Brick (formulario embebido, PCI-compliant).
+Este documento quedó de la integración anterior. El checkout actual cobra con **Culqi** (tarjeta débito/crédito y Yape).
+
+---
+
+Checkout anterior: **tarjeta (crédito/débito) + Yape** vía Payment Brick (formulario embebido, PCI-compliant).
 
 ## 0. Qué ya está en el código
 

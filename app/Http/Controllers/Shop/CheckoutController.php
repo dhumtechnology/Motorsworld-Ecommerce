@@ -5,21 +5,22 @@ namespace App\Http\Controllers\Shop;
 use App\Actions\Orders\CreateOrderFromCartAction;
 use App\Actions\Orders\DiscardFailedCheckoutOrderAction;
 use App\Actions\Orders\MarkOrderAsPaidAction;
-use App\Actions\Payments\ProcessMercadoPagoPaymentAction;
-use App\Actions\Payments\RefreshMercadoPagoPaymentStatusAction;
+use App\Actions\Payments\ProcessCulqiPaymentAction;
+use App\Actions\Payments\RefreshCulqiPaymentStatusAction;
 use App\Actions\Shop\ResolveOrCreateCustomerAction;
 use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\PaymentStatus;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\CheckoutPayRequest;
+use App\Http\Requests\Shop\ConfirmCulqi3DSRequest;
 use App\Models\Auth\User;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
 use App\Services\Orders\ProductPricingService;
-use App\Services\Payments\MercadoPago\Exceptions\MercadoPagoApiException;
+use App\Services\Payments\Culqi\Exceptions\CulqiApiException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -37,8 +38,8 @@ class CheckoutController extends Controller
         private readonly CartTotalsService $cartTotals,
         private readonly CreateOrderFromCartAction $createOrderFromCart,
         private readonly DiscardFailedCheckoutOrderAction $discardFailedOrder,
-        private readonly ProcessMercadoPagoPaymentAction $processPayment,
-        private readonly RefreshMercadoPagoPaymentStatusAction $refreshPaymentStatus,
+        private readonly ProcessCulqiPaymentAction $processPayment,
+        private readonly RefreshCulqiPaymentStatusAction $refreshPaymentStatus,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
         private readonly ResolveOrCreateCustomerAction $resolveOrCreateCustomer,
     ) {}
@@ -94,11 +95,12 @@ class CheckoutController extends Controller
             'totals' => $totals,
             'total' => $totals->chargeAmount(),
             'currency' => $totals->chargeCurrency(),
-            'mpPublicKey' => config('services.mercadopago.public_key'),
-            'mpFake' => (bool) config('services.mercadopago.fake'),
+            'culqiPublicKey' => config('services.culqi.public_key'),
+            'culqiFake' => (bool) config('services.culqi.fake'),
             'profile' => $profile,
             'user' => $user,
             'amount' => round((float) $totals->chargeAmount(), 2),
+            'amountCents' => (int) round((float) $totals->chargeAmount() * 100),
         ]);
     }
 
@@ -147,8 +149,9 @@ class CheckoutController extends Controller
             $result = $this->processPayment->execute(
                 $order,
                 $request->paymentMethod(),
-                $request->mercadoPagoFormData(),
+                $request->culqiToken(),
                 $request->customerDetails(),
+                $request->threeDS(),
             );
         } catch (ValidationException $e) {
             if ($order !== null) {
@@ -156,8 +159,8 @@ class CheckoutController extends Controller
             }
 
             throw $e;
-        } catch (MercadoPagoApiException $e) {
-            Log::error('Mercado Pago payment failed', [
+        } catch (CulqiApiException $e) {
+            Log::error('Culqi payment failed', [
                 'message' => $e->getMessage(),
                 'payload' => $e->payload,
                 'order_id' => $order?->id,
@@ -171,7 +174,7 @@ class CheckoutController extends Controller
                 return response()->json([
                     'message' => $e->getMessage(),
                     'errors' => ['payment' => [$e->getMessage()]],
-                    'mercadopago' => $e->payload,
+                    'culqi' => $e->payload,
                 ], 422);
             }
 
@@ -202,9 +205,29 @@ class CheckoutController extends Controller
                 ->withErrors(['payment' => 'El pago no fue aprobado. No se creó el pedido.']);
         }
 
-        // Aprobado o en confirmación: vaciar carrito y recordar acceso al pedido.
-        $cart->items()->delete();
         $this->rememberAccessibleOrder($request, $order);
+
+        if (! empty($result['needs_3ds'])) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'needs_3ds' => true,
+                    'message' => 'Tu banco requiere autenticación 3D Secure.',
+                    'order_id' => $order->id,
+                    'confirm_url' => route('shop.checkout.orders.confirm3ds', $order),
+                    'payment' => [
+                        'id' => $payment->id,
+                        'method' => $payment->method->value,
+                        'status' => $payment->status->value,
+                    ],
+                ]);
+            }
+
+            return redirect()
+                ->route('shop.checkout.orders.show', $order)
+                ->with('status', 'Tu banco requiere autenticación 3D Secure. Completa el desafío para confirmar el pago.');
+        }
+
+        $cart->items()->delete();
 
         if (! $payment->isPaid()) {
             if ($request->wantsJson()) {
@@ -215,7 +238,7 @@ class CheckoutController extends Controller
                         'id' => $payment->id,
                         'method' => $payment->method->value,
                         'status' => $payment->status->value,
-                        'mp_payment_id' => $payment->mp_payment_id,
+                        'culqi_charge_id' => $payment->culqi_charge_id,
                     ],
                     'redirect_url' => route('shop.checkout.orders.show', $order),
                 ]);
@@ -223,7 +246,7 @@ class CheckoutController extends Controller
 
             return redirect()
                 ->route('shop.checkout.orders.show', $order)
-                ->with('status', 'Estamos confirmando tu pago con Mercado Pago…');
+                ->with('status', 'Estamos confirmando tu pago con Culqi…');
         }
 
         if ($request->wantsJson()) {
@@ -234,8 +257,82 @@ class CheckoutController extends Controller
                     'id' => $payment->id,
                     'method' => $payment->method->value,
                     'status' => $payment->status->value,
-                    'mp_payment_id' => $payment->mp_payment_id,
+                    'culqi_charge_id' => $payment->culqi_charge_id,
                 ],
+                'redirect_url' => route('shop.checkout.orders.show', $order),
+            ]);
+        }
+
+        return redirect()
+            ->route('shop.checkout.orders.show', $order)
+            ->with('status', '¡Pago exitoso! Gracias por tu compra.');
+    }
+
+    public function confirmThreeDS(ConfirmCulqi3DSRequest $request, Order $order): JsonResponse|RedirectResponse
+    {
+        $this->assertCanAccessOrder($request, $order);
+
+        try {
+            $order->loadMissing(['user.customerProfile', 'shippingAddress']);
+
+            $result = $this->processPayment->confirmThreeDS(
+                $order,
+                $request->authentication3DS(),
+                [
+                    'first_name' => $order->user?->customerProfile?->first_name,
+                    'last_name' => $order->user?->customerProfile?->last_name,
+                    'phone' => $order->user?->customerProfile?->phone,
+                    'address' => $order->shippingAddress?->line1,
+                    'city' => $order->shippingAddress?->city,
+                ],
+            );
+        } catch (CulqiApiException $e) {
+            $this->discardFailedOrder->execute($order);
+
+            Log::error('Culqi 3DS confirmation failed', [
+                'message' => $e->getMessage(),
+                'payload' => $e->payload,
+                'order_id' => $order->id,
+            ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'errors' => ['payment' => [$e->getMessage()]],
+                    'culqi' => $e->payload,
+                ], 422);
+            }
+
+            return redirect()
+                ->route('shop.checkout.show')
+                ->withErrors(['payment' => $e->getMessage()]);
+        }
+
+        $order = $result['order'];
+        $payment = $result['payment'];
+
+        if (! $payment->isPaid()) {
+            $this->discardFailedOrder->execute($order);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'No se pudo confirmar la autenticación 3DS.',
+                    'errors' => ['payment' => ['No se pudo confirmar la autenticación 3DS.']],
+                ], 422);
+            }
+
+            return redirect()
+                ->route('shop.checkout.show')
+                ->withErrors(['payment' => 'No se pudo confirmar la autenticación 3DS.']);
+        }
+
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+        $cart->items()->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Pago realizado correctamente.',
+                'order_id' => $order->id,
                 'redirect_url' => route('shop.checkout.orders.show', $order),
             ]);
         }
@@ -278,14 +375,14 @@ class CheckoutController extends Controller
                 'order' => $order,
                 'payment' => $payment,
                 'statusUrl' => route('shop.checkout.orders.status', $order),
-                'mpFake' => (bool) config('services.mercadopago.fake'),
+                'culqiFake' => (bool) config('services.culqi.fake'),
             ]);
         }
 
         return view('shop.checkout.order', [
             'order' => $order,
             'payment' => $payment,
-            'mpFake' => (bool) config('services.mercadopago.fake'),
+            'culqiFake' => (bool) config('services.culqi.fake'),
         ]);
     }
 
@@ -319,11 +416,11 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Solo con MERCADOPAGO_FAKE=true: simula confirmación de pago pendiente.
+     * Solo con CULQI_FAKE=true: simula confirmación de pago pendiente.
      */
     public function simulatePaid(Request $request, Order $order): RedirectResponse
     {
-        abort_unless((bool) config('services.mercadopago.fake'), 404);
+        abort_unless((bool) config('services.culqi.fake'), 404);
         $this->assertCanAccessOrder($request, $order);
 
         if ($order->payment_status === PaymentStatus::Paid) {
@@ -336,7 +433,7 @@ class CheckoutController extends Controller
 
         if ($payment !== null && $payment->status === PaymentRecordStatus::Pending) {
             $payload = $payment->provider_payload ?? [];
-            $payload['status'] = 'approved';
+            $payload['outcome'] = ['type' => 'venta_exitosa'];
             $payload['simulated_at'] = now()->toIso8601String();
             $payment->update(['provider_payload' => $payload]);
         }
@@ -344,7 +441,7 @@ class CheckoutController extends Controller
         $this->markOrderAsPaid->execute(
             $order,
             $payment,
-            'Pago simulado (MERCADOPAGO_FAKE=true)',
+            'Pago simulado (CULQI_FAKE=true)',
         );
 
         return redirect()

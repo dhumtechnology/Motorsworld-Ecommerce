@@ -34,14 +34,14 @@
             <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-600">Pedido #{{ $order->id }}</p>
             <h1 class="mt-3 text-2xl font-black uppercase tracking-wide text-neutral-900">Confirmando tu pago</h1>
             <p class="mt-3 text-sm text-neutral-600">
-                Mercado Pago aún está procesando la transacción.
+                Culqi aún está procesando la transacción.
                 El resumen del pedido se mostrará automáticamente cuando el pago sea aprobado.
             </p>
             <p id="processing-status" class="mt-4 text-xs font-bold uppercase tracking-widest text-neutral-400">
                 Estado: {{ $payment?->status->value ?? 'pending' }}
             </p>
 
-            @if ($mpFake ?? false)
+            @if ($culqiFake ?? false)
                 <form method="POST" action="{{ route('shop.checkout.orders.simulate', $order) }}" class="mt-6">
                     @csrf
                     <button type="submit" class="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-sky-500">

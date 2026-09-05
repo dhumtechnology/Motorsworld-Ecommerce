@@ -16,7 +16,7 @@
         <div class="mb-8 md:mb-10">
             <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-500">Pago seguro</p>
             <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-wide text-white">Checkout</h1>
-            <p class="mt-2 max-w-xl text-sm text-white/70">Tarjeta de crédito/débito o Yape · Mercado Pago</p>
+            <p class="mt-2 max-w-xl text-sm text-white/70">Tarjeta de crédito/débito o Yape · Culqi</p>
         </div>
 
         @if ($errors->any())
@@ -25,10 +25,10 @@
             </div>
         @endif
 
-        @if (! $mpFake && ! $mpPublicKey)
+        @if (! $culqiFake && ! $culqiPublicKey)
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                Configura <code class="font-mono">MERCADOPAGO_PUBLIC_KEY</code> y <code class="font-mono">MERCADOPAGO_ACCESS_TOKEN</code>,
-                o usa <code class="font-mono">MERCADOPAGO_FAKE=true</code> para probar sin llaves.
+                Configura <code class="font-mono">CULQI_PUBLIC_KEY</code> y <code class="font-mono">CULQI_SECRET_KEY</code>,
+                o usa <code class="font-mono">CULQI_FAKE=true</code> para probar sin llaves.
             </div>
         @endif
 
@@ -43,11 +43,8 @@
                 >
                     @csrf
                     <input type="hidden" name="payment_method" id="payment_method" value="card">
-                    <input type="hidden" name="mp_token" id="mp_token" value="">
-                    <input type="hidden" name="mp_payment_method_id" id="mp_payment_method_id" value="">
-                    <input type="hidden" name="mp_installments" id="mp_installments" value="1">
-                    <input type="hidden" name="mp_issuer_id" id="mp_issuer_id" value="">
-                    <input type="hidden" name="mp_form_data" id="mp_form_data" value="">
+                    <input type="hidden" name="culqi_token" id="culqi_token" value="">
+                    <input type="hidden" name="device_finger_print_id" id="device_finger_print_id" value="">
 
                     {{-- Comprador --}}
                     <section class="space-y-4">
@@ -168,48 +165,44 @@
                         </div>
 
                         <div id="card-payment-panel" class="space-y-3">
-                            @if ($mpFake)
-                                <div class="space-y-4 rounded-2xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-4">
-                                    <div>
-                                        <label class="{{ $labelClass }}" for="fake_card_number">Número de tarjeta</label>
-                                        <input id="fake_card_number" inputmode="numeric" placeholder="5031 7557 3456 0604" class="{{ $fieldClass }}">
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-3">
-                                        <div>
-                                            <label class="{{ $labelClass }}" for="fake_exp">Vence</label>
-                                            <input id="fake_exp" placeholder="11/25" class="{{ $fieldClass }}">
-                                        </div>
-                                        <div>
-                                            <label class="{{ $labelClass }}" for="fake_cvv">CVV</label>
-                                            <input id="fake_cvv" placeholder="123" maxlength="4" class="{{ $fieldClass }}">
-                                        </div>
-                                        <div>
-                                            <label class="{{ $labelClass }}" for="fake_doc">DNI</label>
-                                            <input id="fake_doc" placeholder="12345678" class="{{ $fieldClass }}" value="{{ old('customer_document', $profile?->document) }}">
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-neutral-500">Modo fake: no se envía a Mercado Pago.</p>
+                            <div class="space-y-4 rounded-2xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-4">
+                                <div>
+                                    <label class="{{ $labelClass }}" for="card_number">Número de tarjeta</label>
+                                    <input id="card_number" inputmode="numeric" autocomplete="cc-number" placeholder="4111 1111 1111 1111" maxlength="19" class="{{ $fieldClass }}">
                                 </div>
-                            @else
-                                <div id="cardPaymentBrick_container" class="min-h-[200px] rounded-2xl border border-neutral-200 bg-neutral-50/60 p-2 sm:p-3"></div>
-                                <p class="text-xs text-neutral-500">Visa, Mastercard, etc. (crédito o débito) en el mismo formulario.</p>
-                            @endif
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="{{ $labelClass }}" for="card_exp">Vence</label>
+                                        <input id="card_exp" inputmode="numeric" autocomplete="cc-exp" placeholder="12/30" maxlength="5" class="{{ $fieldClass }}">
+                                    </div>
+                                    <div>
+                                        <label class="{{ $labelClass }}" for="card_cvv">CVV</label>
+                                        <input id="card_cvv" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" class="{{ $fieldClass }}">
+                                    </div>
+                                </div>
+                                <p class="text-xs text-neutral-500">
+                                    Visa, Mastercard y otras (crédito o débito) en el mismo formulario.
+                                    @if ($culqiFake)
+                                        Modo fake: no se envía a Culqi.
+                                    @endif
+                                </p>
+                            </div>
                         </div>
 
                         <div id="yape-payment-panel" class="hidden space-y-4 rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-4">
                             <p class="text-sm text-neutral-600">
-                                Abre Yape, genera el código de aprobación e ingrésalo junto a tu celular.
+                                Abre Yape, genera el código de aprobación e ingrésalo junto a tu celular. Máximo S/ 2,000.00.
                             </p>
                             <div>
                                 <label class="{{ $labelClass }}" for="yape_phone">Celular Yape *</label>
-                                <input id="yape_phone" name="yape_phone" inputmode="tel" placeholder="999999999"
+                                <input id="yape_phone" inputmode="tel" placeholder="999999999"
                                        value="{{ old('phone', $profile?->phone) }}" class="{{ $fieldClass }}">
                             </div>
                             <div>
                                 <label class="{{ $labelClass }}" for="yape_otp">Código OTP (6 dígitos) *</label>
-                                <input id="yape_otp" name="yape_otp" inputmode="numeric" placeholder="123456" maxlength="6" class="{{ $fieldClass }}">
+                                <input id="yape_otp" inputmode="numeric" placeholder="123456" maxlength="6" class="{{ $fieldClass }}">
                             </div>
-                            @if ($mpFake)
+                            @if ($culqiFake)
                                 <p class="text-xs text-neutral-500">Modo fake: cualquier OTP simula el pago.</p>
                             @endif
                         </div>
@@ -226,7 +219,7 @@
                     </button>
 
                     <p class="text-center text-[11px] text-neutral-400">
-                        Procesado por Mercado Pago · Datos de tarjeta tokenizados (PCI)
+                        Procesado por Culqi · Datos de tarjeta tokenizados (PCI)
                     </p>
                 </form>
             </div>
@@ -323,15 +316,17 @@
 
 <script>
 window.MotoworldCheckout = {
-    publicKey: @json($mpPublicKey),
+    publicKey: @json($culqiPublicKey),
     amount: {{ (float) $amount }},
-    fake: @json((bool) $mpFake),
-    locale: 'es-PE',
+    amountCents: {{ (int) $amountCents }},
+    currency: @json($currency ?? 'PEN'),
+    fake: @json((bool) $culqiFake),
+    yapeMaxCents: 200000,
 };
 </script>
 
-@if (! $mpFake && $mpPublicKey)
-<script src="https://sdk.mercadopago.com/js/v2"></script>
+@if (! $culqiFake && $culqiPublicKey)
+<script src="https://3ds.culqi.com" defer></script>
 @endif
 
 <script>
@@ -343,17 +338,16 @@ window.MotoworldCheckout = {
     const errorEl = document.getElementById('payment-error');
     const payButton = document.getElementById('pay-button');
     const paymentMethodInput = document.getElementById('payment_method');
-    const mpToken = document.getElementById('mp_token');
-    const mpPaymentMethodId = document.getElementById('mp_payment_method_id');
-    const mpInstallments = document.getElementById('mp_installments');
-    const mpIssuerId = document.getElementById('mp_issuer_id');
-    const mpFormData = document.getElementById('mp_form_data');
+    const tokenInput = document.getElementById('culqi_token');
+    const deviceInput = document.getElementById('device_finger_print_id');
     const cardPanel = document.getElementById('card-payment-panel');
     const yapePanel = document.getElementById('yape-payment-panel');
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+        || form.querySelector('input[name="_token"]')?.value
+        || '';
 
     let selectedPayMethod = 'card';
-    let cardBrickController = null;
-    let mp = null;
+    let pending3DS = null;
 
     const deliveryFields = document.getElementById('delivery-address-fields');
     const addressLine = document.getElementById('address_line1');
@@ -405,62 +399,211 @@ window.MotoworldCheckout = {
     });
     setPayMethod('card');
 
+    const cardNumberEl = document.getElementById('card_number');
+    const cardExpEl = document.getElementById('card_exp');
+    cardNumberEl?.addEventListener('input', () => {
+        const digits = cardNumberEl.value.replace(/\D+/g, '').slice(0, 16);
+        cardNumberEl.value = digits.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+    });
+    cardExpEl?.addEventListener('input', () => {
+        let value = cardExpEl.value.replace(/\D+/g, '').slice(0, 4);
+        if (value.length >= 3) value = value.slice(0, 2) + '/' + value.slice(2);
+        cardExpEl.value = value;
+    });
+
     function randomId(prefix) {
         return prefix + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
     }
 
-    function payerPayload() {
-        return {
-            email: document.getElementById('customer_email')?.value,
-            identification: {
-                type: 'DNI',
-                number: document.getElementById('customer_document')?.value,
+    function customerEmail() {
+        return (document.getElementById('customer_email')?.value || '').trim();
+    }
+
+    function parseExpiration(value) {
+        const match = String(value || '').match(/^(\d{1,2})\s*\/\s*(\d{2}|\d{4})$/);
+        if (!match) return null;
+        const month = match[1].padStart(2, '0');
+        let year = match[2];
+        if (year.length === 2) year = '20' + year;
+        if (Number(month) < 1 || Number(month) > 12) return null;
+        return { month, year };
+    }
+
+    async function culqiFetch(path, payload) {
+        const response = await fetch('https://secure.culqi.com/v2' + path, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + cfg.publicKey,
             },
-        };
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.id) {
+            throw new Error(data.user_message || data.merchant_message || data.message || 'No se pudo tokenizar el pago.');
+        }
+        return data.id;
     }
 
-    async function mountCardBrick() {
-        if (cfg.fake || !cfg.publicKey || typeof MercadoPago === 'undefined') {
-            return;
+    async function createCardToken() {
+        if (cfg.fake) return randomId('tkn_test_fake_');
+        if (!cfg.publicKey) throw new Error('Falta CULQI_PUBLIC_KEY.');
+
+        const number = (document.getElementById('card_number')?.value || '').replace(/\D+/g, '');
+        const cvv = (document.getElementById('card_cvv')?.value || '').replace(/\D+/g, '');
+        const exp = parseExpiration(document.getElementById('card_exp')?.value);
+        const email = customerEmail();
+
+        if (number.length < 13) throw new Error('Ingresa un número de tarjeta válido.');
+        if (!exp) throw new Error('Ingresa el vencimiento en formato MM/AA.');
+        if (cvv.length < 3) throw new Error('Ingresa el CVV.');
+        if (!email) throw new Error('Ingresa tu correo.');
+
+        return culqiFetch('/tokens', {
+            card_number: number,
+            cvv,
+            expiration_month: exp.month,
+            expiration_year: exp.year,
+            email,
+            metadata: {
+                dni: document.getElementById('customer_document')?.value || '',
+            },
+        });
+    }
+
+    async function createYapeToken() {
+        const phone = (document.getElementById('yape_phone')?.value || '').replace(/\D+/g, '').slice(-9);
+        const otp = (document.getElementById('yape_otp')?.value || '').replace(/\D+/g, '');
+
+        if (phone.length !== 9) throw new Error('Ingresa un celular Yape válido.');
+        if (otp.length !== 6) throw new Error('El OTP de Yape debe tener 6 dígitos.');
+        if (cfg.currency && cfg.currency !== 'PEN') throw new Error('Yape solo acepta pagos en soles.');
+        if (Number(cfg.amountCents) > Number(cfg.yapeMaxCents)) {
+            throw new Error('Yape acepta un máximo de S/ 2,000.00.');
         }
 
-        mp = new MercadoPago(cfg.publicKey, { locale: cfg.locale || 'es-PE' });
+        if (cfg.fake) return randomId('ype_test_fake_');
+        if (!cfg.publicKey) throw new Error('Falta CULQI_PUBLIC_KEY.');
 
+        return culqiFetch('/tokens/yape', {
+            number_phone: phone,
+            otp,
+            amount: Number(cfg.amountCents),
+        });
+    }
+
+    async function generateDeviceId() {
+        if (cfg.fake || typeof Culqi3DS === 'undefined' || typeof Culqi3DS.generateDevice !== 'function') {
+            return '';
+        }
         try {
-            const bricksBuilder = mp.bricks();
-            cardBrickController = await bricksBuilder.create('cardPayment', 'cardPaymentBrick_container', {
-                initialization: {
-                    amount: Number(cfg.amount),
-                },
-                customization: {
-                    visual: {
-                        hidePaymentButton: true,
-                        style: {
-                            theme: 'default',
-                            customVariables: {
-                                baseColor: '#ff6600',
-                                formBackgroundColor: 'transparent',
-                            },
-                        },
-                    },
-                },
-                callbacks: {
-                    onReady: () => {},
-                    onError: (error) => {
-                        console.error(error);
-                        showError(error?.message || 'Error en el formulario de tarjeta.');
-                    },
-                    onSubmit: () => Promise.resolve(),
-                },
-            });
-            window.cardPaymentBrickController = cardBrickController;
+            Culqi3DS.publicKey = cfg.publicKey;
+            const id = await Culqi3DS.generateDevice();
+            return id || '';
         } catch (err) {
-            console.error(err);
-            showError('No se pudo cargar el formulario de tarjeta de Mercado Pago.');
+            console.warn('Culqi3DS.generateDevice', err);
+            return '';
         }
     }
 
-    mountCardBrick();
+    function firstError(data) {
+        if (!data) return 'No se pudo procesar el pago.';
+        if (data.message) return data.message;
+        const errors = data.errors;
+        if (errors && typeof errors === 'object') {
+            const first = Object.values(errors)[0];
+            if (Array.isArray(first) && first[0]) return first[0];
+            if (typeof first === 'string') return first;
+        }
+        return 'No se pudo procesar el pago.';
+    }
+
+    async function postJson(url, extra = {}) {
+        const body = new FormData(form);
+        Object.entries(extra).forEach(([key, value]) => {
+            if (value === undefined || value === null) return;
+            if (typeof value === 'object') {
+                Object.entries(value).forEach(([nested, nestedValue]) => {
+                    if (nestedValue != null && nestedValue !== '') {
+                        body.set(key + '[' + nested + ']', String(nestedValue));
+                    }
+                });
+                return;
+            }
+            body.set(key, String(value));
+        });
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrf,
+            },
+            credentials: 'same-origin',
+            body,
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(firstError(data));
+        }
+        return data;
+    }
+
+    function startThreeDS(token, confirmUrl) {
+        return new Promise((resolve, reject) => {
+            if (typeof Culqi3DS === 'undefined') {
+                reject(new Error('No se pudo cargar Culqi 3DS.'));
+                return;
+            }
+
+            pending3DS = { resolve, reject, confirmUrl, handled: false };
+
+            Culqi3DS.publicKey = cfg.publicKey;
+            Culqi3DS.settings = {
+                charge: {
+                    totalAmount: Number(cfg.amountCents),
+                    returnUrl: window.location.href,
+                    currency: cfg.currency || 'PEN',
+                },
+                card: { email: customerEmail() },
+            };
+            Culqi3DS.options = {
+                showModal: true,
+                showLoading: true,
+                showIcon: true,
+                style: { btnColor: '#ea580c', btnTextColor: '#FFFFFF' },
+            };
+
+            Culqi3DS.initAuthentication(token);
+        });
+    }
+
+    window.addEventListener('message', async (event) => {
+        if (event.origin !== window.location.origin || !pending3DS || pending3DS.handled) return;
+        const response = event.data || {};
+        if (response.parameters3DS) {
+            pending3DS.handled = true;
+            const confirmUrl = pending3DS.confirmUrl;
+            const finish = pending3DS.resolve;
+            const fail = pending3DS.reject;
+            pending3DS = null;
+            try {
+                if (typeof Culqi3DS !== 'undefined' && typeof Culqi3DS.reset === 'function') {
+                    Culqi3DS.reset();
+                }
+                const result = await postJson(confirmUrl, { authentication_3DS: response.parameters3DS });
+                finish(result);
+            } catch (err) {
+                fail(err);
+            }
+        } else if (response.error) {
+            pending3DS.handled = true;
+            pending3DS.reject(new Error(typeof response.error === 'string' ? response.error : 'No se pudo autenticar la transacción.'));
+            pending3DS = null;
+        }
+    });
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -468,76 +611,40 @@ window.MotoworldCheckout = {
         payButton.disabled = true;
 
         try {
-            if (selectedPayMethod === 'yape') {
-                const phone = (document.getElementById('yape_phone')?.value || '').replace(/\D+/g, '');
-                const otp = (document.getElementById('yape_otp')?.value || '').replace(/\D+/g, '');
+            const token = selectedPayMethod === 'yape'
+                ? await createYapeToken()
+                : await createCardToken();
 
-                if (phone.length < 9) {
-                    throw new Error('Ingresa un celular Yape válido.');
-                }
-                if (otp.length !== 6) {
-                    throw new Error('El OTP de Yape debe tener 6 dígitos.');
-                }
+            paymentMethodInput.value = selectedPayMethod;
+            tokenInput.value = token;
 
-                let token;
-                if (cfg.fake) {
-                    token = randomId('ype_test_fake_');
-                } else {
-                    if (!mp) {
-                        mp = new MercadoPago(cfg.publicKey, { locale: cfg.locale || 'es-PE' });
-                    }
-                    const yape = mp.yape({ phoneNumber: phone, otp: otp });
-                    const yapeResult = await yape.create();
-                    token = yapeResult?.id || yapeResult?.token;
-                    if (!token) {
-                        throw new Error('No se pudo generar el token Yape. Revisa celular y OTP.');
-                    }
-                }
-
-                paymentMethodInput.value = 'yape';
-                mpToken.value = token;
-                mpPaymentMethodId.value = 'yape';
-                mpInstallments.value = '1';
-                mpIssuerId.value = '';
-                mpFormData.value = JSON.stringify({
-                    token,
-                    payment_method_id: 'yape',
-                    installments: 1,
-                    payer: payerPayload(),
-                });
+            let deviceId = '';
+            if (selectedPayMethod === 'card' && !cfg.fake) {
+                deviceId = await generateDeviceId();
+                deviceInput.value = deviceId;
             } else {
-                let formData;
-
-                if (cfg.fake) {
-                    const token = randomId('tkn_test_fake_');
-                    formData = {
-                        token,
-                        payment_method_id: 'visa',
-                        installments: 1,
-                        payer: payerPayload(),
-                    };
-                } else {
-                    if (!cardBrickController || typeof cardBrickController.getFormData !== 'function') {
-                        throw new Error('El formulario de tarjeta aún no está listo.');
-                    }
-                    formData = await cardBrickController.getFormData();
-                    if (!formData?.token) {
-                        throw new Error('Completa los datos de la tarjeta.');
-                    }
-                }
-
-                paymentMethodInput.value = 'card';
-                mpToken.value = formData.token;
-                mpPaymentMethodId.value = formData.payment_method_id || '';
-                mpInstallments.value = String(formData.installments || 1);
-                mpIssuerId.value = formData.issuer_id != null ? String(formData.issuer_id) : '';
-                mpFormData.value = JSON.stringify({
-                    ...formData,
-                    payer: formData.payer || payerPayload(),
-                });
+                deviceInput.value = '';
             }
 
-            form.submit();
+            const data = await postJson(form.action, {
+                culqi_token: token,
+                device_finger_print_id: deviceId,
+            });
+
+            if (data.needs_3ds && data.confirm_url) {
+                const confirmed = await startThreeDS(token, data.confirm_url);
+                if (confirmed.redirect_url) {
+                    window.location.href = confirmed.redirect_url;
+                    return;
+                }
+            }
+
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+
+            throw new Error(data.message || 'No se recibió confirmación del pago.');
         } catch (err) {
             showError(err?.message || 'No se pudo preparar el pago.');
         }

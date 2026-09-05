@@ -14,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class ProcessCulqiPaymentAction
 {
+    public const YAPE_MAX_CENTS = 200000;
+
     public function __construct(
         private readonly CulqiClient $culqi,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
@@ -27,7 +29,11 @@ class ProcessCulqiPaymentAction
      *     address?: ?string,
      *     city?: ?string
      * }  $customer
-     * @return array{order: Order, payment: Payment, culqi: array<string, mixed>}
+     * @param  array{
+     *     device_finger_print_id?: ?string,
+     *     authentication_3DS?: ?array<string, mixed>
+     * }  $threeDS
+     * @return array{order: Order, payment: Payment, culqi: array<string, mixed>, needs_3ds: bool}
      *
      * @throws ValidationException
      * @throws CulqiApiException
@@ -37,6 +43,7 @@ class ProcessCulqiPaymentAction
         PaymentMethod $method,
         ?string $culqiToken = null,
         array $customer = [],
+        array $threeDS = [],
     ): array {
         if ($order->payment_status === PaymentStatus::Paid) {
             throw ValidationException::withMessages([
@@ -44,19 +51,18 @@ class ProcessCulqiPaymentAction
             ]);
         }
 
-        $order->loadMissing(['user.customerProfile', 'shippingAddress']);
-
-        if ($method->requiresCulqiToken()) {
-            $this->assertValidToken($method, $culqiToken);
-        }
-
-        $amountCents = $this->amountInCents($order);
-
-        if ($method === PaymentMethod::Plin && ($amountCents < 600 || $amountCents > 50000)) {
+        if (! in_array($method, [PaymentMethod::Card, PaymentMethod::Yape], true)) {
             throw ValidationException::withMessages([
-                'method' => 'Plin solo acepta montos entre S/ 6.00 y S/ 500.00.',
+                'payment_method' => 'Solo se aceptan tarjeta o Yape.',
             ]);
         }
+
+        $order->loadMissing(['user.customerProfile', 'shippingAddress']);
+
+        $this->assertValidToken($method, $culqiToken);
+        $this->assertYapeLimits($order, $method);
+
+        $amountCents = $this->amountInCents($order);
 
         $payment = Payment::query()->create([
             'order_id' => $order->id,
@@ -69,20 +75,7 @@ class ProcessCulqiPaymentAction
         ]);
 
         try {
-            $culqiResponse = match ($method) {
-                PaymentMethod::Card, PaymentMethod::Yape => $this->charge(
-                    $order,
-                    $payment,
-                    $culqiToken,
-                    $customer,
-                ),
-                PaymentMethod::PagoEfectivo, PaymentMethod::Plin => $this->createPaymentOrder(
-                    $order,
-                    $payment,
-                    $method,
-                    $customer,
-                ),
-            };
+            return $this->charge($order, $payment, (string) $culqiToken, $customer, $threeDS);
         } catch (CulqiApiException $e) {
             $payment->update([
                 'status' => PaymentRecordStatus::Failed,
@@ -95,30 +88,99 @@ class ProcessCulqiPaymentAction
 
             throw $e;
         }
+    }
 
-        return [
-            'order' => $order->fresh(['items.product', 'payments']),
-            'payment' => $payment->fresh(),
-            'culqi' => $culqiResponse,
-        ];
+    /**
+     * Segundo intento de cargo tras autenticación 3DS (mismo token y device id).
+     *
+     * @param  array<string, mixed>  $authentication3DS
+     * @return array{order: Order, payment: Payment, culqi: array<string, mixed>, needs_3ds: bool}
+     *
+     * @throws ValidationException
+     * @throws CulqiApiException
+     */
+    public function confirmThreeDS(Order $order, array $authentication3DS, array $customer = []): array
+    {
+        $order->loadMissing(['user.customerProfile', 'shippingAddress', 'payments']);
+        $payment = $order->latestPayment();
+
+        if ($payment === null || $payment->provider !== 'culqi') {
+            throw ValidationException::withMessages([
+                'payment' => 'No hay un pago Culqi pendiente de autenticación.',
+            ]);
+        }
+
+        if ($payment->isPaid()) {
+            return [
+                'order' => $order,
+                'payment' => $payment,
+                'culqi' => $payment->provider_payload ?? [],
+                'needs_3ds' => false,
+            ];
+        }
+
+        $token = (string) $payment->source_id;
+        if ($token === '' || ! str_starts_with($token, 'tkn_')) {
+            throw ValidationException::withMessages([
+                'culqi_token' => 'El pago pendiente no tiene un token de tarjeta válido.',
+            ]);
+        }
+
+        $stored = is_array($payment->provider_payload) ? $payment->provider_payload : [];
+        $deviceId = $stored['device_finger_print_id'] ?? null;
+
+        try {
+            return $this->charge($order, $payment, $token, $customer, [
+                'device_finger_print_id' => is_string($deviceId) ? $deviceId : null,
+                'authentication_3DS' => $authentication3DS,
+            ]);
+        } catch (CulqiApiException $e) {
+            $payment->update([
+                'status' => PaymentRecordStatus::Failed,
+                'provider_payload' => $e->payload,
+            ]);
+
+            $order->update([
+                'payment_status' => PaymentStatus::Failed,
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
      * @param  array<string, mixed>  $customer
-     * @return array<string, mixed>
+     * @param  array{
+     *     device_finger_print_id?: ?string,
+     *     authentication_3DS?: ?array<string, mixed>
+     * }  $threeDS
+     * @return array{order: Order, payment: Payment, culqi: array<string, mixed>, needs_3ds: bool}
      */
     private function charge(
         Order $order,
         Payment $payment,
         string $culqiToken,
         array $customer,
+        array $threeDS = [],
     ): array {
         $user = $order->user;
         $profile = $user?->customerProfile;
+        $deviceId = trim((string) ($threeDS['device_finger_print_id'] ?? ''));
+        $authentication3DS = $threeDS['authentication_3DS'] ?? null;
+
+        $antifraud = array_filter([
+            'first_name' => $customer['first_name'] ?? $profile?->first_name,
+            'last_name' => $customer['last_name'] ?? $profile?->last_name,
+            'phone_number' => $this->normalizePhone($customer['phone'] ?? $profile?->phone),
+            'address' => $customer['address'] ?? $order->shippingAddress?->line1,
+            'address_city' => $customer['city'] ?? $order->shippingAddress?->city ?? 'Lima',
+            'country_code' => 'PE',
+            'device_finger_print_id' => $deviceId !== '' ? $deviceId : null,
+        ], fn ($value) => $value !== null && $value !== '');
 
         $payload = [
             'amount' => $payment->amount_cents,
-            'currency_code' => $order->currency,
+            'currency_code' => strtoupper((string) $order->currency),
             'email' => $user->email,
             'source_id' => $culqiToken,
             'capture' => true,
@@ -127,17 +189,47 @@ class ProcessCulqiPaymentAction
                 'order_id' => (string) $order->id,
                 'payment_id' => (string) $payment->id,
             ],
-            'antifraud_details' => array_filter([
-                'first_name' => $customer['first_name'] ?? $profile?->first_name,
-                'last_name' => $customer['last_name'] ?? $profile?->last_name,
-                'phone_number' => $this->normalizePhone($customer['phone'] ?? $profile?->phone),
-                'address' => $customer['address'] ?? $order->shippingAddress?->line1,
-                'address_city' => $customer['city'] ?? $order->shippingAddress?->city ?? 'Lima',
-                'country_code' => 'PE',
-            ], fn ($value) => $value !== null && $value !== ''),
+            'antifraud_details' => $antifraud,
         ];
 
-        $response = $this->culqi->createCharge($payload);
+        if (is_array($authentication3DS) && $authentication3DS !== []) {
+            $payload['authentication_3DS'] = array_filter([
+                'eci' => $authentication3DS['eci'] ?? null,
+                'xid' => $authentication3DS['xid'] ?? null,
+                'cavv' => $authentication3DS['cavv'] ?? null,
+                'protocolVersion' => $authentication3DS['protocolVersion'] ?? null,
+                'directoryServerTransactionId' => $authentication3DS['directoryServerTransactionId'] ?? null,
+            ], fn ($value) => $value !== null && $value !== '');
+        }
+
+        $result = $this->culqi->createCharge($payload);
+        $response = $result['body'];
+
+        if ($result['needs_3ds']) {
+            $payment->update([
+                'provider_payload' => [
+                    ...$response,
+                    'device_finger_print_id' => $deviceId !== '' ? $deviceId : null,
+                    'needs_3ds' => true,
+                ],
+                'status' => PaymentRecordStatus::Pending,
+            ]);
+
+            return [
+                'order' => $order->fresh(['items.product', 'payments']),
+                'payment' => $payment->fresh(),
+                'culqi' => $response,
+                'needs_3ds' => true,
+            ];
+        }
+
+        if (! $this->culqi->isSuccessfulCharge($response)) {
+            throw CulqiApiException::fromApi(
+                $result['http_status'],
+                (string) ($response['user_message'] ?? $response['merchant_message'] ?? 'El cargo no fue aprobado.'),
+                $response,
+            );
+        }
 
         $payment->update([
             'culqi_charge_id' => $response['id'] ?? null,
@@ -152,74 +244,44 @@ class ProcessCulqiPaymentAction
             'Pago Culqi cargo '.($response['id'] ?? ''),
         );
 
-        return $response;
-    }
-
-    /**
-     * @param  array<string, mixed>  $customer
-     * @return array<string, mixed>
-     */
-    private function createPaymentOrder(
-        Order $order,
-        Payment $payment,
-        PaymentMethod $method,
-        array $customer,
-    ): array {
-        $user = $order->user;
-        $profile = $user?->customerProfile;
-
-        $firstName = $customer['first_name'] ?? $profile?->first_name;
-        $lastName = $customer['last_name'] ?? $profile?->last_name;
-        $phone = $this->normalizePhone($customer['phone'] ?? $profile?->phone);
-
-        if ($firstName === null || $lastName === null || $phone === null) {
-            throw ValidationException::withMessages([
-                'customer' => 'Para PagoEfectivo/Plin se requieren nombre, apellido y teléfono.',
-            ]);
-        }
-
-        $expirationHours = (int) config('services.culqi.order_expiration_hours', 24);
-
-        $payload = [
-            'amount' => $payment->amount_cents,
-            'currency_code' => $order->currency,
-            'description' => 'Pedido #'.$order->id.' — Motoworld',
-            'order_number' => 'MW-'.$order->id.'-'.now()->timestamp,
-            'client_details' => [
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $user->email,
-                'phone_number' => $phone,
-            ],
-            'expiration_date' => now()->addHours($expirationHours)->timestamp,
-            'confirm' => true,
-            'metadata' => [
-                'order_id' => (string) $order->id,
-                'payment_id' => (string) $payment->id,
-                'method' => $method->value,
-            ],
+        return [
+            'order' => $order->fresh(['items.product', 'payments']),
+            'payment' => $payment->fresh(),
+            'culqi' => $response,
+            'needs_3ds' => false,
         ];
-
-        $response = $this->culqi->createOrder($payload);
-
-        $payment->update([
-            'culqi_order_id' => $response['id'] ?? null,
-            'payment_code' => $response['payment_code'] ?? null,
-            'qr_url' => $response['qr'] ?? null,
-            'payment_url' => $response['url_pe'] ?? null,
-            'expires_at' => isset($response['expiration_date'])
-                ? now()->setTimestamp((int) $response['expiration_date'])
-                : now()->addHours($expirationHours),
-            'provider_payload' => $response,
-            'status' => PaymentRecordStatus::Pending,
-        ]);
-
-        return $response;
     }
 
     private function amountInCents(Order $order): int
     {
         return (int) round(((float) $order->total_amount) * 100);
+    }
+
+    private function assertYapeLimits(Order $order, PaymentMethod $method): void
+    {
+        if ($method !== PaymentMethod::Yape) {
+            return;
+        }
+
+        if (strtoupper((string) $order->currency) !== 'PEN') {
+            throw ValidationException::withMessages([
+                'method' => 'Yape solo acepta pagos en soles (PEN).',
+            ]);
+        }
+
+        $cents = $this->amountInCents($order);
+
+        if ($cents > self::YAPE_MAX_CENTS) {
+            throw ValidationException::withMessages([
+                'method' => 'Yape acepta un máximo de S/ 2,000.00 por transacción.',
+            ]);
+        }
+
+        if ($cents < 100) {
+            throw ValidationException::withMessages([
+                'method' => 'El monto mínimo para pagar con Yape es S/ 1.00.',
+            ]);
+        }
     }
 
     private function assertValidToken(PaymentMethod $method, ?string $token): void

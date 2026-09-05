@@ -48,16 +48,41 @@ class CulqiClient
     }
 
     /**
+     * Crea un cargo. HTTP 201 con `chr_` = aprobado; 200/201 sin cargo = 3DS.
+     *
      * @param  array<string, mixed>  $payload
-     * @return array<string, mixed>
+     * @return array{
+     *     http_status: int,
+     *     needs_3ds: bool,
+     *     body: array<string, mixed>
+     * }
      */
     public function createCharge(array $payload): array
     {
         if ($this->fake) {
-            return $this->fakeCharge($payload);
+            $body = $this->fakeCharge($payload);
+
+            return [
+                'http_status' => 201,
+                'needs_3ds' => false,
+                'body' => $body,
+            ];
         }
 
-        return $this->post('/charges', $payload);
+        $response = $this->http()->post(self::API_BASE.'/charges', $payload);
+        $status = $response->status();
+        $body = $response->json();
+        $body = is_array($body) ? $body : [];
+
+        if ($status >= 400) {
+            $this->throwFromError($status, $body, '/charges');
+        }
+
+        return [
+            'http_status' => $status,
+            'needs_3ds' => $this->chargeNeeds3DS($status, $body),
+            'body' => $body,
+        ];
     }
 
     /**
@@ -211,6 +236,42 @@ class CulqiClient
     }
 
     /**
+     * @param  array<string, mixed>  $body
+     */
+    private function chargeNeeds3DS(int $status, array $body): bool
+    {
+        if ($this->isSuccessfulCharge($body)) {
+            return false;
+        }
+
+        return in_array($status, [200, 201], true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     */
+    public function isSuccessfulCharge(array $body): bool
+    {
+        $id = $body['id'] ?? null;
+        $object = $body['object'] ?? null;
+        $outcome = strtolower((string) ($body['outcome']['type'] ?? ''));
+
+        if (! is_string($id) || $id === '' || ! str_starts_with($id, 'chr_')) {
+            return false;
+        }
+
+        if ($object !== null && $object !== 'charge') {
+            return false;
+        }
+
+        if ($outcome !== '' && ! in_array($outcome, ['venta_exitosa', 'successful', 'venta_exitosa_3ds'], true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @param  array<string, mixed>|null  $body
      * @return array<string, mixed>
      */
@@ -218,12 +279,20 @@ class CulqiClient
     {
         $body ??= [];
 
-        if ($status >= 200 && $status < 300) {
-            return $body;
+        if ($status < 200 || $status >= 300) {
+            $this->throwFromError($status, $body, $path);
         }
 
-        $merchantMessage = $body['merchant_message']
-            ?? $body['user_message']
+        return $body;
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     */
+    private function throwFromError(int $status, array $body, string $path): never
+    {
+        $merchantMessage = $body['user_message']
+            ?? $body['merchant_message']
             ?? $body['message']
             ?? 'Error en la API de Culqi.';
 

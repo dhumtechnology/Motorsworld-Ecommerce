@@ -28,11 +28,14 @@ class CheckoutPayRequest extends FormRequest
                 PaymentMethod::Card->value,
                 PaymentMethod::Yape->value,
             ])],
-            'mp_token' => ['nullable', 'string', 'max:255'],
-            'mp_payment_method_id' => ['nullable', 'string', 'max:64'],
-            'mp_installments' => ['nullable', 'integer', 'min:1', 'max:24'],
-            'mp_issuer_id' => ['nullable', 'string', 'max:32'],
-            'mp_form_data' => ['nullable', 'string'],
+            'culqi_token' => ['required', 'string', 'max:80'],
+            'device_finger_print_id' => ['nullable', 'string', 'max:80'],
+            'authentication_3DS' => ['nullable', 'array'],
+            'authentication_3DS.eci' => ['nullable', 'string', 'max:8'],
+            'authentication_3DS.xid' => ['nullable', 'string', 'max:80'],
+            'authentication_3DS.cavv' => ['nullable', 'string', 'max:80'],
+            'authentication_3DS.protocolVersion' => ['nullable', 'string', 'max:16'],
+            'authentication_3DS.directoryServerTransactionId' => ['nullable', 'string', 'max:80'],
             'fulfillment_method' => ['required', Rule::enum(FulfillmentMethod::class)],
             'customer_email' => [$authenticated ? 'nullable' : 'required', 'email', 'max:255'],
             'customer_document' => [
@@ -63,6 +66,7 @@ class CheckoutPayRequest extends FormRequest
             'phone' => 'teléfono',
             'address_line1' => 'dirección',
             'address_city' => 'ciudad',
+            'culqi_token' => 'token de pago',
         ];
     }
 
@@ -76,41 +80,26 @@ class CheckoutPayRequest extends FormRequest
         return FulfillmentMethod::from($this->string('fulfillment_method')->toString());
     }
 
-    /**
-     * Form data listo para /v1/payments (Brick o fake).
-     *
-     * @return array<string, mixed>
-     */
-    public function mercadoPagoFormData(): array
+    public function culqiToken(): string
     {
-        $raw = trim((string) $this->input('mp_form_data', ''));
-        $decoded = [];
+        return trim((string) $this->input('culqi_token', ''));
+    }
 
-        if ($raw !== '') {
-            $json = json_decode($raw, true);
-            if (is_array($json)) {
-                $decoded = $json;
-            }
-        }
-
-        $token = trim((string) ($decoded['token'] ?? $this->input('mp_token', '')));
+    /**
+     * @return array{
+     *     device_finger_print_id?: ?string,
+     *     authentication_3DS?: array<string, mixed>
+     * }
+     */
+    public function threeDS(): array
+    {
+        $deviceId = trim((string) $this->input('device_finger_print_id', ''));
+        $auth = $this->input('authentication_3DS');
 
         return array_filter([
-            ...$decoded,
-            'token' => $token !== '' ? $token : null,
-            'payment_method_id' => $decoded['payment_method_id']
-                ?? $this->input('mp_payment_method_id')
-                ?? ($this->paymentMethod() === PaymentMethod::Yape ? 'yape' : null),
-            'installments' => (int) ($decoded['installments'] ?? $this->input('mp_installments', 1)),
-            'issuer_id' => $decoded['issuer_id'] ?? $this->input('mp_issuer_id'),
-            'payer' => $decoded['payer'] ?? [
-                'email' => $this->customerPayload()['customer_email'],
-                'identification' => [
-                    'type' => 'DNI',
-                    'number' => $this->customerPayload()['customer_document'],
-                ],
-            ],
-        ], fn ($value) => $value !== null && $value !== '');
+            'device_finger_print_id' => $deviceId !== '' ? $deviceId : null,
+            'authentication_3DS' => is_array($auth) ? $auth : null,
+        ], fn ($value) => $value !== null && $value !== []);
     }
 
     /**
