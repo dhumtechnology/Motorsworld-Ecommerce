@@ -2,10 +2,16 @@
 set -e
 
 ROOT="${ROOT:-/var/www/html}"
-STAGING="/tmp/motoworld-cpanel"
+SKIP_ZIP="${SKIP_ZIP:-0}"
+OUT_DIR="${ROOT}/dist"
 STAMP="$(date +%Y%m%d-%H%M)"
 ZIP_NAME="motoworld-cpanel-${STAMP}.zip"
-OUT_DIR="${ROOT}/dist"
+
+if [ "$SKIP_ZIP" = "1" ]; then
+    STAGING="${OUT_DIR}/cpanel"
+else
+    STAGING="/tmp/motoworld-cpanel"
+fi
 
 cd "$ROOT"
 
@@ -84,15 +90,27 @@ Pasos
 No subas el .env de tu PC.
 EOF
 
-echo ">>> Generando ZIP"
-rm -f "$OUT_DIR"/motoworld-cpanel-*.zip
-cd "$STAGING"
-zip -qr "$OUT_DIR/$ZIP_NAME" laravel public_html LEEME-CPANEL.txt
+if [ "$SKIP_ZIP" = "1" ]; then
+    echo ">>> Omitiendo ZIP (SKIP_ZIP=1). Carpeta lista para comprimir:"
+    echo "    dist/cpanel/laravel"
+    echo "    dist/cpanel/public_html"
+    echo "    dist/cpanel/LEEME-CPANEL.txt"
+else
+    echo ">>> Generando ZIP"
+    rm -f "$OUT_DIR"/motoworld-cpanel-*.zip
+    cd "$STAGING"
+    zip -qr "$OUT_DIR/$ZIP_NAME" laravel public_html LEEME-CPANEL.txt
+fi
 
 echo ">>> Restaurando Composer de desarrollo"
 cd "$ROOT"
 composer install --no-interaction --prefer-dist
 
 echo
-echo "Listo: dist/$ZIP_NAME"
-ls -lh "$OUT_DIR/$ZIP_NAME"
+if [ "$SKIP_ZIP" = "1" ]; then
+    echo "Listo: dist/cpanel/ (sin ZIP)"
+    du -sh "$STAGING" "$STAGING/laravel" "$STAGING/public_html" 2>/dev/null || true
+else
+    echo "Listo: dist/$ZIP_NAME"
+    ls -lh "$OUT_DIR/$ZIP_NAME"
+fi

@@ -14,6 +14,7 @@ use App\Services\Payments\MercadoPago\MercadoPagoClient;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->useSharedHostingPublicPath();
+        $this->ensureStorageDirectories();
+
         $this->app->singleton(CulqiClient::class, fn () => CulqiClient::fromConfig());
         $this->app->singleton(MercadoPagoClient::class, fn () => MercadoPagoClient::fromConfig());
     }
@@ -55,34 +59,90 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('layouts.shop', function ($view): void {
-            $request = request();
             $cartLines = collect();
             $count = 0;
             $cartTotals = null;
+            $searchCategories = [];
+            $searchRecommendedProducts = collect();
+            $footerLinks = ['clientes' => [], 'productos' => [], 'acerca_de' => []];
 
-            if ($request->hasSession()) {
-                $cart = app(CartResolver::class)->resolve(
-                    $request->user(),
-                    $request->session()->getId(),
-                );
+            try {
+                $request = request();
 
-                $cartLines = app(BuildCartLinesAction::class)->execute($cart);
-                $count = (int) $cartLines->sum('quantity');
-                $cartTotals = app(CartTotalsService::class)->summarize($cartLines);
+                if ($request->hasSession()) {
+                    $cart = app(CartResolver::class)->resolve(
+                        $request->user(),
+                        $request->session()->getId(),
+                    );
+
+                    $cartLines = app(BuildCartLinesAction::class)->execute($cart);
+                    $count = (int) $cartLines->sum('quantity');
+                    $cartTotals = app(CartTotalsService::class)->summarize($cartLines);
+                }
+
+                $searchData = app(GetShopHeaderSearchDataAction::class)->execute();
+                $searchCategories = $searchData['searchCategories'];
+                $searchRecommendedProducts = $searchData['searchRecommendedProducts'];
+                $footerLinks = app(GetShopFooterLinksAction::class)->execute();
+            } catch (Throwable $exception) {
+                report($exception);
             }
-
-            $searchData = app(GetShopHeaderSearchDataAction::class)->execute();
-            $footerLinks = app(GetShopFooterLinksAction::class)->execute();
 
             $view->with([
                 'cartItemCount' => $count,
                 'cartDrawerLines' => $cartLines,
                 'cartDrawerTotals' => $cartTotals,
-                'searchCategories' => $searchData['searchCategories'],
-                'searchRecommendedProducts' => $searchData['searchRecommendedProducts'],
+                'searchCategories' => $searchCategories,
+                'searchRecommendedProducts' => $searchRecommendedProducts,
                 'footerLinks' => $footerLinks,
             ]);
         });
+    }
+
+    /**
+     * cPanel: public_html es la web; Laravel vive en /laravel.
+     * Sin esto, Vite busca CSS en laravel/public/build y no carga estilos.
+     */
+    private function useSharedHostingPublicPath(): void
+    {
+        $publicHtml = dirname(base_path()).DIRECTORY_SEPARATOR.'public_html';
+
+        if (! is_dir($publicHtml)) {
+            return;
+        }
+
+        $this->app->usePublicPath($publicHtml);
+    }
+
+    /**
+     * En cPanel esas carpetas a menudo no se suben (Docker las monta como volúmenes).
+     * Si views no existe, realpath() deja view.compiled vacío y Blade lanza
+     * "Please provide a valid cache path".
+     */
+    private function ensureStorageDirectories(): void
+    {
+        $directories = [
+            storage_path('app/public'),
+            storage_path('app/private'),
+            storage_path('framework/cache/data'),
+            storage_path('framework/sessions'),
+            storage_path('framework/testing'),
+            storage_path('framework/views'),
+            storage_path('logs'),
+            base_path('bootstrap/cache'),
+        ];
+
+        foreach ($directories as $directory) {
+            if (! is_dir($directory)) {
+                @mkdir($directory, 0775, true);
+            }
+        }
+
+        $viewsPath = storage_path('framework/views');
+        if (is_dir($viewsPath)) {
+            $this->app->useStoragePath(storage_path());
+            config(['view.compiled' => $viewsPath]);
+        }
     }
 
     /**

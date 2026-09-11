@@ -10,18 +10,13 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seeders de sistema + demo (catálogo, pagos, inventario, pedidos, citas).
+     * Roles/permisos + usuario administrador. Sin datos demo.
      */
     public function run(): void
     {
         $this->call([
             RoleAndPermissionSeeder::class,
             UserSeeder::class,
-            CatalogSeeder::class,
-            PaymentMethodSeeder::class,
-            InventoryMovementSeeder::class,
-            OrderSalesSeeder::class,
-            AppointmentSeeder::class,
         ]);
     }
 }

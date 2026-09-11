@@ -6,7 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -36,4 +36,29 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->reportable(function (Throwable $e): void {
+            error_log(sprintf(
+                '[Motoworld] %s: %s in %s:%d',
+                $e::class,
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine(),
+            ));
+        });
     })->create();
+
+$publicHtml = dirname($app->basePath()).DIRECTORY_SEPARATOR.'public_html';
+
+if (is_dir($publicHtml)) {
+    $app->usePublicPath($publicHtml);
+
+    $manifest = $publicHtml.DIRECTORY_SEPARATOR.'build'.DIRECTORY_SEPARATOR.'manifest.json';
+    $hot = $publicHtml.DIRECTORY_SEPARATOR.'hot';
+
+    if (is_file($manifest) && is_file($hot)) {
+        @unlink($hot);
+    }
+}
+
+return $app;

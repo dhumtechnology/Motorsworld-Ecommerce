@@ -134,14 +134,9 @@ $mapEmbedUrl = config('shop.map_embed_url');
 
     .home-hero-slide {
         position: absolute;
-        top: 50%;
-        left: 50%;
+        inset: 0;
         display: block;
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        max-height: none;
-        transform: translate(-50%, -50%);
+        overflow: hidden;
         opacity: 0;
         transition: opacity 1.2s ease-in-out;
         will-change: opacity;
@@ -150,10 +145,18 @@ $mapEmbedUrl = config('shop.map_embed_url');
     }
 
     .home-hero-slide img {
-        width: 100%;
-        height: 100%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: auto;
+        height: auto;
+        min-width: 100%;
+        min-height: 100%;
+        max-width: none;
+        max-height: none;
+        transform: translate(-50%, -50%);
         object-fit: cover;
-        object-position: 50% 50%;
+        object-position: center center;
         pointer-events: none;
     }
 

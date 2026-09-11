@@ -154,6 +154,19 @@ if (! is_file($root.'/vendor/autoload.php')) {
     exit("Falta vendor/ en {$root}. Sube la carpeta vendor o ejecuta composer install.\n");
 }
 
+foreach ([
+    $root.'/storage/app/public',
+    $root.'/storage/framework/cache/data',
+    $root.'/storage/framework/sessions',
+    $root.'/storage/framework/views',
+    $root.'/storage/logs',
+    $root.'/bootstrap/cache',
+] as $directory) {
+    if (! is_dir($directory)) {
+        @mkdir($directory, 0775, true);
+    }
+}
+
 define('LARAVEL_START', microtime(true));
 
 require $root.'/vendor/autoload.php';
