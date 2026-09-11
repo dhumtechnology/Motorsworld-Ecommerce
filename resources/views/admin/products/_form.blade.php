@@ -229,14 +229,34 @@
         </select>
     </div>
 
-    <div class="lg:col-span-2">
-        <label for="description" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</label>
-        <textarea id="description" name="description" rows="4" class="{{ $fieldClass }}">{{ old('description', $product?->description) }}</textarea>
+    <div>
+        <label for="stock_availability" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Disponibilidad de stock *</label>
+        <select id="stock_availability" name="stock_availability" required class="{{ $fieldClass }}">
+            @foreach (\App\Enums\Products\StockAvailability::casesInAdminOrder() as $availability)
+                <option value="{{ $availability->value }}" @selected(old('stock_availability', $product?->stock_availability?->value ?? 'store') === $availability->value)>
+                    {{ $availability->label() }}
+                </option>
+            @endforeach
+        </select>
+        <p class="mt-1.5 text-xs text-muted">Se muestra en la ficha del producto. El número de unidades queda solo para control interno.</p>
     </div>
 
-    <div class="lg:col-span-2">
-        <label for="additional_information" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Información adicional</label>
-        <textarea id="additional_information" name="additional_information" rows="3" class="{{ $fieldClass }}">{{ old('additional_information', $product?->additional_information) }}</textarea>
+    <div class="lg:col-span-2 relative z-0" data-quill-field>
+        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</label>
+        <input type="hidden" name="description" id="description" value="{{ old('description', $product?->description) }}">
+        <div data-quill-wrap class="mw-quill-wrap relative z-0 overflow-visible rounded border border-border bg-white">
+            <div data-quill-editor data-placeholder="Describe el producto…" class="min-h-[200px] text-text"></div>
+        </div>
+        <p class="mt-1.5 text-xs text-muted">Usa la barra para negrita, cursiva, tamaño, color y más.</p>
+    </div>
+
+    <div class="lg:col-span-2 relative z-0" data-quill-field>
+        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Información adicional</label>
+        <input type="hidden" name="additional_information" id="additional_information" value="{{ old('additional_information', $product?->additional_information) }}">
+        <div data-quill-wrap class="mw-quill-wrap relative z-0 overflow-visible rounded border border-border bg-white">
+            <div data-quill-editor data-placeholder="Especificaciones, medidas, materiales…" class="min-h-[160px] text-text"></div>
+        </div>
+        <p class="mt-1.5 text-xs text-muted">Mismo editor que el blog: formato de texto enriquecido.</p>
     </div>
 
     {{-- Ficha técnica: justo después de información adicional --}}
@@ -302,3 +322,73 @@
         Cancelar
     </a>
 </div>
+
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<style>
+    .mw-quill-wrap .ql-toolbar.ql-snow {
+        border: 0;
+        border-bottom: 1px solid var(--color-border, #e5e7eb);
+        border-radius: 0;
+        background: #fafafa;
+        position: relative;
+        z-index: 2;
+    }
+    .mw-quill-wrap .ql-container.ql-snow {
+        border: 0;
+        min-height: 160px;
+        font-size: 0.95rem;
+        position: relative;
+        z-index: 1;
+    }
+    .mw-quill-wrap .ql-editor { min-height: 140px; }
+    .mw-quill-wrap .ql-toolbar .ql-picker-options {
+        z-index: 30;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+    (function () {
+        if (typeof Quill === 'undefined') return;
+
+        const form = document.querySelector('[data-product-form]')?.closest('form');
+        const toolbar = [
+            [{ header: [1, 2, 3, false] }],
+            [{ size: ['small', false, 'large', 'huge'] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ color: [] }, { background: [] }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ align: [] }],
+            ['blockquote', 'link'],
+            ['clean'],
+        ];
+
+        document.querySelectorAll('[data-quill-field]').forEach((field) => {
+            const hidden = field.querySelector('input[type="hidden"]');
+            const editorEl = field.querySelector('[data-quill-editor]');
+            if (!hidden || !editorEl) return;
+
+            const quill = new Quill(editorEl, {
+                theme: 'snow',
+                placeholder: editorEl.getAttribute('data-placeholder') || '',
+                modules: { toolbar },
+            });
+
+            if (hidden.value) {
+                quill.root.innerHTML = hidden.value;
+            }
+
+            const sync = () => {
+                const html = quill.root.innerHTML;
+                hidden.value = (html === '<p><br></p>' || html === '<p></p>') ? '' : html;
+            };
+
+            quill.on('text-change', sync);
+            form?.addEventListener('submit', sync);
+        });
+    })();
+</script>
+@endpush

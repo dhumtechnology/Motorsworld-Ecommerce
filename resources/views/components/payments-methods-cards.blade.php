@@ -1,5 +1,5 @@
 <div
-    class="flex flex-wrap items-center justify-center py-4 gap-x-4 gap-y-2 [&_svg]:block [&_svg]:h-7 [&_svg]:w-auto [&_svg]:shrink-0"
+    class="flex flex-wrap items-center justify-center px-4 py-6 sm:px-6 md:px-8 lg:px-10 gap-x-6 gap-y-4 sm:gap-x-8 sm:gap-y-5 md:gap-x-10 md:gap-y-6 lg:gap-x-12 [&_svg]:block [&_svg]:h-7 sm:[&_svg]:h-8 [&_svg]:w-auto [&_svg]:shrink-0"
     aria-label="Métodos de pago"
 >
     <svg viewBox="0 0 960 231" fill="currentColor" aria-label="Amazon Pay" role="img">

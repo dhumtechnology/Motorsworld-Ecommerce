@@ -187,18 +187,36 @@ RELACIONES CARGADAS EN $product
     $discountLabel = ($product->is_on_sale && $product->discount_percent)
     ? rtrim(rtrim(number_format((float) $product->discount_percent, 2, '.', ''), '0'), '.')
     : null;
+    $isMotosCategory = strtoupper(trim((string) ($product->category?->name ?? ''))) === 'MOTOCICLETAS';
+    $tiendaUrl = route('shop.catalog', ['section' => $isMotosCategory ? 'motos' : 'accesorios']);
+    $breadcrumbItems = [
+        ['label' => 'TIENDA', 'url' => $tiendaUrl],
+        ['label' => 'PRODUCTO', 'url' => $product->category ? route('shop.product.show', $product) : null],
+    ];
+    if ($product->category) {
+        $breadcrumbItems[] = [
+            'label' => $product->category->name,
+            'url' => $isMotosCategory
+                ? route('shop.catalog', ['section' => 'motos'])
+                : route('shop.catalog', [
+                    'section' => 'accesorios',
+                    'categories' => [$product->category->id],
+                ]),
+        ];
+    }
+    $stockAvailability = $product->stock_availability?->value ?? 'store';
+    $stockAvailabilityLabels = collect(\App\Enums\Products\StockAvailability::cases())
+        ->mapWithKeys(fn (\App\Enums\Products\StockAvailability $case) => [$case->value => $case->label()])
+        ->all();
     @endphp
     <div>
         <div class="px-4 py-2">
-            <x-breadcrumb :items="[
-                ['label' => 'NUESTRA TIENDA', 'url' => route('shop.catalog')],
-                ['label' => 'PRODUCTO', 'url' => null],
-            ]" />
+            <x-breadcrumb :items="$breadcrumbItems" />
         </div>
 
         <div
             class="grid grid-cols-1 lg:grid-cols-12 FLEC gap-8 text-white max-w-[95%] mx-auto p-8 select-none font-title"
-            x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }}, @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'), {{ ($hasColorChoices ?? false) ? 'true' : 'false' }})">
+            x-data="productColorPicker(@js($variantsPayload ?? []), {{ (int) ($defaultVariantId ?? 0) }}, @js($product->image ?: 'https://via.placeholder.com/600?text=MotoWorld'), {{ ($hasColorChoices ?? false) ? 'true' : 'false' }}, @js($stockAvailability), @js($stockAvailabilityLabels))">
             <div class="lg:col-span-8 flex flex-col sm:flex-row gap-4 sm:h-96 lg:h-[480px]">
                 <div
                     class="relative shrink-0 sm:h-full sm:w-36"
@@ -250,17 +268,15 @@ RELACIONES CARGADAS EN $product
             <div class="lg:col-span-4 flex flex-col justify-between py-6 text-black font-title">
                 <h3 class="text-3xl tracking-wide font-bold font-title uppercase leading-tight antialiased">{{ $product->name }}</h3>
 
-                @if($product->vehicleModel?->brand)
-                <h5 class="text-sm font-bold tracking-widest mt-1 uppercase text-black">{{ $product->vehicleModel->brand->name }}</h5>
-                @endif
-
                 <div class="flex flex-col justify-between space-y-2 text-black font-title">
-                    <p><span class="font-bold">Categoría:</span> {{ $product->category->name }}</p>
+                    @if($product->vehicleModel?->brand)
+                    <p><span class="font-bold">Marca:</span> {{ $product->vehicleModel->brand->name }}</p>
+                    @endif
                     <p><span class="font-bold">SKU:</span> <span x-text="selected?.sku || '{{ $product->sku }}'"></span></p>
                     @if($product->vehicleModel)
                     <p><span class="font-bold">Modelo:</span> {{ $product->vehicleModel->name }}</p>
                     @endif
-                    <p><span class="font-bold">Disponibilidad:</span> <span class="font-bold" x-text="stockLabel"></span></p>
+                    <p><span class="font-bold">Disponibilidad stock:</span> <span class="font-bold" x-text="stockLabel"></span></p>
                 </div>
 
                 <div class="my-4 space-y-3" x-show="hasColorChoices && variants.length > 0">
@@ -277,9 +293,8 @@ RELACIONES CARGADAS EN $product
                                     ? 'border-black bg-orange-50 ring-1 ring-[#f15a24]/40'
                                     : 'border-neutral-300 hover:border-neutral-500 bg-white'"
                                 class="w-fit rounded-lg border px-3 py-2 text-left transition-colors shadow-sm">
-                                <!-- Fila superior: Círculos de color y Unidades -->
+                                <!-- Fila superior: Círculos de color -->
                                 <div class="flex items-center justify-between gap-3">
-                                    <!-- Círculos de color con borde negro fino -->
                                     <div class="flex -space-x-1 shrink-0">
                                         <template x-for="(color, cIndex) in (variant.colors.length ? variant.colors : [{ name: variant.label, hex: '#9CA3AF' }])" :key="cIndex">
                                             <span
@@ -288,12 +303,6 @@ RELACIONES CARGADAS EN $product
                                                 :title="color.name"></span>
                                         </template>
                                     </div>
-
-                                    <!-- Cantidad de unidades -->
-                                    <span
-                                        class="shrink-0 text-xs font-bold tracking-wide"
-                                        :class="Number(variant.available_stock) > 0 ? 'text-emerald-700' : 'text-rose-600'"
-                                        x-text="Number(variant.available_stock) > 0 ? (variant.available_stock + ' u.') : 'Agotado'"></span>
                                 </div>
 
                                 <!-- Fila inferior: Nombre del color -->
@@ -368,8 +377,8 @@ RELACIONES CARGADAS EN $product
                         <button
                             type="button"
                             data-cart-action="store"
-                            :disabled="cartBusy || !selectedId || selectedStock <= 0"
-                            x-show="selectedId && selectedStock > 0"
+                            :disabled="cartBusy || !canPurchase"
+                            x-show="canPurchase"
                             class="w-full sm:w-auto px-8 py-3 text-white font-title bold tracking-widest bg-primary rounded hover:bg-black cursor-pointer transition-colors uppercase disabled:opacity-60">
                             <span>Agregar al carrito</span>
                             <span class="normal-case tracking-normal font-semibold opacity-90" x-show="hasColorChoices" x-text="selected ? ' — ' + selected.label : ''"></span>
@@ -377,9 +386,9 @@ RELACIONES CARGADAS EN $product
                         <button
                             type="button"
                             disabled
-                            x-show="!selectedId || selectedStock <= 0"
+                            x-show="!canPurchase"
                             class="w-full sm:w-auto px-8 py-3 bg-neutral-700 text-neutral-400 font-extrabold text-xs tracking-widest rounded uppercase cursor-not-allowed">
-                            <span x-text="!selectedId ? (hasColorChoices ? 'Selecciona un color' : 'No disponible') : 'Agotado'"></span>
+                            <span x-text="!selectedId ? (hasColorChoices ? 'Selecciona un color' : stockLabel) : stockLabel"></span>
                         </button>
                     </div>
 
@@ -437,12 +446,14 @@ RELACIONES CARGADAS EN $product
             }
         </style>
         <script>
-            window.productColorPicker = function(variants, defaultId, fallbackImage, hasColorChoices) {
+            window.productColorPicker = function(variants, defaultId, fallbackImage, hasColorChoices, availability, availabilityLabels) {
                 const list = Array.isArray(variants) ? variants : [];
                 const initial = list.find((v) => Number(v.id) === Number(defaultId)) || list[0] || null;
+                const labels = availabilityLabels && typeof availabilityLabels === 'object' ? availabilityLabels : {};
                 return {
                     variants: list,
                     hasColorChoices: Boolean(hasColorChoices),
+                    availability: availability || 'store',
                     selectedId: initial ? Number(initial.id) : null,
                     cartQty: Number(initial?.cart_quantity || 0),
                     cartBusy: false,
@@ -457,14 +468,26 @@ RELACIONES CARGADAS EN $product
                     get selectedStock() {
                         return Number(this.selected?.available_stock || 0);
                     },
+                    get canPurchase() {
+                        if (this.availability === 'unavailable' || this.availability === 'coming_soon') {
+                            return false;
+                        }
+                        return Boolean(this.selectedId) && this.selectedStock > 0;
+                    },
                     get galleryImages() {
                         return this.selected?.images?.length ? this.selected.images : [{
                             path: this.mainImage
                         }];
                     },
                     get stockLabel() {
-                        if (!this.selected) return 'No disponible';
-                        return this.selectedStock > 0 ? `En Stock (${this.selectedStock} u.)` : 'Agotado';
+                        const code = this.availability || 'store';
+                        if (code === 'on_order' || code === 'coming_soon' || code === 'unavailable') {
+                            return labels[code] || 'No disponible';
+                        }
+                        if (!this.selected || this.selectedStock <= 0) {
+                            return labels.unavailable || 'No disponible';
+                        }
+                        return labels[code] || 'Tienda';
                     },
                     syncThumbScroll() {
                         const el = this.$refs.thumbsScroll;
@@ -564,8 +587,8 @@ RELACIONES CARGADAS EN $product
 
                 {{-- Tab: Descripción --}}
                 <div x-show="currentTab === 'description'" class="space-y-4">
-                    @if($product->description)
-                    <p>{!! nl2br(e($product->description)) !!}</p>
+                    @if($product->descriptionHtml() !== '')
+                    <div class="product-richtext">{!! $product->descriptionHtml() !!}</div>
                     @else
                     <p class="text-black italic">No hay descripción disponible para este artículo.</p>
                     @endif
@@ -573,8 +596,8 @@ RELACIONES CARGADAS EN $product
 
                 {{-- Tab: Información Adicional --}}
                 <div x-show="currentTab === 'info'" class="space-y-4" style="display: none;">
-                    @if($product->additional_information)
-                    <p>{!! nl2br(e($product->additional_information)) !!}</p>
+                    @if($product->additionalInformationHtml() !== '')
+                    <div class="product-richtext">{!! $product->additionalInformationHtml() !!}</div>
                     @else
                     <p class="text-black italic">No hay especificaciones adicionales registradas.</p>
                     @endif
@@ -645,4 +668,37 @@ RELACIONES CARGADAS EN $product
             });
         });
     </script>
+    <style>
+        .product-richtext h1, .product-richtext h2, .product-richtext h3 {
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #171717;
+            margin-top: 1.25rem;
+            margin-bottom: 0.6rem;
+        }
+        .product-richtext h1 { font-size: 1.5rem; }
+        .product-richtext h2 { font-size: 1.25rem; }
+        .product-richtext h3 { font-size: 1.1rem; }
+        .product-richtext p { margin-bottom: 0.85rem; }
+        .product-richtext ul, .product-richtext ol { margin: 0 0 0.85rem 1.25rem; }
+        .product-richtext li { margin-bottom: 0.3rem; }
+        .product-richtext a { color: #ea580c; font-weight: 600; text-decoration: underline; }
+        .product-richtext strong, .product-richtext b { font-weight: 800; }
+        .product-richtext em, .product-richtext i { font-style: italic; }
+        .product-richtext u { text-decoration: underline; }
+        .product-richtext s, .product-richtext strike { text-decoration: line-through; }
+        .product-richtext blockquote {
+            border-left: 3px solid #ea580c;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #525252;
+            font-style: italic;
+        }
+        .product-richtext .ql-size-small { font-size: 0.75em; }
+        .product-richtext .ql-size-large { font-size: 1.5em; }
+        .product-richtext .ql-size-huge { font-size: 2.25em; }
+        .product-richtext .ql-align-center { text-align: center; }
+        .product-richtext .ql-align-right { text-align: right; }
+        .product-richtext .ql-align-justify { text-align: justify; }
+    </style>
     @endsection

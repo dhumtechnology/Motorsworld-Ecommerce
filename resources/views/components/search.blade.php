@@ -81,6 +81,7 @@
                         class="flex items-center gap-2 sm:gap-3"
                         @submit="if (! query.trim()) { $event.preventDefault(); }"
                     >
+                        <input type="hidden" name="section" value="all">
                         <div class="relative min-w-0 flex-1">
                             <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M16 10.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z" />

@@ -3,6 +3,7 @@
 namespace App\Models\Products;
 
 use App\Enums\Products\ProductStatus;
+use App\Enums\Products\StockAvailability;
 use App\Models\Cart\CartItem;
 use App\Models\Orders\OrderItem;
 use App\Services\Orders\ProductPricing;
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
     'price_amount',
     'currency',
     'status',
+    'stock_availability',
     'image',
     'technical_sheet',
     'category_id',
@@ -254,6 +256,50 @@ class Product extends Model
         return $this->availableStockTotal() > 0;
     }
 
+    public function shopStockAvailability(?int $availableStock = null): StockAvailability
+    {
+        $availability = $this->stock_availability ?? StockAvailability::Store;
+
+        if (in_array($availability, [
+            StockAvailability::OnOrder,
+            StockAvailability::ComingSoon,
+            StockAvailability::Unavailable,
+        ], true)) {
+            return $availability;
+        }
+
+        if ($availableStock !== null && $availableStock <= 0) {
+            return StockAvailability::Unavailable;
+        }
+
+        return $availability;
+    }
+
+    public function descriptionHtml(): string
+    {
+        return self::richTextToHtml($this->description);
+    }
+
+    public function additionalInformationHtml(): string
+    {
+        return self::richTextToHtml($this->additional_information);
+    }
+
+    public static function richTextToHtml(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if ($value !== strip_tags($value)) {
+            return $value;
+        }
+
+        return nl2br(e($value), false);
+    }
+
     /**
      * @return array<string, string>
      */
@@ -262,6 +308,7 @@ class Product extends Model
         return [
             'price_amount' => 'decimal:2',
             'status' => ProductStatus::class,
+            'stock_availability' => StockAvailability::class,
         ];
     }
 }

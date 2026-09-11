@@ -126,15 +126,15 @@ class CatalogIndexRequest extends FormRequest
 
     public function section(): string
     {
+        // Búsqueda del header (y cualquier ?search=): motos + accesorios juntos.
+        if ($this->searchTerm() !== null) {
+            return 'all';
+        }
+
         $section = $this->input('section');
 
         if (in_array($section, ['motos', 'accesorios', 'all'], true)) {
             return $section;
-        }
-
-        // Búsqueda global (p. ej. header): sin sección → todo el catálogo.
-        if ($this->searchTerm() !== null) {
-            return 'all';
         }
 
         return 'accesorios';

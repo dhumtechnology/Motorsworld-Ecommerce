@@ -143,17 +143,17 @@
                     </div>
                 </dl>
 
-                @if ($product->description)
+                @if ($product->descriptionHtml() !== '')
                     <div class="mt-6">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</h3>
-                        <div class="text-sm text-text-soft whitespace-pre-line">{{ $product->description }}</div>
+                        <div class="product-richtext text-sm text-text-soft">{!! $product->descriptionHtml() !!}</div>
                     </div>
                 @endif
 
-                @if ($product->additional_information)
+                @if ($product->additionalInformationHtml() !== '')
                     <div class="mt-6">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Información adicional</h3>
-                        <div class="text-sm text-text-soft whitespace-pre-line">{{ $product->additional_information }}</div>
+                        <div class="product-richtext text-sm text-text-soft">{!! $product->additionalInformationHtml() !!}</div>
                     </div>
                 @endif
 
@@ -446,3 +446,16 @@
         @endif
     </div>
 @endsection
+
+@push('styles')
+<style>
+    .product-richtext p { margin-bottom: 0.6rem; }
+    .product-richtext ul, .product-richtext ol { margin: 0 0 0.6rem 1.2rem; }
+    .product-richtext .ql-size-small { font-size: 0.75em; }
+    .product-richtext .ql-size-large { font-size: 1.5em; }
+    .product-richtext .ql-size-huge { font-size: 2.25em; }
+    .product-richtext .ql-align-center { text-align: center; }
+    .product-richtext .ql-align-right { text-align: right; }
+    .product-richtext .ql-align-justify { text-align: justify; }
+</style>
+@endpush

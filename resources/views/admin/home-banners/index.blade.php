@@ -85,6 +85,9 @@
                                     <img src="{{ $banner->image }}" alt="" class="h-12 w-24 rounded object-cover border border-border shrink-0">
                                     <div class="min-w-0">
                                         <p class="font-semibold text-text truncate">{{ $banner->title ?: 'Sin título' }}</p>
+                                        @if ($banner->link_url)
+                                            <p class="text-xs text-orange-600 truncate mt-0.5" title="{{ $banner->link_url }}">{{ $banner->link_url }}</p>
+                                        @endif
                                         <p class="text-xs text-muted mt-0.5">Orden: {{ $banner->sort_order }}</p>
                                     </div>
                                 </div>

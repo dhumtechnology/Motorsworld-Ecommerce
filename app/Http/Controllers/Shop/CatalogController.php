@@ -70,7 +70,7 @@ class CatalogController extends Controller
 
             $filterOptions = [
                 'categories' => $this->categoryOptions($section),
-                'brands' => $this->brandOptions(),
+                'brands' => $this->brandOptions($section, $request->categoryIds()),
                 'models' => $this->modelOptions($request->brandIds()),
                 'price' => $this->priceBounds($section),
             ];
@@ -344,16 +344,82 @@ class CatalogController extends Controller
     }
 
     /**
+     * Marcas del filtro:
+     * - Motos: solo marcas con productos en Motocicletas.
+     * - Otros / todo: todas las marcas, salvo que haya categorías seleccionadas.
+     * - Con categorías: solo marcas que tengan productos activos en esas categorías.
+     *
+     * @param  list<int>  $categoryIds
      * @return \Illuminate\Support\Collection<int, object>
      */
-    private function brandOptions()
+    private function brandOptions(string $section, array $categoryIds)
     {
+        $motosCategoryId = $this->motosCategoryId();
+        $effectiveCategoryIds = $this->brandFilterCategoryIds($section, $categoryIds, $motosCategoryId);
+
+        if (is_array($effectiveCategoryIds) && $effectiveCategoryIds !== []) {
+            sort($effectiveCategoryIds);
+        }
+
+        $categoryKey = $effectiveCategoryIds === null
+            ? 'all'
+            : ($effectiveCategoryIds === [] ? 'none' : implode(',', $effectiveCategoryIds));
+
         return QueryResultCache::rememberRows(
-            'catalog.filter_options.brands.all',
-            fn () => Brand::query()
-                ->orderBy('name')
-                ->get(['id', 'name']),
+            "catalog.filter_options.brands.{$section}.{$categoryKey}",
+            function () use ($effectiveCategoryIds) {
+                $query = Brand::query()->orderBy('name');
+
+                if ($effectiveCategoryIds === []) {
+                    return $query->whereRaw('0 = 1')->get(['id', 'name']);
+                }
+
+                if ($effectiveCategoryIds !== null) {
+                    $query->whereHas(
+                        'products',
+                        fn (Builder $productQuery) => $productQuery
+                            ->active()
+                            ->whereIn('category_id', $effectiveCategoryIds),
+                    );
+                }
+
+                return $query->get(['id', 'name']);
+            },
         );
+    }
+
+    /**
+     * @param  list<int>  $categoryIds
+     * @return list<int>|null null = no filtrar por categoría (todas las marcas)
+     */
+    private function brandFilterCategoryIds(string $section, array $categoryIds, ?int $motosCategoryId): ?array
+    {
+        if ($section === 'motos') {
+            if ($motosCategoryId === null) {
+                return [];
+            }
+
+            if ($categoryIds === []) {
+                return [$motosCategoryId];
+            }
+
+            $ids = array_values(array_intersect($categoryIds, [$motosCategoryId]));
+
+            return $ids !== [] ? $ids : [$motosCategoryId];
+        }
+
+        if ($categoryIds === []) {
+            return null;
+        }
+
+        if ($section === 'accesorios' && $motosCategoryId !== null) {
+            return array_values(array_filter(
+                $categoryIds,
+                static fn (int $id): bool => $id !== $motosCategoryId,
+            ));
+        }
+
+        return $categoryIds;
     }
 
     /**

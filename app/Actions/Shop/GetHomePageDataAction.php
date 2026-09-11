@@ -21,7 +21,7 @@ class GetHomePageDataAction
      *     popularProducts: Collection<int, Product>,
      *     brands: Collection<int, Brand>,
      *     categories: Collection<int, Category>,
-     *     heroSlides: list<string>
+     *     heroSlides: list<array{image: string, url: ?string, title: string}>
      * }
      */
     public function execute(): array
@@ -35,7 +35,7 @@ class GetHomePageDataAction
     }
 
     /**
-     * @return list<string>
+     * @return list<array{image: string, url: ?string, title: string}>
      */
     private function heroSlides(): array
     {
@@ -43,16 +43,23 @@ class GetHomePageDataAction
             ->visibleOnHome()
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->pluck('image')
-            ->filter(fn (?string $image) => filled($image))
+            ->get(['image', 'link_url', 'title']);
+
+        $mapped = $slides
+            ->filter(fn (HomeBanner $banner): bool => filled($banner->image))
+            ->map(fn (HomeBanner $banner): array => [
+                'image' => (string) $banner->image,
+                'url' => filled($banner->link_url) ? (string) $banner->link_url : null,
+                'title' => filled($banner->title) ? (string) $banner->title : 'Motoworld',
+            ])
             ->values()
             ->all();
 
-        if ($slides === []) {
-            return HomeBanner::defaultSlideUrls();
+        if ($mapped === []) {
+            return HomeBanner::defaultSlides();
         }
 
-        return $slides;
+        return $mapped;
     }
 
     /**

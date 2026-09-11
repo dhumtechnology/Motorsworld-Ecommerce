@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'title',
     'image',
+    'link_url',
     'is_active',
     'sort_order',
     'starts_at',
@@ -18,16 +19,78 @@ use Illuminate\Support\Carbon;
 class HomeBanner extends Model
 {
     /**
+     * @return list<array{image: string, url: ?string, title: string}>
+     */
+    public static function defaultSlides(): array
+    {
+        return [
+            [
+                'image' => asset('images/home/banner-hero.png'),
+                'url' => null,
+                'title' => 'Motoworld',
+            ],
+            [
+                'image' => asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
+                'url' => null,
+                'title' => 'Motoworld',
+            ],
+        ];
+    }
+
+    /**
      * Imágenes estáticas usadas cuando no hay banners vigentes en el admin.
      *
      * @return list<string>
      */
     public static function defaultSlideUrls(): array
     {
-        return [
-            asset('images/home/banner-hero.png'),
-            asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
-        ];
+        return array_column(self::defaultSlides(), 'image');
+    }
+
+    public static function normalizeLinkUrl(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $url = trim($value);
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
+            return $url;
+        }
+
+        if (preg_match('#^https?://#i', $url) === 1) {
+            return $url;
+        }
+
+        if (str_contains($url, ':')) {
+            return $url;
+        }
+
+        return 'https://'.$url;
+    }
+
+    public static function isValidLinkUrl(?string $url): bool
+    {
+        if ($url === null || $url === '') {
+            return true;
+        }
+
+        if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
+            return strlen($url) <= 2048;
+        }
+
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https'], true);
     }
 
     public function isVisibleOnHome(?Carbon $at = null): bool

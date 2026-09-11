@@ -20,9 +20,7 @@
                 method="GET"
                 class="flex w-full sm:w-auto sm:min-w-[280px] items-center gap-1 rounded-full border border-neutral-300 bg-white pl-4 pr-1 py-1 shadow-sm"
             >
-                @if (request('section') || ($section ?? null) === 'all')
-                    <input type="hidden" name="section" value="{{ request('section', $section) }}">
-                @endif
+                <input type="hidden" name="section" value="all">
 
                 <input
                     type="search"
@@ -48,8 +46,10 @@
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-8">
             <div class="lg:col-span-2">
                 <form action="{{ url()->current() }}" method="GET" class="flex flex-col gap-6 sticky top-4 h-fit">
-                    @if (request('section') || ($section ?? null) === 'all')
-                        <input type="hidden" name="section" value="{{ request('section', $section) }}">
+                    @if (($section ?? null) === 'all' || ! empty($filters['search']))
+                        <input type="hidden" name="section" value="all">
+                    @elseif (request('section'))
+                        <input type="hidden" name="section" value="{{ request('section') }}">
                     @endif
 
                     @if (! empty($filters['search']))

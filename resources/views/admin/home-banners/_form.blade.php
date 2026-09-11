@@ -23,6 +23,14 @@
     </div>
 
     <div>
+        <label for="link_url" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Enlace (opcional)</label>
+        <input id="link_url" name="link_url" type="text" inputmode="url" value="{{ old('link_url', $banner?->link_url) }}"
+               placeholder="https://… o /catalogo?section=motos"
+               class="w-full rounded border border-border bg-surface px-4 py-2.5 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+        <p class="mt-1.5 text-xs text-muted">Si lo dejas vacío, el banner no redirige. Puedes usar una URL completa o una ruta interna del sitio.</p>
+    </div>
+
+    <div>
         <label class="inline-flex items-center gap-2 cursor-pointer">
             <input type="hidden" name="is_active" value="0">
             <input type="checkbox" name="is_active" value="1" class="rounded border-border-strong bg-surface text-primary focus:ring-primary"

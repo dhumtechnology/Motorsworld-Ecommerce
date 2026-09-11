@@ -18,7 +18,7 @@
     - $popularProducts : Collection<Product> (top 10 por ventas; incluye motos)
     - $brands          : Collection<Brand> — marcas con imagen (id, name, image)
     - $categories      : Collection<Category> — categorías con imagen (id, name, description, image)
-    - $heroSlides      : list<string> — URLs del carrusel (admin o imágenes por defecto)
+    - $heroSlides      : list<array{image: string, url: ?string, title: string}>
 --}}
 @extends('layouts.shop')
 
@@ -26,10 +26,7 @@
 
 @section('content')
 @php
-$heroSlides = $heroSlides ?? [
-asset('images/home/banner-hero.png'),
-asset('images/home/portadas/1 HOME - bienvenidos a mw 2.jpg'),
-];
+$heroSlides = $heroSlides ?? \App\Models\Content\HomeBanner::defaultSlides();
 $mapEmbedUrl = config('shop.map_embed_url');
 @endphp
 
@@ -66,21 +63,41 @@ $mapEmbedUrl = config('shop.map_embed_url');
     }"
     x-init="start()"
     aria-label="Banner Motoworld">
-    <div class="home-hero-frame relative w-full overflow-hidden">
-        {{-- La 1.ª imagen define la altura del banner. --}}
-        <img
-            src="{{ $heroSlides[0] }}"
-            alt=""
-            aria-hidden="true"
-            class="home-hero-sizer block h-auto w-full max-w-full">
+    <div class="home-hero-frame">
         @foreach ($heroSlides as $index => $slide)
-        <img
-            src="{{ $slide }}"
-            alt="Motoworld"
-            class="home-hero-slide{{ $index === 0 ? ' is-active' : '' }}"
-            :class="{ 'is-active': active === {{ $index }} }"
-            @if ($index===0) loading="eager" @else loading="lazy" @endif
-            :aria-hidden="active === {{ $index }} ? 'false' : 'true'">
+            @php
+                $slideImage = is_array($slide) ? ($slide['image'] ?? '') : $slide;
+                $slideUrl = is_array($slide) ? ($slide['url'] ?? null) : null;
+                $slideTitle = is_array($slide) ? ($slide['title'] ?? 'Motoworld') : 'Motoworld';
+                $isLinked = filled($slideUrl);
+                $isExternal = $isLinked && preg_match('#^https?://#i', (string) $slideUrl) === 1;
+                $slideClass = 'home-hero-slide'.($index === 0 ? ' is-active' : '').($isLinked ? ' is-linked' : '');
+            @endphp
+            @if ($isLinked)
+                <a
+                    href="{{ $slideUrl }}"
+                    @if ($isExternal) target="_blank" rel="noopener noreferrer" @endif
+                    class="{{ $slideClass }}"
+                    :class="{ 'is-active': active === {{ $index }} }"
+                    :aria-hidden="active === {{ $index }} ? 'false' : 'true'"
+                >
+                    <img
+                        src="{{ $slideImage }}"
+                        alt="{{ $slideTitle }}"
+                        @if ($index === 0) loading="eager" @else loading="lazy" @endif>
+                </a>
+            @else
+                <div
+                    class="{{ $slideClass }}"
+                    :class="{ 'is-active': active === {{ $index }} }"
+                    :aria-hidden="active === {{ $index }} ? 'false' : 'true'"
+                >
+                    <img
+                        src="{{ $slideImage }}"
+                        alt="{{ $slideTitle }}"
+                        @if ($index === 0) loading="eager" @else loading="lazy" @endif>
+                </div>
+            @endif
         @endforeach
     </div>
 
@@ -110,34 +127,44 @@ $mapEmbedUrl = config('shop.map_embed_url');
     .home-hero-frame {
         position: relative;
         width: 100%;
+        height: 80vh;
         overflow: hidden;
-    }
-
-    .home-hero-sizer {
-        display: block;
-        width: 100%;
-        height: auto;
-        visibility: hidden;
-        pointer-events: none;
+        background: #171717;
     }
 
     .home-hero-slide {
         position: absolute;
-        inset: 0;
+        top: 50%;
+        left: 50%;
+        display: block;
         width: 100%;
         height: 100%;
-        /* Cubre todo el ancho; si sobra, recorta en Y (y en X si hace falta). */
-        object-fit: cover;
-        object-position: center;
+        max-width: none;
+        max-height: none;
+        transform: translate(-50%, -50%);
         opacity: 0;
         transition: opacity 1.2s ease-in-out;
         will-change: opacity;
         pointer-events: none;
+        z-index: 0;
     }
 
-    /* Mismo z-index + solo opacity = crossfade en ambos sentidos. */
+    .home-hero-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 50%;
+        pointer-events: none;
+    }
+
     .home-hero-slide.is-active {
         opacity: 1;
+        z-index: 1;
+    }
+
+    .home-hero-slide.is-active.is-linked {
+        pointer-events: auto;
+        cursor: pointer;
     }
 </style>
 
@@ -344,6 +371,7 @@ $mapEmbedUrl = config('shop.map_embed_url');
                 <div class="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(20%-0.8rem)] flex-shrink-0 snap-start">
                     <a
                         href="{{ $categoryHref }}"
+                        data-category-click
                         class="group/category relative block aspect-[3/4] overflow-hidden bg-neutral-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
                         <img
                             src="{{ $category->image }}"
@@ -368,6 +396,50 @@ $mapEmbedUrl = config('shop.map_embed_url');
 
         </div>
     </div>
+
+    <audio
+        id="home-category-click"
+        src="{{ asset('sounds/category-click.wav') }}"
+        preload="auto"
+        hidden
+    ></audio>
+    <script>
+        (function () {
+            const sound = document.getElementById('home-category-click');
+            const links = document.querySelectorAll('[data-category-click]');
+            if (!sound || links.length === 0) return;
+
+            const playClick = () => {
+                try {
+                    sound.pause();
+                    sound.currentTime = 0;
+                    const play = sound.play();
+                    if (play && typeof play.catch === 'function') play.catch(() => {});
+                } catch (e) {}
+            };
+
+            links.forEach((link) => {
+                link.addEventListener('click', (event) => {
+                    if (
+                        event.defaultPrevented
+                        || event.button !== 0
+                        || event.metaKey
+                        || event.ctrlKey
+                        || event.shiftKey
+                        || event.altKey
+                    ) {
+                        return;
+                    }
+
+                    playClick();
+                    event.preventDefault();
+                    window.setTimeout(() => {
+                        window.location.href = link.href;
+                    }, 180);
+                });
+            });
+        })();
+    </script>
 </section>
 
 {{-- Productos populares --}}

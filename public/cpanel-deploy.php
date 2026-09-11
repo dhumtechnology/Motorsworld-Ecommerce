@@ -170,6 +170,7 @@ echo "Raíz Laravel: {$root}\n";
 echo str_repeat('=', 40)."\n\n";
 
 $commands = [
+    'optimize:clear',
     'migrate --force',
     'storage:link',
     'config:cache',

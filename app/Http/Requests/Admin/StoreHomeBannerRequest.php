@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Content\HomeBanner;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 
@@ -12,6 +13,13 @@ class StoreHomeBannerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'link_url' => HomeBanner::normalizeLinkUrl($this->input('link_url')),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -20,6 +28,11 @@ class StoreHomeBannerRequest extends FormRequest
         return [
             'title' => ['nullable', 'string', 'max:255'],
             'image' => ['required', 'image', 'max:5120'],
+            'link_url' => ['nullable', 'string', 'max:2048', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! HomeBanner::isValidLinkUrl(is_string($value) ? $value : null)) {
+                    $fail('Ingresa una URL válida (https://…) o una ruta interna (/catalogo).');
+                }
+            }],
             'is_active' => ['nullable', 'boolean'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
@@ -47,6 +60,7 @@ class StoreHomeBannerRequest extends FormRequest
         return [
             'title' => $this->filled('title') ? trim((string) $this->input('title')) : null,
             'image' => '',
+            'link_url' => HomeBanner::normalizeLinkUrl($this->input('link_url')),
             'is_active' => $this->boolean('is_active'),
             'starts_at' => $this->input('starts_at'),
             'ends_at' => $this->filled('ends_at') ? $this->input('ends_at') : null,

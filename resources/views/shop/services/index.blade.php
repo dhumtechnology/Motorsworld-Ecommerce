@@ -53,7 +53,7 @@ $imgReservar = asset('images/services/reservar-servicio.jpg');
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="images/about/MISION.jpg"
+                        src="{{ asset('images/about/MISION.jpg') }}"
                         alt="Misión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy">
@@ -78,7 +78,7 @@ $imgReservar = asset('images/services/reservar-servicio.jpg');
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="images/about/vision.png"
+                        src="{{ asset('images/about/vision.jpeg') }}"
                         alt="Visión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy">

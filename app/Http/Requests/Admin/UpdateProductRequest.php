@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\Products\ProductStatus;
+use App\Enums\Products\StockAvailability;
 use App\Http\Requests\Admin\Concerns\ParsesProductVariantPayload;
 use App\Models\Products\Product;
 use App\Models\Products\ProductVariant;
@@ -42,6 +43,7 @@ class UpdateProductRequest extends FormRequest
             'price_amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', 'string', Rule::in(['PEN', 'USD'])],
             'status' => ['required', Rule::enum(ProductStatus::class)],
+            'stock_availability' => ['required', Rule::enum(StockAvailability::class)],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
             'model_id' => [
@@ -108,6 +110,15 @@ class UpdateProductRequest extends FormRequest
 
         if (! $this->filled('brand_id')) {
             $this->merge(['model_id' => null]);
+        } elseif ($this->filled('model_id')) {
+            $belongsToBrand = VehicleModel::query()
+                ->whereKey((int) $this->input('model_id'))
+                ->where('brand_id', (int) $this->input('brand_id'))
+                ->exists();
+
+            if (! $belongsToBrand) {
+                $this->merge(['model_id' => null]);
+            }
         }
     }
 
@@ -196,8 +207,12 @@ class UpdateProductRequest extends FormRequest
             'price_amount' => $this->input('price_amount'),
             'currency' => strtoupper((string) $this->input('currency', 'PEN')),
             'status' => $this->input('status'),
+            'stock_availability' => $this->input('stock_availability', StockAvailability::Store->value),
             'category_id' => (int) $this->input('category_id'),
-            'model_id' => $this->filled('model_id') ? (int) $this->input('model_id') : null,
+            'model_id' => VehicleModel::idForBrandSelection(
+                $this->filled('brand_id') ? (int) $this->input('brand_id') : null,
+                $this->filled('model_id') ? (int) $this->input('model_id') : null,
+            ),
         ];
     }
 

@@ -1,10 +1,10 @@
 {{--
     Nosotros / About
 
-    Imágenes (opcionales; hay fallbacks):
-    - public/images/about/banner-nosotros.png
-    - public/images/about/mision.png
-    - public/images/about/vision.png
+    Imágenes:
+    - public/images/about/NOSOTROS.jpg
+    - public/images/about/MISION.jpg
+    - public/images/about/vision.jpeg
 --}}
 @extends('layouts.shop')
 
@@ -12,18 +12,6 @@
 
 @section('content')
 @php
-$banner = file_exists(public_path('images/about/banner-nosotros.png'))
-? asset('images/about/banner-nosotros.png')
-: asset('images/services/banner-servicios.png');
-
-$misionImage = file_exists(public_path('images/about/mision.png'))
-? asset('images/about/mision.png')
-: asset('images/home/taller-1.png');
-
-$visionImage = file_exists(public_path('images/about/vision.png'))
-? asset('images/about/vision.png')
-: asset('images/home/taller-2.png');
-
 $policies = [
 [
 'title' => 'Satisfacción del cliente',
@@ -44,7 +32,7 @@ $policies = [
 <section class="relative w-full overflow-hidden bg-neutral-900">
     <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
         <img
-            src="images/about/NOSOTROS.jpg"
+            src="{{ asset('images/about/NOSOTROS.jpg') }}"
             alt="Nosotros Motoworld"
             class="absolute inset-0 h-full w-full object-cover"
             onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
@@ -89,7 +77,7 @@ $policies = [
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="images/about/MISION.jpeg"
+                        src="{{ asset('images/about/MISION.jpg') }}"
                         alt="Misión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy">
@@ -110,7 +98,7 @@ $policies = [
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="images/about/vision.png"
+                        src="{{ asset('images/about/vision.jpeg') }}"
                         alt="Visión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy">

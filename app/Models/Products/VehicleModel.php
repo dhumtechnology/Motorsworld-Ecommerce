@@ -39,6 +39,45 @@ class VehicleModel extends Model
     }
 
     /**
+     * El producto guarda la marca vía model_id. Si hay marca y ningún modelo válido,
+     * usa el primero de esa marca o crea uno con el nombre de la marca.
+     */
+    public static function idForBrandSelection(?int $brandId, ?int $modelId): ?int
+    {
+        if ($brandId === null || $brandId <= 0) {
+            return null;
+        }
+
+        if ($modelId !== null && $modelId > 0) {
+            $belongs = static::query()
+                ->whereKey($modelId)
+                ->where('brand_id', $brandId)
+                ->exists();
+
+            if ($belongs) {
+                return $modelId;
+            }
+        }
+
+        $existingId = static::query()
+            ->where('brand_id', $brandId)
+            ->orderBy('name')
+            ->value('id');
+
+        if ($existingId) {
+            return (int) $existingId;
+        }
+
+        $brandName = Brand::query()->whereKey($brandId)->value('name');
+        $name = filled($brandName) ? (string) $brandName : 'General';
+
+        return (int) static::query()->create([
+            'brand_id' => $brandId,
+            'name' => $name,
+        ])->id;
+    }
+
+    /**
      * Modelos con al menos un producto en la categoría Motocicletas.
      *
      * @param  Builder<VehicleModel>  $query

@@ -149,7 +149,15 @@
                 || selectedBtn?.dataset.filterValue === brandId;
 
             if (resetInvalid && !stillValid && modelRoot._ssSetValue) {
-                modelRoot._ssSetValue('', 'Sin modelo', true);
+                const firstForBrand = Array.from(modelRoot.querySelectorAll('[data-ss-option]')).find((btn) => {
+                    return btn.dataset.value !== '' && (btn.dataset.filterValue || '') === brandId;
+                });
+
+                if (firstForBrand) {
+                    modelRoot._ssSetValue(firstForBrand.dataset.value || '', firstForBrand.dataset.label || '', true);
+                } else {
+                    modelRoot._ssSetValue('', 'Sin modelo', true);
+                }
             }
         };
 
