@@ -27,6 +27,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CheckoutController extends Controller
 {
@@ -182,6 +183,21 @@ class CheckoutController extends Controller
                 ->route('shop.checkout.show')
                 ->withInput()
                 ->withErrors(['payment' => $e->getMessage()]);
+        } catch (Throwable $e) {
+            report($e);
+
+            if ($order !== null) {
+                $this->discardFailedOrder->execute($order);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'No se pudo completar el pago. Inténtalo de nuevo.',
+                    'errors' => ['payment' => ['No se pudo completar el pago. Inténtalo de nuevo.']],
+                ], 500);
+            }
+
+            throw $e;
         }
 
         $order = $result['order'];
@@ -213,7 +229,7 @@ class CheckoutController extends Controller
                     'needs_3ds' => true,
                     'message' => 'Tu banco requiere autenticación 3D Secure.',
                     'order_id' => $order->id,
-                    'confirm_url' => route('shop.checkout.orders.confirm3ds', $order),
+                    'confirm_url' => route('shop.checkout.orders.confirm3ds', $order, false),
                     'payment' => [
                         'id' => $payment->id,
                         'method' => $payment->method->value,

@@ -37,7 +37,7 @@
                 <form
                     id="checkout-form"
                     method="POST"
-                    action="{{ route('shop.checkout.pay') }}"
+                    action="{{ route('shop.checkout.pay', absolute: false) }}"
                     data-submit-lock="async"
                     class="space-y-5 rounded-3xl border border-neutral-200/80 bg-white/95 p-5 sm:p-7 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.45)] backdrop-blur"
                 >
@@ -429,15 +429,38 @@ window.MotoworldCheckout = {
         return { month, year };
     }
 
+    function isNetworkError(err) {
+        return /failed to fetch|networkerror|load failed|network request failed/i.test(String(err?.message || err || ''));
+    }
+
+    function sameOriginPath(url) {
+        try {
+            const parsed = new URL(url, window.location.origin);
+            return parsed.pathname + parsed.search;
+        } catch (e) {
+            return url;
+        }
+    }
+
     async function culqiFetch(path, payload) {
-        const response = await fetch('https://secure.culqi.com/v2' + path, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + cfg.publicKey,
-            },
-            body: JSON.stringify(payload),
-        });
+        let response;
+        try {
+            response = await fetch('https://secure.culqi.com/v2' + path, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + String(cfg.publicKey || '').trim(),
+                },
+                body: JSON.stringify(payload),
+            });
+        } catch (err) {
+            throw new Error(
+                'Culqi no aceptó la conexión desde ' + window.location.host +
+                '. Entra a https://motoworld.pe (sin www), registra ese dominio en Culqi Panel y usa llaves pk_live_/sk_live_ (o pk_test_/sk_test_) del mismo entorno.'
+            );
+        }
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.id) {
             throw new Error(data.user_message || data.merchant_message || data.message || 'No se pudo tokenizar el pago.');
@@ -533,16 +556,24 @@ window.MotoworldCheckout = {
             body.set(key, String(value));
         });
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrf,
-            },
-            credentials: 'same-origin',
-            body,
-        });
+        let response;
+        try {
+            response = await fetch(sameOriginPath(url), {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                credentials: 'same-origin',
+                body,
+            });
+        } catch (err) {
+            if (isNetworkError(err)) {
+                throw new Error('No se pudo contactar al servidor de pago. Revisa tu conexión e inténtalo de nuevo.');
+            }
+            throw err;
+        }
 
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -632,7 +663,7 @@ window.MotoworldCheckout = {
             });
 
             if (data.needs_3ds && data.confirm_url) {
-                const confirmed = await startThreeDS(token, data.confirm_url);
+                const confirmed = await startThreeDS(token, sameOriginPath(data.confirm_url));
                 if (confirmed.redirect_url) {
                     window.location.href = confirmed.redirect_url;
                     return;

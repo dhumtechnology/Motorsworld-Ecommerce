@@ -38,8 +38,8 @@ return [
     'culqi' => [
         // true = simula Culqi sin cuenta/llaves (solo desarrollo local)
         'fake' => (bool) env('CULQI_FAKE', false),
-        'public_key' => env('CULQI_PUBLIC_KEY'),
-        'secret_key' => env('CULQI_SECRET_KEY'),
+        'public_key' => ($key = env('CULQI_PUBLIC_KEY')) ? trim((string) $key) : null,
+        'secret_key' => ($key = env('CULQI_SECRET_KEY')) ? trim((string) $key) : null,
         'order_expiration_hours' => (int) env('CULQI_ORDER_EXPIRATION_HOURS', 24),
     ],
 
