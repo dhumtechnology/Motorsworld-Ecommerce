@@ -20,6 +20,7 @@ use App\Models\Orders\Order;
 use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
 use App\Services\Orders\ProductPricingService;
+use App\Services\Payments\Culqi\CulqiClient;
 use App\Services\Payments\Culqi\Exceptions\CulqiApiException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -102,7 +103,74 @@ class CheckoutController extends Controller
             'user' => $user,
             'amount' => round((float) $totals->chargeAmount(), 2),
             'amountCents' => (int) round((float) $totals->chargeAmount() * 100),
+            'yapeTokenUrl' => route('shop.checkout.yapeToken', absolute: false),
         ]);
+    }
+
+    public function yapeToken(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'number_phone' => ['required', 'digits:9'],
+            'otp' => ['required', 'digits:6'],
+            'dni' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+        $cart->loadMissing([
+            'items.product.activeOffer',
+            'items.variant',
+        ]);
+
+        if ($cart->items->isEmpty()) {
+            return response()->json([
+                'message' => 'Tu carrito está vacío.',
+            ], 422);
+        }
+
+        $lines = $cart->items
+            ->filter(fn ($item) => $item->product !== null)
+            ->map(function ($item) {
+                $pricing = $this->pricing->resolve($item->product);
+
+                return [
+                    'quantity' => $item->quantity,
+                    'unit_price' => (float) $pricing->unitPrice,
+                    'line_total' => (float) $pricing->unitPrice * $item->quantity,
+                    'currency' => $pricing->currency,
+                ];
+            });
+
+        $totals = $this->cartTotals->summarize($lines);
+        $amountCents = (int) round((float) $totals->chargeAmount() * 100);
+
+        if (strtoupper((string) $totals->chargeCurrency()) !== 'PEN') {
+            return response()->json([
+                'message' => 'Yape solo acepta pagos en soles.',
+            ], 422);
+        }
+
+        if ($amountCents < 100 || $amountCents > 99999) {
+            return response()->json([
+                'message' => 'Yape acepta montos de S/ 1.00 a S/ 999.99.',
+            ], 422);
+        }
+
+        try {
+            $token = app(CulqiClient::class)->createYapeToken(
+                $validated['number_phone'],
+                $validated['otp'],
+                $amountCents,
+                array_filter([
+                    'dni' => $validated['dni'] ?? null,
+                ]),
+            );
+        } catch (CulqiApiException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json(['id' => $token]);
     }
 
     public function pay(CheckoutPayRequest $request): JsonResponse|RedirectResponse

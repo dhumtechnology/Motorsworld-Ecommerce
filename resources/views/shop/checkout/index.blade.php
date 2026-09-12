@@ -322,6 +322,7 @@ window.MotoworldCheckout = {
     currency: @json($currency ?? 'PEN'),
     fake: @json((bool) $culqiFake),
     yapeMaxCents: 200000,
+    yapeTokenUrl: @json($yapeTokenUrl ?? '/checkout/token-yape'),
 };
 </script>
 
@@ -456,16 +457,24 @@ window.MotoworldCheckout = {
                 body: JSON.stringify(payload),
             });
         } catch (err) {
-            throw new Error(
-                'Culqi no aceptó la conexión desde ' + window.location.host +
-                '. Entra a https://motoworld.pe (sin www), registra ese dominio en Culqi Panel y usa llaves pk_live_/sk_live_ (o pk_test_/sk_test_) del mismo entorno.'
-            );
+            throw new Error('No se pudo conectar con Culqi. Inténtalo de nuevo.');
         }
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.id) {
-            throw new Error(data.user_message || data.merchant_message || data.message || 'No se pudo tokenizar el pago.');
+            throw new Error(culqiErrorMessage(data));
         }
         return data.id;
+    }
+
+    function culqiErrorMessage(data) {
+        if (!data || typeof data !== 'object') {
+            return 'No se pudo tokenizar el pago.';
+        }
+        return data.user_message
+            || data.merchant_message
+            || data.message
+            || (data.param ? ('Culqi rechazó el campo ' + data.param + '.') : '')
+            || 'Culqi rechazó el pago. Revisa OTP, celular Yape y que el monto sea al menos S/ 1.00.';
     }
 
     async function createCardToken() {
@@ -506,13 +515,43 @@ window.MotoworldCheckout = {
         }
 
         if (cfg.fake) return randomId('ype_test_fake_');
-        if (!cfg.publicKey) throw new Error('Falta CULQI_PUBLIC_KEY.');
+        if (!cfg.yapeTokenUrl) throw new Error('Falta la URL de token Yape.');
 
-        return culqiFetch('/tokens/yape', {
+        const data = await postYapeToken({
             number_phone: phone,
             otp,
-            amount: Number(cfg.amountCents),
+            dni: document.getElementById('customer_document')?.value || '',
         });
+        if (!data.id) throw new Error(data.message || 'No se pudo tokenizar Yape.');
+        return data.id;
+    }
+
+    async function postYapeToken(payload) {
+        let response;
+        try {
+            response = await fetch(sameOriginPath(cfg.yapeTokenUrl), {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload),
+            });
+        } catch (err) {
+            if (isNetworkError(err)) {
+                throw new Error('No se pudo contactar al servidor de pago. Revisa tu conexión e inténtalo de nuevo.');
+            }
+            throw err;
+        }
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.id) {
+            throw new Error(firstError(data) || data.message || 'Culqi rechazó el código Yape. Genera un OTP nuevo e inténtalo de nuevo.');
+        }
+        return data;
     }
 
     async function generateDeviceId() {

@@ -79,29 +79,11 @@ class MarkOrderAsPaidAction
             return;
         }
 
-        $orderId = $order->id;
-
-        dispatch(function () use ($orderId, $email): void {
-            try {
-                $fresh = Order::query()
-                    ->with([
-                        'items.product',
-                        'items.variant',
-                        'payments',
-                        'user.customerProfile',
-                        'shippingAddress',
-                    ])
-                    ->find($orderId);
-
-                if ($fresh === null) {
-                    return;
-                }
-
-                Mail::to($email)->send(new OrderPaidConfirmationMail($fresh));
-            } catch (Throwable $e) {
-                report($e);
-            }
-        })->afterResponse();
+        try {
+            Mail::to($email)->send(new OrderPaidConfirmationMail($order));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private function registerSaleExits(Order $order): void

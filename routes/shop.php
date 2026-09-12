@@ -111,6 +111,7 @@ Route::prefix('carrito')->name('cart.')->group(function () {
 Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'show'])->name('show');
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
+    Route::post('/token-yape', [CheckoutController::class, 'yapeToken'])->name('yapeToken');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
     Route::get('/pedidos/{order}/estado', [CheckoutController::class, 'paymentStatus'])->name('orders.status');
     Route::post('/pedidos/{order}/confirmar-3ds', [CheckoutController::class, 'confirmThreeDS'])->name('orders.confirm3ds');

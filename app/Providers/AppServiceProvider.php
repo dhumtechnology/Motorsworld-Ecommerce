@@ -40,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        $this->configureSharedHostingMail();
+        $this->configureProductionCulqi();
         $this->configureSharedHostingPublicDisk();
 
         Gate::before(function ($user, string $ability) {
@@ -144,9 +146,38 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $viewsPath = storage_path('framework/views');
+        if (! is_dir($viewsPath)) {
+            @mkdir($viewsPath, 0775, true);
+        }
         if (is_dir($viewsPath)) {
-            $this->app->useStoragePath(storage_path());
             config(['view.compiled' => $viewsPath]);
+        }
+    }
+
+    /**
+     * cPanel SMTP usa el certificado del servidor (priva10...), no de mail.dominio.
+     * Si config está cacheada con verify_peer=true, el checkout espera 60s y el
+     * navegador muestra "Failed to fetch".
+     */
+    private function configureSharedHostingMail(): void
+    {
+        config([
+            'mail.mailers.smtp.verify_peer' => false,
+            'mail.mailers.smtp.timeout' => 8,
+        ]);
+    }
+
+    /**
+     * Si hay llaves live en el servidor, nunca simular Culqi aunque CULQI_FAKE
+     * haya quedado en true o la config esté cacheada.
+     */
+    private function configureProductionCulqi(): void
+    {
+        $public = trim((string) config('services.culqi.public_key'));
+        $secret = trim((string) config('services.culqi.secret_key'));
+
+        if (str_starts_with($public, 'pk_live_') && str_starts_with($secret, 'sk_live_')) {
+            config(['services.culqi.fake' => false]);
         }
     }
 

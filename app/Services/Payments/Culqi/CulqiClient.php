@@ -86,6 +86,52 @@ class CulqiClient
     }
 
     /**
+     * Token Yape (OTP + celular). Se llama desde el servidor para evitar CORS del navegador.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    public function createYapeToken(string $phone, string $otp, int $amountCents, array $metadata = []): string
+    {
+        if ($this->fake) {
+            return 'ype_test_fake_'.Str::lower(Str::random(8));
+        }
+
+        $amount = (string) $amountCents;
+
+        if (strlen($amount) < 3 || strlen($amount) > 5) {
+            throw CulqiApiException::configuration('Yape acepta montos de S/ 1.00 a S/ 999.99.');
+        }
+
+        $payload = [
+            'number_phone' => $phone,
+            'otp' => $otp,
+            'amount' => $amount,
+        ];
+
+        if ($metadata !== []) {
+            $payload['metadata'] = $metadata;
+        }
+
+        $response = Http::withToken($this->publicKey())
+            ->acceptJson()
+            ->asJson()
+            ->timeout(30)
+            ->post('https://secure.culqi.com/v2/tokens/yape', $payload);
+
+        $status = $response->status();
+        $body = $response->json();
+        $body = is_array($body) ? $body : [];
+        $id = $body['id'] ?? null;
+
+        if ($status >= 400 || ! is_string($id) || $id === '' || ! str_starts_with($id, 'ype_')) {
+            unset($body['otp']);
+            $this->throwFromError($status, $body, '/tokens/yape');
+        }
+
+        return $id;
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
