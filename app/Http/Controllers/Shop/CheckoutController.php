@@ -166,7 +166,7 @@ class CheckoutController extends Controller
             );
         } catch (CulqiApiException $e) {
             return response()->json([
-                'message' => $e->getMessage(),
+                'message' => $this->yapeTokenErrorMessage($e),
             ], 422);
         }
 
@@ -604,5 +604,16 @@ class CheckoutController extends Controller
             'postal_code' => $request->input('postal_code') ?: '15001',
             'country' => 'PE',
         ]);
+    }
+
+    private function yapeTokenErrorMessage(CulqiApiException $e): string
+    {
+        $message = $e->getMessage();
+
+        if (str_contains(mb_strtolower($message), 'no está autorizado')) {
+            return 'Culqi no tiene Yape habilitado para este comercio. Hay que pedirlo a Culqi Soporte. Mientras tanto se puede pagar con tarjeta.';
+        }
+
+        return $message !== '' ? $message : 'No se pudo tokenizar Yape.';
     }
 }
