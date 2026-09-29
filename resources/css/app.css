@@ -469,4 +469,125 @@ input[type="submit"].is-submit-locked {
     .gallery-thumbs-scroll::-webkit-scrollbar-thumb:hover {
         background: #e65c00;
     }
+
+    /* Banners de página: mismo alto en todo el sitio. La imagen cubre el ancho sin deformarse. */
+    .shop-page-banner {
+        position: relative;
+        width: 100%;
+        height: 16.25rem;
+        overflow: hidden;
+    }
+
+    @media (width >= 40rem) {
+        .shop-page-banner {
+            height: 20rem;
+        }
+    }
+
+    @media (width >= 48rem) {
+        .shop-page-banner {
+            height: 22.5rem;
+        }
+    }
+
+    @media (width >= 64rem) {
+        .shop-page-banner {
+            height: 26.25rem;
+        }
+    }
+
+    .shop-page-banner img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+    }
+
+    /* HTML de Quill en ficha de producto (Tailwind resetea listas/títulos). */
+    .product-richtext {
+        font-family: var(--font-secondary);
+        color: var(--color-text);
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .product-richtext h1,
+    .product-richtext h2,
+    .product-richtext h3 {
+        font-family: var(--font-title);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #171717;
+        line-height: 1.25;
+        margin-top: 1.25rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .product-richtext h1 { font-size: 1.75rem; }
+    .product-richtext h2 { font-size: 1.4rem; }
+    .product-richtext h3 { font-size: 1.15rem; }
+
+    .product-richtext p { margin-bottom: 0.85rem; }
+    .product-richtext p:last-child { margin-bottom: 0; }
+
+    .product-richtext ul,
+    .product-richtext ol {
+        margin: 0 0 0.85rem;
+        padding-left: 1.5rem;
+    }
+
+    .product-richtext ul { list-style-type: disc; }
+    .product-richtext ol { list-style-type: decimal; }
+
+    .product-richtext li {
+        display: list-item;
+        margin-bottom: 0.3rem;
+    }
+
+    .product-richtext li[data-list="bullet"] { list-style-type: disc; }
+    .product-richtext li[data-list="ordered"] { list-style-type: decimal; }
+
+    .product-richtext a {
+        color: #ea580c;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+
+    .product-richtext strong,
+    .product-richtext b { font-weight: 800; }
+
+    .product-richtext em,
+    .product-richtext i { font-style: italic; }
+
+    .product-richtext u { text-decoration: underline; }
+
+    .product-richtext s,
+    .product-richtext strike { text-decoration: line-through; }
+
+    .product-richtext blockquote {
+        border-left: 3px solid #ea580c;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        color: #525252;
+        font-style: italic;
+    }
+
+    .product-richtext .ql-size-small { font-size: 0.75em; }
+    .product-richtext .ql-size-large { font-size: 1.5em; }
+    .product-richtext .ql-size-huge { font-size: 2.5em; }
+
+    .product-richtext .ql-align-center { text-align: center; }
+    .product-richtext .ql-align-right { text-align: right; }
+    .product-richtext .ql-align-justify { text-align: justify; }
+
+    .product-richtext .ql-indent-1 { padding-left: 3em; }
+    .product-richtext .ql-indent-2 { padding-left: 6em; }
+    .product-richtext .ql-indent-3 { padding-left: 9em; }
+    .product-richtext .ql-indent-4 { padding-left: 12em; }
+    .product-richtext .ql-indent-5 { padding-left: 15em; }
+    .product-richtext .ql-indent-6 { padding-left: 18em; }
+    .product-richtext .ql-indent-7 { padding-left: 21em; }
+    .product-richtext .ql-indent-8 { padding-left: 24em; }
 }

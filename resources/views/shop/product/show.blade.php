@@ -619,15 +619,15 @@ RELACIONES CARGADAS EN $product
                             </svg>
 
                             <!-- Nombre del archivo subido -->
-                            <span class="text-sm font-medium text-neutral-800 truncate" title="{{ basename($product->technical_sheet) }}">
-                                {{ basename($product->technical_sheet) }}
+                            <span class="text-sm font-medium text-neutral-800 truncate" title="{{ $product->technicalSheetFilename() }}">
+                                {{ $product->technicalSheetFilename() }}
                             </span>
                         </div>
 
                         <!-- Botón Descargar -->
                         <a
                             href="{{ $product->technical_sheet }}"
-                            download
+                            download="{{ $product->technicalSheetFilename() }}"
                             target="_blank"
                             rel="noopener noreferrer"
                             class="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-black transition-colors shrink-0">
@@ -668,37 +668,4 @@ RELACIONES CARGADAS EN $product
             });
         });
     </script>
-    <style>
-        .product-richtext h1, .product-richtext h2, .product-richtext h3 {
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            color: #171717;
-            margin-top: 1.25rem;
-            margin-bottom: 0.6rem;
-        }
-        .product-richtext h1 { font-size: 1.5rem; }
-        .product-richtext h2 { font-size: 1.25rem; }
-        .product-richtext h3 { font-size: 1.1rem; }
-        .product-richtext p { margin-bottom: 0.85rem; }
-        .product-richtext ul, .product-richtext ol { margin: 0 0 0.85rem 1.25rem; }
-        .product-richtext li { margin-bottom: 0.3rem; }
-        .product-richtext a { color: #ea580c; font-weight: 600; text-decoration: underline; }
-        .product-richtext strong, .product-richtext b { font-weight: 800; }
-        .product-richtext em, .product-richtext i { font-style: italic; }
-        .product-richtext u { text-decoration: underline; }
-        .product-richtext s, .product-richtext strike { text-decoration: line-through; }
-        .product-richtext blockquote {
-            border-left: 3px solid #ea580c;
-            padding-left: 1rem;
-            margin: 1rem 0;
-            color: #525252;
-            font-style: italic;
-        }
-        .product-richtext .ql-size-small { font-size: 0.75em; }
-        .product-richtext .ql-size-large { font-size: 1.5em; }
-        .product-richtext .ql-size-huge { font-size: 2.25em; }
-        .product-richtext .ql-align-center { text-align: center; }
-        .product-richtext .ql-align-right { text-align: right; }
-        .product-richtext .ql-align-justify { text-align: justify; }
-    </style>
     @endsection

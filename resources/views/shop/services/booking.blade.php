@@ -17,7 +17,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
 @endphp
 
 <section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="relative aspect-[21/9] min-h-[220px] max-h-[420px] w-full">
+    <div class="shop-page-banner">
         <img
             src="{{ $banner }}"
             alt="Agendar servicio"
@@ -29,7 +29,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                 Agenda tu servicio
             </h1>
             <p class="mt-2 text-sm md:text-base text-white/85 max-w-xl">
-                Horario de atención: Lunes a viernes de 9:30 a.m. a 6:00 p.m.
+                Horario de atención: lunes a viernes de 9:00 a 13:00 h y de 14:00 a 18:30 h. Sábados, de 9:00 a 14:00 h.
             </p>
         </div>
     </div>
@@ -236,14 +236,14 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                     </span>
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-wider text-neutral-900">Fecha y hora *</h3>
-                        <p class="text-xs text-neutral-500">Solo lunes a viernes · 9:30 a.m. – 6:00 p.m.</p>
+                        <p class="text-xs text-neutral-500">Lunes a viernes 9:00–13:00 y 14:00–18:30 · Sábados 9:00–14:00</p>
                     </div>
                 </div>
 
                 <label class="{{ $label }}">Elige fecha y horario</label>
                 <div
                     class="grid grid-cols-1 divide-y divide-neutral-200 rounded-lg border border-neutral-200 bg-white shadow-sm transition focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 sm:grid-cols-2 sm:divide-x sm:divide-y-0"
-                    :class="{ 'border-red-300': weekendSelected }">
+                    :class="{ 'border-red-300': sundaySelected }">
                     <input
                         type="date"
                         name="appointment_date"
@@ -257,7 +257,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                         x-model="time"
                         required
                         class="{{ $datetimePart }} rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none"
-                        :disabled="!date || loadingSlots || weekendSelected">
+                        :disabled="!date || loadingSlots || sundaySelected">
                         <option value="">Horario</option>
                         <template x-for="slot in slots" :key="slot">
                             <option :value="slot" x-text="formatSlot(slot)"></option>
@@ -265,10 +265,10 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                     </select>
                 </div>
 
-                <p class="mt-2 text-[11px] text-red-600" x-show="weekendSelected" x-cloak>
-                    Solo puedes reservar de lunes a viernes.
+                <p class="mt-2 text-[11px] text-red-600" x-show="sundaySelected" x-cloak>
+                    Los domingos no hay atención. Elige lunes a sábado.
                 </p>
-                <p class="mt-2 text-[11px] text-neutral-500" x-show="date && !weekendSelected && !loadingSlots && slots.length === 0" x-cloak>
+                <p class="mt-2 text-[11px] text-neutral-500" x-show="date && !sundaySelected && !loadingSlots && slots.length === 0" x-cloak>
                     No hay horarios disponibles para esta fecha.
                 </p>
                 <p class="mt-2 text-[11px] text-neutral-500" x-show="loadingSlots" x-cloak>Cargando horarios...</p>
@@ -331,20 +331,19 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
             return y + '-' + m + '-' + day;
         };
 
-        const nextWeekday = () => {
+        const nextOpenDay = () => {
             const d = new Date();
             d.setHours(12, 0, 0, 0);
-            while (d.getDay() === 0 || d.getDay() === 6) {
+            while (d.getDay() === 0) {
                 d.setDate(d.getDate() + 1);
             }
             return toIsoDate(d);
         };
 
-        const isWeekend = (iso) => {
+        const isSunday = (iso) => {
             if (!iso) return false;
             const d = new Date(iso + 'T12:00:00');
-            const day = d.getDay();
-            return day === 0 || day === 6;
+            return d.getDay() === 0;
         };
 
         return {
@@ -360,8 +359,8 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
             slots: [],
             loadingSlots: false,
             submitting: false,
-            weekendSelected: false,
-            minDate: nextWeekday(),
+            sundaySelected: false,
+            minDate: nextOpenDay(),
             formatSlot(slot) {
                 if (!slot) return '';
                 const [h, m] = String(slot).split(':');
@@ -377,8 +376,8 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
                 this.packageId = '';
             },
             onDateChange() {
-                this.weekendSelected = isWeekend(this.date);
-                if (this.weekendSelected) {
+                this.sundaySelected = isSunday(this.date);
+                if (this.sundaySelected) {
                     this.time = '';
                     this.slots = [];
                     return;
@@ -388,7 +387,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
             async loadSlots() {
                 this.time = '';
                 this.slots = [];
-                if (!this.date || this.weekendSelected) return;
+                if (!this.date || this.sundaySelected) return;
                 this.loadingSlots = true;
                 try {
                     const response = await fetch(this.slotsUrl + '?date=' + encodeURIComponent(this.date), {
@@ -406,8 +405,8 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
             },
             init() {
                 if (this.date) {
-                    this.weekendSelected = isWeekend(this.date);
-                    if (!this.weekendSelected) {
+                    this.sundaySelected = isSunday(this.date);
+                    if (!this.sundaySelected) {
                         this.loadSlots().then(() => {
                             if (config.old.appointment_time) {
                                 this.time = String(config.old.appointment_time);

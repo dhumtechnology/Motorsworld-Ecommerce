@@ -41,10 +41,10 @@ class GetShopHeaderSearchDataAction
     private function categories(): array
     {
         return QueryResultCache::remember(
-            'shop.header.search_categories.v3',
+            'shop.header.search_categories.v5',
             function (): array {
                 $categories = Category::query()
-                    ->orderByRaw('CASE WHEN UPPER(name) = ? THEN 0 ELSE 1 END', [self::MOTOS_CATEGORY])
+                    ->orderBy('sort_order')
                     ->orderBy('name')
                     ->get(['id', 'name', 'image']);
 
@@ -56,12 +56,10 @@ class GetShopHeaderSearchDataAction
                         'name' => $category->name,
                         'image' => filled($category->image) ? (string) $category->image : null,
                         'is_motos' => $isMotos,
-                        'href' => $isMotos
-                            ? route('shop.catalog', ['section' => 'motos'])
-                            : route('shop.catalog', [
-                                'section' => 'accesorios',
-                                'categories' => [$category->id],
-                            ]),
+                        'href' => route('shop.catalog', [
+                            'section' => $isMotos ? 'motos' : 'accesorios',
+                            'categories' => [$category->id],
+                        ], false),
                     ];
                 })->all();
             },

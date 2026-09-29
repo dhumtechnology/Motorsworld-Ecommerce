@@ -108,8 +108,8 @@ class StoreShopAppointmentRequest extends FormRequest
             $time = (string) $this->input('appointment_time');
             $day = Carbon::parse($date);
 
-            if ($day->isWeekend()) {
-                $validator->errors()->add('appointment_date', 'Las citas solo están disponibles de lunes a viernes.');
+            if ($day->isSunday()) {
+                $validator->errors()->add('appointment_date', 'Las citas están disponibles de lunes a sábado.');
 
                 return;
             }

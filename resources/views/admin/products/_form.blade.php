@@ -275,7 +275,7 @@
                     </svg>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm text-text font-semibold">Ficha técnica actual</p>
+                    <p class="text-sm text-text font-semibold truncate" title="{{ $product->technicalSheetFilename() }}">{{ $product->technicalSheetFilename() }}</p>
                     <a href="{{ $product->technical_sheet }}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-sky-700 hover:underline">
                         Ver / descargar PDF
                     </a>

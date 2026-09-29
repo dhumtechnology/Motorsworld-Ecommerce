@@ -58,7 +58,7 @@
                                 ?? $popularProduct->category?->name
                                 ?? 'Motoworld';
                             $description = \Illuminate\Support\Str::limit(
-                                trim((string) ($popularProduct->description ?: $popularProduct->name)),
+                                $popularProduct->descriptionPlain(),
                                 90,
                             );
                             $price = (float) ($popularProduct->effective_price ?? $popularProduct->price_amount);

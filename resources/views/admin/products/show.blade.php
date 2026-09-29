@@ -166,7 +166,7 @@
                             rel="noopener noreferrer"
                             class="inline-flex items-center gap-2 rounded border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700 hover:bg-sky-100 transition-colors"
                         >
-                            Ver / descargar PDF
+                            {{ $product->technicalSheetFilename() }}
                         </a>
                         <p class="mt-2 text-xs text-muted">Para reemplazar o eliminar, usa Editar producto.</p>
                     @else
@@ -446,16 +446,3 @@
         @endif
     </div>
 @endsection
-
-@push('styles')
-<style>
-    .product-richtext p { margin-bottom: 0.6rem; }
-    .product-richtext ul, .product-richtext ol { margin: 0 0 0.6rem 1.2rem; }
-    .product-richtext .ql-size-small { font-size: 0.75em; }
-    .product-richtext .ql-size-large { font-size: 1.5em; }
-    .product-richtext .ql-size-huge { font-size: 2.25em; }
-    .product-richtext .ql-align-center { text-align: center; }
-    .product-richtext .ql-align-right { text-align: right; }
-    .product-richtext .ql-align-justify { text-align: justify; }
-</style>
-@endpush

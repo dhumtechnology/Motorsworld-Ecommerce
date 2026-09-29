@@ -35,7 +35,7 @@
     <div
         x-show="open"
         x-transition
-        class="absolute left-0 top-full z-50 w-56 border border-gray-100 bg-white shadow-lg"
+        class="absolute left-0 top-full z-50 w-64 max-h-[min(70vh,28rem)] overflow-y-auto border border-gray-100 bg-white shadow-lg"
         style="display: none;"
     >
         <div class="py-2">

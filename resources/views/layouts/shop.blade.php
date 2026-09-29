@@ -35,18 +35,21 @@
                             <a href="{{ route('shop.services.index') }}" class="{{ $shopNavLink }}">SERVICIOS</a>
                         </li>
                         <x-dropdown title="TIENDA" :trigger-class="$shopNavLink">
-                            <a
-                                href="{{ route('shop.catalog', ['section' => 'motos']) }}"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-                            >
-                                Motos
-                            </a>
-                            <a
-                                href="{{ route('shop.catalog', ['section' => 'accesorios']) }}"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-                            >
-                                Accesorios y más
-                            </a>
+                            @forelse ($searchCategories ?? [] as $category)
+                                <a
+                                    href="{{ $category['href'] }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                                >
+                                    {{ $category['name'] }}
+                                </a>
+                            @empty
+                                <a
+                                    href="{{ route('shop.catalog') }}"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                                >
+                                    Ver catálogo
+                                </a>
+                            @endforelse
                         </x-dropdown>
                         <li class="flex h-full">
                             <a href="{{ route('shop.about') }}" class="{{ $shopNavLink }}">NOSOTROS</a>
@@ -202,9 +205,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div x-show="storeOpen" x-cloak class="ml-3 mb-1 space-y-1 border-l border-white/15 pl-3">
-                            <a href="{{ route('shop.catalog', ['section' => 'motos']) }}" class="block rounded px-3 py-2.5 text-sm text-neutral-300 hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Motos</a>
-                            <a href="{{ route('shop.catalog', ['section' => 'accesorios']) }}" class="block rounded px-3 py-2.5 text-sm text-neutral-300 hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Accesorios y más</a>
+                        <div x-show="storeOpen" x-cloak class="ml-3 mb-1 max-h-72 space-y-1 overflow-y-auto border-l border-white/15 pl-3">
+                            @forelse ($searchCategories ?? [] as $category)
+                                <a href="{{ $category['href'] }}" class="block rounded px-3 py-2.5 text-sm text-neutral-300 hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">{{ $category['name'] }}</a>
+                            @empty
+                                <a href="{{ route('shop.catalog') }}" class="block rounded px-3 py-2.5 text-sm text-neutral-300 hover:bg-white/5 hover:text-orange-500" @click="mobileOpen = false">Ver catálogo</a>
+                            @endforelse
                         </div>
                     </li>
                     <li>

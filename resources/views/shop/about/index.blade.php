@@ -30,7 +30,7 @@ $policies = [
 
 {{-- Banner --}}
 <section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="relative aspect-[21/9] min-h-[220px] max-h-[480px] w-full">
+    <div class="shop-page-banner">
         <img
             src="{{ asset('images/about/NOSOTROS.jpg') }}"
             alt="Nosotros Motoworld"
@@ -83,9 +83,8 @@ $policies = [
                         loading="lazy">
                 </div>
                 <div class="p-6 md:p-8">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Nuestra misión</p>
-                    <h3 class="mt-2 text-lg md:text-xl font-black uppercase tracking-wide text-neutral-900 font-title">
-                        Misión
+                    <h3 class="text-lg md:text-xl font-black uppercase tracking-wide text-orange-600 font-title">
+                        Nuestra misión
                     </h3>
                     <p class="mt-3 text-sm md:text-base leading-relaxed text-neutral-600">
                         Generar valor en nuestros clientes a través de productos y servicios de altos estándares
@@ -104,9 +103,8 @@ $policies = [
                         loading="lazy">
                 </div>
                 <div class="p-6 md:p-8">
-                    <p class="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">Nuestra visión</p>
-                    <h3 class="mt-2 text-lg md:text-xl font-black uppercase tracking-wide text-neutral-900 font-title">
-                        Visión
+                    <h3 class="text-lg md:text-xl font-black uppercase tracking-wide text-orange-600 font-title">
+                        Nuestra visión
                     </h3>
                     <p class="mt-3 text-sm md:text-base leading-relaxed text-neutral-600">
                         Ser la empresa con los clientes más satisfechos y los colaboradores más motivados en el
@@ -128,8 +126,17 @@ $policies = [
                     Políticas de calidad
                 </h2>
                 <p class="mt-4 text-sm md:text-base leading-relaxed text-neutral-600">
-                    En Moto World estamos comprometidos con la excelencia en la prestación de nuestros servicios.
-                    Nuestra política de calidad está basada en los siguientes principios:
+                    En Moto World buscamos alcanzar la excelencia de nuestros servicios, basándonos en los
+                    siguientes principios:
+                </p>
+                <p class="mt-4 text-sm md:text-base leading-relaxed text-neutral-600">
+                    Nuestro compromiso de calidad va dirigido a obtener la satisfacción total de nuestros clientes.
+                    En Moto World buscamos día a día cumplir con los compromisos ofrecidos en nuestro portafolio de
+                    productos y servicios (venta de unidades, repuestos y servicio técnico).
+                </p>
+                <p class="mt-4 text-sm md:text-base leading-relaxed text-neutral-600">
+                    Orientamos nuestra gestión hacia la mejora continua de los procesos y el desarrollo integral de
+                    nuestros colaboradores.
                 </p>
             </div>
 
@@ -151,15 +158,6 @@ $policies = [
                     </div>
                 </article>
                 @endforeach
-
-                <div class="rounded-2xl border border-orange-200 bg-orange-50 p-5 md:p-6">
-                    <p class="text-sm md:text-base leading-relaxed text-neutral-800">
-                        Nuestro compromiso de calidad va dirigido a obtener la satisfacción total de nuestros clientes.
-                        En Motoworld nos comprometemos a cumplir con los compromisos adquiridos durante la venta de
-                        unidades, repuestos y servicio técnico de los rubros en los que participamos. Orientamos nuestra
-                        gestión hacia la mejora continua de los procesos y el desarrollo integral de nuestros colaboradores.
-                    </p>
-                </div>
             </div>
         </div>
     </div>

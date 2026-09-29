@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
     'stock_availability',
     'image',
     'technical_sheet',
+    'technical_sheet_filename',
     'category_id',
     'model_id',
 ])]
@@ -275,9 +276,26 @@ class Product extends Model
         return $availability;
     }
 
+    public function technicalSheetFilename(): string
+    {
+        $name = trim((string) ($this->technical_sheet_filename ?? ''));
+        if ($name !== '') {
+            return $name;
+        }
+
+        return 'Ficha técnica.pdf';
+    }
+
     public function descriptionHtml(): string
     {
         return self::richTextToHtml($this->description);
+    }
+
+    public function descriptionPlain(): string
+    {
+        $plain = self::richTextToPlain($this->description);
+
+        return $plain !== '' ? $plain : (string) $this->name;
     }
 
     public function additionalInformationHtml(): string
@@ -298,6 +316,20 @@ class Product extends Model
         }
 
         return nl2br(e($value), false);
+    }
+
+    public static function richTextToPlain(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $plain = html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $plain = preg_replace('/\s+/u', ' ', $plain) ?? $plain;
+
+        return trim($plain);
     }
 
     /**

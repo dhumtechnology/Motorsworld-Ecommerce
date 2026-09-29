@@ -12,8 +12,8 @@ return [
         'whatsapp' => '51920883723',
         'email' => 'workshop@motoworld.pe',
         'hours' => [
-            'weekdays' => 'Lunes a Viernes 09:00 a 18:30',
-            'saturday' => 'Sábados: 09:00 a 14:30',
+            'weekdays' => 'Lunes a Viernes 09:00 a 13:00 y 14:00 a 18:30',
+            'saturday' => 'Sábados: 09:00 a 14:00',
         ],
     ],
 ];

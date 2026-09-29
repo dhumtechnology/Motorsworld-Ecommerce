@@ -15,9 +15,9 @@
     $currencySymbol = \App\Support\Currency::symbol($currency);
 @endphp
 
-<div {{ $attributes->class('bg-white text-black p-4 rounded-md flex flex-col justify-between group transition-all duration-300 border border-transparent hover:border-neutral-800 select-none') }}>
+<div {{ $attributes->class('bg-white text-black p-4 rounded-md flex flex-col justify-between group transition-all duration-300 select-none') }}>
 
-    <div class="relative w-full aspect-square bg-neutral-100 border-neutral-800 rounded-sm overflow-hidden">
+    <div class="relative w-full aspect-square bg-neutral-100 rounded-sm overflow-hidden">
 
         {{-- Etiqueta OFERTA + % --}}
         @if($isSale && $discountPercent)

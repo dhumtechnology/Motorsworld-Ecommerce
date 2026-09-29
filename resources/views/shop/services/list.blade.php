@@ -14,7 +14,7 @@ $banner = file_exists($bannerPath)
 @endphp
 
 <section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="relative aspect-[21/9] min-h-[220px] max-h-[420px] w-full">
+    <div class="shop-page-banner">
         <img
             src="{{ $banner }}"
             alt="Servicios Motoworld"

@@ -141,7 +141,11 @@ class AppServiceProvider extends ServiceProvider
 
         foreach ($directories as $directory) {
             if (! is_dir($directory)) {
-                @mkdir($directory, 0775, true);
+                @mkdir($directory, 0777, true);
+            }
+            // umask 022 deja 0755; si artisan corrió como root, www-data no escribe.
+            if (is_dir($directory)) {
+                @chmod($directory, 0777);
             }
         }
 

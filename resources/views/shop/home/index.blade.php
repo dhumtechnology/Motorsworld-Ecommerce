@@ -63,7 +63,7 @@ $mapEmbedUrl = config('shop.map_embed_url');
     }"
     x-init="start()"
     aria-label="Banner Motoworld">
-    <div class="home-hero-frame">
+    <div class="home-hero-frame shop-page-banner">
         @foreach ($heroSlides as $index => $slide)
             @php
                 $slideImage = is_array($slide) ? ($slide['image'] ?? '') : $slide;
@@ -127,7 +127,6 @@ $mapEmbedUrl = config('shop.map_embed_url');
     .home-hero-frame {
         position: relative;
         width: 100%;
-        height: 80vh;
         overflow: hidden;
         background: #171717;
     }

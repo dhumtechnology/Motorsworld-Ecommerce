@@ -617,7 +617,10 @@ class UpsertProductAction
     ): void {
         if ($removeTechnicalSheet && $product->technical_sheet) {
             $this->deleteStoredFile($product->technical_sheet);
-            $product->forceFill(['technical_sheet' => null])->save();
+            $product->forceFill([
+                'technical_sheet' => null,
+                'technical_sheet_filename' => null,
+            ])->save();
         }
 
         if ($technicalSheet === null) {
@@ -630,7 +633,24 @@ class UpsertProductAction
 
         $product->forceFill([
             'technical_sheet' => $this->storeUploadedFile($product, $technicalSheet),
+            'technical_sheet_filename' => $this->originalUploadFilename($technicalSheet),
         ])->save();
+    }
+
+    private function originalUploadFilename(UploadedFile $file): string
+    {
+        $name = basename(str_replace('\\', '/', (string) $file->getClientOriginalName()));
+        $name = trim($name);
+
+        if ($name === '' || $name === '.' || $name === '..') {
+            return 'ficha-tecnica.pdf';
+        }
+
+        if (! str_ends_with(mb_strtolower($name), '.pdf')) {
+            $name .= '.pdf';
+        }
+
+        return $name;
     }
 
     private function storeUploadedFile(Product $product, UploadedFile $file): string

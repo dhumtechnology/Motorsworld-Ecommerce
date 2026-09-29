@@ -1,9 +1,23 @@
 #!/bin/sh
 set -e
 
-mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/public bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
-chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+# PHP-FPM corre como www-data. Artisan en este script corre como root y, si
+# crea storage/framework/cache/data, queda 755 root:root. El catálogo (file
+# cache) entonces falla con "Failed to open stream".
+fix_storage_perms() {
+    mkdir -p \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/testing \
+        storage/framework/views \
+        storage/logs \
+        storage/app/public \
+        bootstrap/cache
+    chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+    chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+}
+
+fix_storage_perms
 
 export TMPDIR=/var/www/html/storage/framework/cache
 
@@ -46,6 +60,7 @@ echo "Aplicando migraciones pendientes..."
 if ! php artisan migrate --force --no-interaction; then
     echo "Advertencia: no se pudieron aplicar todas las migraciones. Revise con: php artisan migrate:status"
 fi
+fix_storage_perms
 
 # Seeders en segundo plano para que PHP-FPM (y nginx) no esperen 1–2 min.
 # SEED_ON_START=auto (default): solo si la BD no tiene usuarios.
@@ -54,11 +69,13 @@ run_seeders_if_needed() {
     case "${SEED_ON_START:-auto}" in
         false|0|no|NO|False)
             echo "Seeders omitidos (SEED_ON_START=false)."
+            fix_storage_perms
             return 0
             ;;
         true|1|yes|YES|True)
             echo "Ejecutando seeders (SEED_ON_START=true)..."
             php artisan db:seed --force --no-interaction || echo "Advertencia: fallaron los seeders."
+            fix_storage_perms
             return 0
             ;;
         *)
@@ -81,6 +98,7 @@ run_seeders_if_needed() {
                 echo "BD vacía → ejecutando seeders (SEED_ON_START=auto)..."
                 php artisan db:seed --force --no-interaction || echo "Advertencia: fallaron los seeders."
             fi
+            fix_storage_perms
             ;;
     esac
 }
