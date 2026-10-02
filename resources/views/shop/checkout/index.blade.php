@@ -9,14 +9,11 @@
     $chargeCurrencySymbol = \App\Support\Currency::symbol($currency ?? 'PEN');
 @endphp
 
-<div class="relative overflow-hidden">
-    <div class="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-neutral-900 via-neutral-900/90 to-transparent"></div>
-
-    <div class="relative mx-auto max-w-6xl px-4 py-10 md:py-14 text-neutral-900 font-title">
+<div class="mx-auto max-w-6xl px-4 py-10 md:py-14 text-neutral-900 font-title">
         <div class="mb-8 md:mb-10">
             <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-500">Pago seguro</p>
-            <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-wide text-white">Checkout</h1>
-            <p class="mt-2 max-w-xl text-sm text-white/70">Tarjeta de crédito/débito o Yape · Culqi</p>
+            <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-wide text-neutral-900">Checkout</h1>
+            <p class="mt-2 max-w-xl text-sm text-neutral-500">Tarjeta de crédito/débito o Yape · Culqi</p>
         </div>
 
         @if ($errors->any())
@@ -266,7 +263,6 @@
                 </div>
             </aside>
         </div>
-    </div>
 </div>
 
 <div id="checkout-loading" class="fixed inset-0 z-40 hidden items-center justify-center bg-neutral-950/75 backdrop-blur-sm">

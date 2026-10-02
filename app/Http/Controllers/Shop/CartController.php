@@ -166,6 +166,7 @@ class CartController extends Controller
                 'product_id' => $line['product']->id,
                 'product_variant_id' => $line['variant']->id,
                 'quantity' => (int) $line['quantity'],
+                'max_quantity' => (int) $line['max_quantity'],
                 'sku' => $line['variant']->sku ?? $line['product']->sku,
                 'name' => $line['product']->name,
                 'color' => $line['color_label'],
@@ -176,6 +177,9 @@ class CartController extends Controller
                 'is_on_sale' => (bool) $line['is_on_sale'],
                 'currency' => $line['currency'],
                 'currency_symbol' => $line['currency_symbol'],
+                'increment_url' => route('shop.cart.items.increment', $line['product'], false),
+                'decrement_url' => route('shop.cart.items.decrement', $line['product'], false),
+                'remove_url' => route('shop.cart.items.remove', $line['product'], false),
             ])->values()->all(),
         ];
     }

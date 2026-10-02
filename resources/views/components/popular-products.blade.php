@@ -57,10 +57,7 @@
                             $brand = $popularProduct->vehicleModel?->brand?->name
                                 ?? $popularProduct->category?->name
                                 ?? 'Motoworld';
-                            $description = \Illuminate\Support\Str::limit(
-                                $popularProduct->descriptionPlain(),
-                                90,
-                            );
+                            $description = $popularProduct->descriptionPlain();
                             $price = (float) ($popularProduct->effective_price ?? $popularProduct->price_amount);
                             $oldPrice = $popularProduct->is_on_sale
                                 ? (float) $popularProduct->list_price
@@ -102,14 +99,19 @@
                                     >
                                 </div>
 
-                                <div class="mt-auto flex min-h-[4.5rem] border-t border-neutral-200">
+                                <div class="mt-auto flex min-h-[5.25rem] border-t border-neutral-200">
                                     <div class="flex min-w-0 flex-1 flex-col justify-center p-2 md:p-2.5">
                                         <p class="truncate text-[10px] font-bold uppercase tracking-wider text-neutral-500">
                                             {{ $brand }}
                                         </p>
-                                        <p class="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-tight text-neutral-900 md:text-xs">
-                                            {{ $description }}
+                                        <p class="mt-0.5 truncate text-[11px] font-bold leading-tight text-neutral-900 md:text-xs" title="{{ $popularProduct->name }}">
+                                            {{ $popularProduct->name }}
                                         </p>
+                                        @if ($description !== '')
+                                            <p class="mt-0.5 truncate text-[10px] font-medium leading-tight text-neutral-500 md:text-[11px]" title="{{ $description }}">
+                                                {{ $description }}
+                                            </p>
+                                        @endif
                                     </div>
                                     <div class="flex shrink-0 flex-col items-center justify-center bg-primary px-2 text-center sm:px-3">
                                         <span class="whitespace-nowrap text-xs font-black tracking-tight text-white sm:text-sm md:text-base">

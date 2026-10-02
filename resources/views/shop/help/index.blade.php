@@ -53,7 +53,7 @@
 
 {{-- Intro --}}
 <section class="bg-neutral-50 border-b border-neutral-100">
-    <div class="mx-auto max-w-3xl px-4 md:px-8 py-10 md:py-12 text-center">
+    <div class="mx-auto max-w-3xl px-4 md:px-10 py-10 md:py-12 text-center">
         <p class="text-sm md:text-base leading-relaxed text-neutral-600">
             Estamos aquí para resolver tus dudas sobre pedidos, repuestos y cualquier consulta relacionada con Moto World.
             Elige el canal que prefieras y te responderemos lo antes posible.

@@ -229,10 +229,10 @@ RELACIONES CARGADAS EN $product
                         <template x-for="(image, index) in galleryImages" :key="image.path + '-' + index">
                             <button
                                 type="button"
-                                @click="mainImage = image.path; activeThumb = index"
+                                @click="selectThumb(index, image.path)"
                                 :class="activeThumb === index ? 'border-2 border-[#f15a24]' : 'border border-neutral-700 hover:border-neutral-500'"
-                                class="gallery-thumb w-20 h-20 sm:w-full sm:h-28 aspect-square rounded-sm overflow-hidden cursor-pointer transition-all duration-150 shrink-0">
-                                <img :src="image.path" class="w-full h-full object-cover" alt="{{ $product->name }}" loading="lazy">
+                                class="gallery-thumb relative h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-white cursor-pointer transition-all duration-150 sm:h-28 sm:w-full">
+                                <img :src="image.path" alt="{{ $product->name }}" loading="lazy">
                             </button>
                         </template>
                     </div>
@@ -255,13 +255,48 @@ RELACIONES CARGADAS EN $product
                     </div>
                 </div>
 
-                <div class="flex justify-center h-80 sm:h-full min-h-0 flex-1 rounded-sm overflow-hidden w-full relative">
+                <div
+                    class="product-main-viewport relative flex h-80 w-full min-h-0 flex-1 items-center justify-center overflow-hidden rounded-sm bg-white sm:h-full"
+                    @wheel.prevent="onImageWheel($event)"
+                    @pointerdown="onImagePointerDown($event)"
+                    @pointermove="onImagePointerMove($event)"
+                    @pointerup="onImagePointerUp($event)"
+                    @pointercancel="onImagePointerUp($event)"
+                    :class="isPanning ? 'cursor-grabbing' : (imageZoom > 1 ? 'cursor-grab' : '')"
+                    :style="imageZoom > 1 ? 'touch-action: none' : 'touch-action: pan-y'">
                     @if($product->is_on_sale && $discountLabel)
                     <span class="absolute top-3 left-3 z-10 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-lg font-black uppercase tracking-tight text-white shadow-md">
                         -{{ $discountLabel }}%
                     </span>
                     @endif
-                    <img id="product-main-image" :src="mainImage" class="h-full transition-all duration-200" alt="{{ $product->name }}">
+
+                    <div class="absolute top-3 right-3 z-20 flex flex-col overflow-hidden rounded-md border border-neutral-200 bg-white/95 shadow-sm">
+                        <button
+                            type="button"
+                            @click.stop="zoomIn()"
+                            :disabled="imageZoom >= maxZoom"
+                            class="flex h-10 w-10 items-center justify-center text-xl font-black text-neutral-800 transition-colors hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-800"
+                            aria-label="Acercar">
+                            +
+                        </button>
+                        <button
+                            type="button"
+                            @click.stop="zoomOut()"
+                            :disabled="imageZoom <= minZoom"
+                            class="flex h-10 w-10 items-center justify-center border-t border-neutral-200 text-xl font-black text-neutral-800 transition-colors hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-neutral-800"
+                            aria-label="Alejar">
+                            −
+                        </button>
+                    </div>
+
+                    <img
+                        id="product-main-image"
+                        :src="mainImage"
+                        :style="`transform: translate(${panX}px, ${panY}px) scale(${imageZoom})`"
+                        :class="isPanning ? '' : 'transition-transform duration-200'"
+                        class="product-main-image max-h-full max-w-full object-contain object-center select-none"
+                        alt="{{ $product->name }}"
+                        draggable="false">
                 </div>
             </div>
 
@@ -444,6 +479,20 @@ RELACIONES CARGADAS EN $product
             .gallery-thumbs-scroll::-webkit-scrollbar-thumb:hover {
                 background: #e65c00;
             }
+
+            .gallery-thumb img {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                width: 100%;
+                height: auto;
+                transform: translateY(-50%);
+            }
+
+            .product-main-image {
+                transform-origin: center center;
+                will-change: transform;
+            }
         </style>
         <script>
             window.productColorPicker = function(variants, defaultId, fallbackImage, hasColorChoices, availability, availabilityLabels) {
@@ -462,6 +511,17 @@ RELACIONES CARGADAS EN $product
                     activeThumb: 0,
                     thumbCanScrollUp: false,
                     thumbCanScrollDown: false,
+                    imageZoom: 1,
+                    minZoom: 1,
+                    maxZoom: 3,
+                    zoomStep: 0.25,
+                    panX: 0,
+                    panY: 0,
+                    isPanning: false,
+                    panStartX: 0,
+                    panStartY: 0,
+                    panOriginX: 0,
+                    panOriginY: 0,
                     get selected() {
                         return this.variants.find((v) => Number(v.id) === Number(this.selectedId)) || null;
                     },
@@ -488,6 +548,63 @@ RELACIONES CARGADAS EN $product
                             return labels.unavailable || 'No disponible';
                         }
                         return labels[code] || 'Tienda';
+                    },
+                    resetImageView() {
+                        this.imageZoom = 1;
+                        this.panX = 0;
+                        this.panY = 0;
+                        this.isPanning = false;
+                    },
+                    selectThumb(index, path) {
+                        this.activeThumb = index;
+                        this.mainImage = path;
+                        this.resetImageView();
+                    },
+                    clampPan() {
+                        const limit = 220 * Math.max(0, this.imageZoom - 1);
+                        this.panX = Math.max(-limit, Math.min(limit, this.panX));
+                        this.panY = Math.max(-limit, Math.min(limit, this.panY));
+                    },
+                    zoomIn() {
+                        this.imageZoom = Math.min(this.maxZoom, Math.round((this.imageZoom + this.zoomStep) * 100) / 100);
+                    },
+                    zoomOut() {
+                        this.imageZoom = Math.max(this.minZoom, Math.round((this.imageZoom - this.zoomStep) * 100) / 100);
+                        if (this.imageZoom <= 1) {
+                            this.panX = 0;
+                            this.panY = 0;
+                        } else {
+                            this.clampPan();
+                        }
+                    },
+                    onImageWheel(event) {
+                        if (event.deltaY < 0) {
+                            this.zoomIn();
+                        } else {
+                            this.zoomOut();
+                        }
+                    },
+                    onImagePointerDown(event) {
+                        if (this.imageZoom <= 1 || event.target.closest('button')) {
+                            return;
+                        }
+                        this.isPanning = true;
+                        this.panStartX = event.clientX;
+                        this.panStartY = event.clientY;
+                        this.panOriginX = this.panX;
+                        this.panOriginY = this.panY;
+                        event.currentTarget.setPointerCapture?.(event.pointerId);
+                    },
+                    onImagePointerMove(event) {
+                        if (!this.isPanning) {
+                            return;
+                        }
+                        this.panX = this.panOriginX + (event.clientX - this.panStartX);
+                        this.panY = this.panOriginY + (event.clientY - this.panStartY);
+                        this.clampPan();
+                    },
+                    onImagePointerUp() {
+                        this.isPanning = false;
                     },
                     syncThumbScroll() {
                         const el = this.$refs.thumbsScroll;
@@ -532,6 +649,7 @@ RELACIONES CARGADAS EN $product
                         this.selectedId = id == null ? null : Number(id);
                         this.activeThumb = 0;
                         this.mainImage = this.selected?.images?.[0]?.path || this.mainImage;
+                        this.resetImageView();
                         this.cartError = '';
                         this.refreshCartQty();
                         this.$nextTick(() => {

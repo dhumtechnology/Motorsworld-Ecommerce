@@ -64,6 +64,12 @@ document.addEventListener(
             return;
         }
 
+        if (form.dataset.compressingImages === '1') {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+
         if (form.dataset.submitLocked === '1') {
             event.preventDefault();
             event.stopPropagation();

@@ -4,10 +4,6 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/home/portadas/REPUESTOS GENERALES .jpeg'))
-        ? asset('images/home/portadas/REPUESTOS GENERALES .jpeg')
-        : asset('images/services/banner-servicios.png');
-
     $paymentMethods = [
         [
             'title' => 'Transferencia bancaria',
@@ -30,25 +26,15 @@
     ];
 @endphp
 
-{{-- Hero --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Formas de pago Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="eager"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/25"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Información para clientes</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Formas de pago y promociones
-            </h1>
-            <p class="mt-2 max-w-2xl text-sm md:text-base text-white/85">
-                Métodos de pago, fraccionamiento, impuestos y uso de vales de descuento en Moto World.
-            </p>
-        </div>
+<section class="bg-white">
+    <div class="mx-auto max-w-[95%] px-4 md:px-8 pt-10 md:pt-12 pb-2">
+        <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-600">Información para clientes</p>
+        <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-neutral-900 font-title">
+            Formas de pago y promociones
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm md:text-base text-neutral-600">
+            Métodos de pago, fraccionamiento, impuestos y uso de vales de descuento en Moto World.
+        </p>
     </div>
 </section>
 

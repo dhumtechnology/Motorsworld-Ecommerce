@@ -403,6 +403,47 @@
         const isImageFile = (file) => file && file.type && file.type.startsWith('image/');
         const pendingKey = () => 'p-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
         const normalizeName = (value) => String(value || '').trim().toLowerCase();
+        const MAX_IMAGE_EDGE = 1600;
+        const JPEG_QUALITY = 0.78;
+        const SKIP_COMPRESS_UNDER = 400 * 1024;
+
+        const compressImageFile = async (file) => {
+            if (!isImageFile(file)) return file;
+            if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
+            if (file.size <= SKIP_COMPRESS_UNDER) return file;
+            if (typeof createImageBitmap !== 'function') return file;
+
+            try {
+                const bitmap = await createImageBitmap(file);
+                const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height));
+                const width = Math.max(1, Math.round(bitmap.width * scale));
+                const height = Math.max(1, Math.round(bitmap.height * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    bitmap.close?.();
+                    return file;
+                }
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(bitmap, 0, 0, width, height);
+                bitmap.close?.();
+
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
+                if (!blob || blob.size >= file.size) return file;
+
+                const baseName = String(file.name || 'imagen').replace(/\.[^.]+$/, '');
+                return new File([blob], baseName + '.jpg', {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                });
+            } catch (error) {
+                console.warn('No se pudo comprimir la imagen, se sube el original.', error);
+                return file;
+            }
+        };
 
         const toExistingGalleryItem = (img) => ({
             key: 'e-' + img.id,
@@ -464,9 +505,15 @@
             initialColoredVariantIds: (config.coloredVariantIds || []).map(Number),
             draggingGalleryKey: null,
             dragOverGalleryKey: null,
+            compressingImages: false,
             init() {
                 const form = this.$el.closest('form');
                 form?.addEventListener('submit', (event) => {
+                    if (this.compressingImages) {
+                        event.preventDefault();
+                        alert('Espera a que terminen de comprimirse las imágenes.');
+                        return;
+                    }
                     if (form.dataset.submitting === '1') {
                         event.preventDefault();
                         return;
@@ -555,10 +602,21 @@
                 const [moved] = items.splice(fromIndex, 1);
                 items.splice(toIndex, 0, moved);
             },
-            appendGalleryFiles(items, fileList) {
-                Array.from(fileList || [])
-                    .filter(isImageFile)
-                    .forEach((file) => items.push(toPendingGalleryItem(file)));
+            async appendGalleryFiles(items, fileList) {
+                const files = Array.from(fileList || []).filter(isImageFile);
+                if (!files.length) return;
+
+                this.compressingImages = true;
+                this.$el.closest('form')?.setAttribute('data-compressing-images', '1');
+                try {
+                    for (const file of files) {
+                        const compressed = await compressImageFile(file);
+                        items.push(toPendingGalleryItem(compressed));
+                    }
+                } finally {
+                    this.compressingImages = false;
+                    this.$el.closest('form')?.removeAttribute('data-compressing-images');
+                }
             },
             syncGalleryInput(input, items, removeIds) {
                 const pending = this.visibleGalleryItems(items, removeIds)
@@ -729,7 +787,7 @@
                     this.syncGalleryInput(input, variant.galleryItems, variant.remove_image_ids);
                 });
             },
-            onDefaultDrop(event) {
+            async onDefaultDrop(event) {
                 const types = Array.from(event.dataTransfer?.types || []);
                 if (!types.includes('Files')) {
                     this.defaultDropActive = false;
@@ -737,7 +795,7 @@
                 }
 
                 this.defaultDropActive = false;
-                this.appendGalleryFiles(this.defaultGalleryItems, event.dataTransfer?.files);
+                await this.appendGalleryFiles(this.defaultGalleryItems, event.dataTransfer?.files);
                 this.$nextTick(() => {
                     this.syncGalleryInput(
                         this.$refs.defaultImagesInput,
@@ -746,8 +804,9 @@
                     );
                 });
             },
-            onDefaultInputChange(event) {
-                this.appendGalleryFiles(this.defaultGalleryItems, event.target.files);
+            async onDefaultInputChange(event) {
+                const files = event.target.files;
+                await this.appendGalleryFiles(this.defaultGalleryItems, files);
                 event.target.value = '';
                 this.$nextTick(() => {
                     this.syncGalleryInput(
@@ -757,7 +816,7 @@
                     );
                 });
             },
-            onVariantDrop(variant, event) {
+            async onVariantDrop(variant, event) {
                 const types = Array.from(event.dataTransfer?.types || []);
                 if (!types.includes('Files')) {
                     variant.dropActive = false;
@@ -765,15 +824,16 @@
                 }
 
                 variant.dropActive = false;
-                this.appendGalleryFiles(variant.galleryItems, event.dataTransfer?.files);
+                await this.appendGalleryFiles(variant.galleryItems, event.dataTransfer?.files);
                 this.$nextTick(() => {
                     const root = this.$el.querySelector(`[data-variant-key="${variant._key}"]`);
                     const input = root?.querySelector('input[type="file"]');
                     this.syncGalleryInput(input, variant.galleryItems, variant.remove_image_ids);
                 });
             },
-            onVariantInputChange(variant, event) {
-                this.appendGalleryFiles(variant.galleryItems, event.target.files);
+            async onVariantInputChange(variant, event) {
+                const files = event.target.files;
+                await this.appendGalleryFiles(variant.galleryItems, files);
                 event.target.value = '';
                 this.$nextTick(() => {
                     const root = this.$el.querySelector(`[data-variant-key="${variant._key}"]`);

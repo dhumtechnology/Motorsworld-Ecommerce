@@ -34,7 +34,8 @@
                 </svg>
             </div>
             <p class="text-sm font-semibold text-text">Arrastra imágenes aquí para subir</p>
-            <p class="mt-1 text-xs text-muted">o haz clic para seleccionar · arrastra las miniaturas para ordenar · la primera es la principal</p>
+            <p class="mt-1 text-xs text-muted">o haz clic para seleccionar · se comprimen solas antes de enviar · la primera es la principal</p>
+            <p class="mt-2 text-xs font-semibold text-primary" x-show="compressingImages" x-cloak>Comprimiendo imágenes…</p>
         </div>
 
         <div
@@ -103,7 +104,8 @@
                 </svg>
             </div>
             <p class="text-sm font-semibold text-text">Arrastra imágenes aquí para subir</p>
-            <p class="mt-1 text-xs text-muted">o haz clic para seleccionar · arrastra las miniaturas para ordenar · la primera es la principal</p>
+            <p class="mt-1 text-xs text-muted">o haz clic para seleccionar · se comprimen solas antes de enviar · la primera es la principal</p>
+            <p class="mt-2 text-xs font-semibold text-primary" x-show="compressingImages" x-cloak>Comprimiendo imágenes…</p>
         </div>
 
         <div

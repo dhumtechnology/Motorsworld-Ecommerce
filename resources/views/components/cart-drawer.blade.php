@@ -87,7 +87,6 @@
                 x-transition:leave-start="translate-x-0 opacity-100"
                 x-transition:leave-end="translate-x-full opacity-0"
                 class="absolute inset-y-0 right-0 flex w-full max-w-[100vw] flex-col bg-white shadow-2xl sm:max-w-md"
-                @click.stop
             >
                 <div class="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-4 sm:px-5">
                     <div>
@@ -115,6 +114,8 @@
                     </button>
                 </div>
 
+                <p data-cart-error class="mx-4 mt-3 hidden text-sm font-semibold text-rose-600 sm:mx-5"></p>
+
                 <div data-cart-drawer-body class="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
                     @if (! $hasItems)
                         <div class="flex h-full min-h-[12rem] flex-col items-center justify-center px-4 text-center">
@@ -130,7 +131,16 @@
                     @else
                         <ul class="flex flex-col divide-y divide-neutral-200">
                             @foreach ($lines as $line)
-                                <li class="flex gap-3 py-4 first:pt-0 last:pb-0">
+                                <li
+                                    class="flex gap-3 py-4 first:pt-0 last:pb-0"
+                                    data-cart-line
+                                    data-product-id="{{ $line['product']->id }}"
+                                    data-variant-id="{{ $line['variant']->id }}"
+                                    data-max-stock="{{ $line['max_quantity'] }}"
+                                    data-increment-url="{{ route('shop.cart.items.increment', $line['product'], false) }}"
+                                    data-decrement-url="{{ route('shop.cart.items.decrement', $line['product'], false) }}"
+                                    data-remove-url="{{ route('shop.cart.items.remove', $line['product'], false) }}"
+                                >
                                     <a
                                         href="{{ route('shop.product.show', $line['product']) }}"
                                         data-cart-drawer-close
@@ -154,11 +164,44 @@
                                         >
                                             {{ $line['product']->name }}
                                         </a>
-                                        <p class="mt-1 text-[11px] text-neutral-500">
-                                            {{ $line['color_label'] }}
-                                            · Cant. {{ $line['quantity'] }}
-                                        </p>
-                                        <p class="mt-2 text-sm font-black text-neutral-900">
+                                        @if ($line['color_label'])
+                                            <p class="mt-1 text-[11px] text-neutral-500">{{ $line['color_label'] }}</p>
+                                        @endif
+
+                                        <div class="relative z-10 mt-2 flex items-center gap-2">
+                                            <div class="flex h-9 w-32 select-none items-center overflow-hidden rounded-sm border border-neutral-700 bg-white">
+                                                <button
+                                                    type="button"
+                                                    data-cart-action="decrement"
+                                                    class="flex h-full w-10 cursor-pointer items-center justify-center bg-white text-lg font-black text-[#f15a24] hover:bg-neutral-100 focus:outline-none"
+                                                    aria-label="Quitar una unidad"
+                                                >−</button>
+                                                <div class="flex h-full w-12 items-center justify-center bg-[#f15a24] text-sm font-black text-white">
+                                                    <span data-line-qty>{{ $line['quantity'] }}</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    data-cart-action="increment"
+                                                    @disabled($line['quantity'] >= $line['max_quantity'])
+                                                    class="flex h-full w-10 cursor-pointer items-center justify-center bg-white text-lg font-black text-[#f15a24] hover:bg-neutral-100 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40"
+                                                    aria-label="Añadir una unidad"
+                                                >+</button>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                data-cart-action="remove"
+                                                data-remove-url="{{ route('shop.cart.items.remove', $line['product'], false) }}"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded text-neutral-400 hover:bg-red-50 hover:text-red-600 focus:outline-none"
+                                                aria-label="Eliminar del carrito"
+                                                title="Eliminar"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <p class="mt-2 text-sm font-black text-neutral-900" data-line-total>
                                             {{ $line['currency_symbol'] }} {{ number_format($line['line_total'], 2) }}
                                         </p>
                                         @if ($line['is_on_sale'])

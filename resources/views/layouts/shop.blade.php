@@ -272,7 +272,7 @@
                             </g>
                         </svg>
                     </a>
-                    <a href="https://www.instagram.com/motoworld.pe">
+                    <a href="https://www.instagram.com/motoworld.pe" target="_blank">
                         <svg width="40px" height="40px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 450">
                             <g transform="translate(0 450) scale(1 -1)">
                                 <g transform="translate(-900.6796,-221.9863)">
@@ -293,7 +293,7 @@
                             </g>
                         </svg>            
                     </a>
-                    <a href="https://www.tiktok.com/@motoworld.pe?_r=1&_t=ZS-996dDIBvCpY">
+                    <a href="https://www.tiktok.com/@motoworld.pe?_r=1&_t=ZS-996dDIBvCpY" target="_blank">
                         <svg width="40px" height="40px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 450">
                             <g transform="translate(0 450) scale(1 -1)">
                                 <g transform="translate(-1548.794,-221.9863)">
