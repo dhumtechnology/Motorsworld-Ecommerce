@@ -68,10 +68,12 @@
     <div class="relative z-0">
         <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Contenido *</label>
         <input type="hidden" name="body" id="body" value="{{ old('body', $blogPost?->body) }}">
-        <div id="blog-editor-wrap" class="relative z-0 overflow-visible rounded border border-border bg-white">
+        <div id="blog-editor-wrap" class="relative z-0 overflow-visible rounded border border-border bg-white" data-inline-image-url="{{ route('admin.blog-posts.inline-images.store') }}">
             <div id="blog-editor" class="min-h-[280px] text-text"></div>
         </div>
-        <p class="mt-1.5 text-xs text-muted">Usa la barra para negrita, cursiva, tamaño, color y más.</p>
+        <p class="mt-1.5 text-xs text-muted">
+            Escribe un párrafo, coloca el cursor donde quieras la foto y pulsa el icono de imagen en la barra.
+        </p>
     </div>
 </div>
 
@@ -106,6 +108,13 @@
     #blog-editor-wrap .ql-toolbar .ql-picker-options {
         z-index: 30;
     }
+    #blog-editor-wrap .ql-editor img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0.75rem auto;
+        border-radius: 0.5rem;
+    }
 </style>
 @endpush
 
@@ -116,7 +125,44 @@
         const form = document.getElementById('blog-post-form');
         const hidden = document.getElementById('body');
         const editorEl = document.getElementById('blog-editor');
+        const wrap = document.getElementById('blog-editor-wrap');
         if (!hidden || !editorEl || typeof Quill === 'undefined') return;
+
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const uploadUrl = wrap?.dataset?.inlineImageUrl || '';
+
+        const compressImageFile = async (file) => {
+            if (!file || !file.type || !file.type.startsWith('image/')) return file;
+            if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
+            if (file.size <= 400 * 1024) return file;
+            if (typeof createImageBitmap !== 'function') return file;
+
+            try {
+                const bitmap = await createImageBitmap(file);
+                const maxEdge = 1600;
+                const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+                const width = Math.max(1, Math.round(bitmap.width * scale));
+                const height = Math.max(1, Math.round(bitmap.height * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    bitmap.close?.();
+                    return file;
+                }
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(bitmap, 0, 0, width, height);
+                bitmap.close?.();
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.78));
+                if (!blob || blob.size >= file.size) return file;
+                const baseName = String(file.name || 'imagen').replace(/\.[^.]+$/, '');
+                return new File([blob], baseName + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+            } catch (error) {
+                return file;
+            }
+        };
 
         const quill = new Quill('#blog-editor', {
             theme: 'snow',
@@ -129,10 +175,64 @@
                     [{ color: [] }, { background: [] }],
                     [{ list: 'ordered' }, { list: 'bullet' }],
                     [{ align: [] }],
-                    ['blockquote', 'link'],
+                    ['blockquote', 'link', 'image'],
                     ['clean'],
                 ],
             },
+        });
+
+        const insertImage = (url) => {
+            const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
+            const index = range.index;
+            quill.insertEmbed(index, 'image', url, 'user');
+            quill.insertText(index + 1, '\n', 'user');
+            quill.setSelection(index + 2, 0);
+        };
+
+        const uploadInlineImage = async (file) => {
+            if (!uploadUrl) {
+                window.alert('No se pudo subir la imagen.');
+                return;
+            }
+
+            const compressed = await compressImageFile(file);
+            const data = new FormData();
+            data.append('image', compressed);
+
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                credentials: 'same-origin',
+                body: data,
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload.url) {
+                const message = payload.message || Object.values(payload.errors || {}).flat()[0] || 'No se pudo subir la imagen.';
+                throw new Error(message);
+            }
+
+            insertImage(payload.url);
+        };
+
+        quill.getModule('toolbar').addHandler('image', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.addEventListener('change', async () => {
+                const file = input.files?.[0];
+                if (!file) return;
+                try {
+                    await uploadInlineImage(file);
+                } catch (error) {
+                    window.alert(error.message || 'No se pudo subir la imagen.');
+                }
+            });
+            input.click();
         });
 
         if (hidden.value) {

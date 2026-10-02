@@ -189,6 +189,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Blog
     Route::get('/blog', [BlogPostController::class, 'index'])->middleware('permission:blog_posts.view')->name('blog-posts.index');
     Route::get('/blog/crear', [BlogPostController::class, 'create'])->middleware('permission:blog_posts.create')->name('blog-posts.create');
+    Route::post('/blog/imagenes', [BlogPostController::class, 'storeInlineImage'])->middleware('permission:blog_posts.create,blog_posts.update')->name('blog-posts.inline-images.store');
     Route::post('/blog', [BlogPostController::class, 'store'])->middleware('permission:blog_posts.create')->name('blog-posts.store');
     Route::get('/blog/{blogPost}/editar', [BlogPostController::class, 'edit'])->middleware('permission:blog_posts.update')->name('blog-posts.edit');
     Route::put('/blog/{blogPost}', [BlogPostController::class, 'update'])->middleware('permission:blog_posts.update')->name('blog-posts.update');

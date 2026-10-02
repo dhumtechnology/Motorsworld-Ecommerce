@@ -57,7 +57,6 @@ class GetShopFooterLinksAction
                 'search' => 'Quad Lock',
             ]),
             'Agenda tu servicio' => route('shop.services.index'),
-            'Ventas al por mayor' => '#',
         ];
     }
 
@@ -72,6 +71,7 @@ class GetShopFooterLinksAction
             'Formas de pago y promociones' => route('shop.payment-promotions'),
             'Política de privacidad' => route('shop.privacy-policy'),
             'Ayuda' => route('shop.help'),
+            'Ventas al por mayor' => '#',
         ];
     }
 

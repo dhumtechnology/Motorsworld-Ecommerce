@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\BlogPosts\DeleteBlogPostsAction;
+use App\Actions\Admin\BlogPosts\StoreBlogInlineImageAction;
 use App\Actions\Admin\BlogPosts\UpsertBlogPostAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BlogPostIndexRequest;
 use App\Http\Requests\Admin\BulkDeleteBlogPostsRequest;
+use App\Http\Requests\Admin\StoreBlogInlineImageRequest;
 use App\Http\Requests\Admin\StoreBlogPostRequest;
 use App\Http\Requests\Admin\UpdateBlogPostRequest;
 use App\Models\Content\BlogPost;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 
 class BlogPostController extends Controller
@@ -21,6 +24,7 @@ class BlogPostController extends Controller
     public function __construct(
         private readonly UpsertBlogPostAction $upsertBlogPost,
         private readonly DeleteBlogPostsAction $deleteBlogPosts,
+        private readonly StoreBlogInlineImageAction $storeBlogInlineImage,
     ) {}
 
     public function index(BlogPostIndexRequest $request): View
@@ -52,6 +56,15 @@ class BlogPostController extends Controller
     public function create(): View
     {
         return view('admin.blog-posts.create');
+    }
+
+    public function storeInlineImage(StoreBlogInlineImageRequest $request): JsonResponse
+    {
+        $stored = $this->storeBlogInlineImage->execute($request->imageFile());
+
+        return response()->json([
+            'url' => $stored['url'],
+        ]);
     }
 
     public function store(StoreBlogPostRequest $request): RedirectResponse

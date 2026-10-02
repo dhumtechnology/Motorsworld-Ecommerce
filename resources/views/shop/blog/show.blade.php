@@ -69,6 +69,15 @@
         color: #525252;
         font-style: italic;
     }
-    .blog-content img { max-width: 100%; height: auto; border-radius: 0.75rem; }
+    .blog-content img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 1.25rem auto;
+        border-radius: 0.75rem;
+    }
+    .blog-content p:has(> img:only-child) {
+        margin-bottom: 0;
+    }
 </style>
 @endsection
