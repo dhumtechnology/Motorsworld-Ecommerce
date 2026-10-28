@@ -30,6 +30,16 @@
         </div>
     @endif
 
+    <div>
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="hidden" name="is_motorcycle" value="0">
+            <input type="checkbox" name="is_motorcycle" value="1" class="rounded border-border-strong bg-surface text-primary focus:ring-primary"
+                   @checked(old('is_motorcycle', $brand?->is_motorcycle ?? false))>
+            <span class="text-sm font-semibold text-text">Marca de motos</span>
+        </label>
+        <p class="mt-1.5 text-xs text-muted">Si está activo, la marca aparece al agendar un servicio, aunque no tenga logo ni motos asociadas.</p>
+    </div>
+
     <div data-brand-image>
         <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Imagen (opcional)</label>
 

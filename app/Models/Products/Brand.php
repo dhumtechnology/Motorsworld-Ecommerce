@@ -8,9 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-#[Fillable(['name', 'image', 'sort_order'])]
+#[Fillable(['name', 'image', 'sort_order', 'is_motorcycle'])]
 class Brand extends Model
 {
+    /**
+     * Marcas marcadas como de motos (aparecen al agendar un servicio).
+     *
+     * @param  Builder<Brand>  $query
+     */
+    public function scopeMotorcycle(Builder $query): void
+    {
+        $query->where('is_motorcycle', true);
+    }
+
     /**
      * @param  Builder<Brand>  $query
      */
@@ -76,6 +86,7 @@ class Brand extends Model
     {
         return [
             'sort_order' => 'integer',
+            'is_motorcycle' => 'boolean',
         ];
     }
 }

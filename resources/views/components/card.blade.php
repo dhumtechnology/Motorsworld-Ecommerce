@@ -9,6 +9,7 @@
     'href' => '#',
     'cartQty' => 0,
     'currency' => 'PEN',
+    'description' => null,
 ])
 
 @php
@@ -51,6 +52,12 @@
         <span class="text-neutral-500 text-xs font-semibold tracking-wider uppercase mt-1">
             {{ $category }}
         </span>
+
+        @if (filled($description))
+            <p class="mt-2 text-xs font-medium leading-snug text-neutral-500 line-clamp-2" title="{{ $description }}">
+                {{ $description }}
+            </p>
+        @endif
 
         <div class="mt-4 flex items-baseline gap-3">
             <span class="text-neutral-900 font-black text-xl tracking-tight">

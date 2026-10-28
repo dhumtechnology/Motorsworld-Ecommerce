@@ -44,12 +44,12 @@ class ServiceController extends Controller
             ->get();
 
         $brands = Brand::query()
-            ->withMotorcycleProducts()
+            ->motorcycle()
             ->orderBy('name')
             ->get(['id', 'name']);
 
         $models = VehicleModel::query()
-            ->withMotorcycleProducts()
+            ->whereHas('brand', fn ($query) => $query->motorcycle())
             ->orderBy('name')
             ->get(['id', 'name', 'brand_id']);
 

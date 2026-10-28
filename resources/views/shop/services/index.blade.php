@@ -53,7 +53,7 @@ $imgReservar = asset('images/services/reservar-servicio.jpg');
             <article class="group overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm">
                 <div class="aspect-[16/10] overflow-hidden bg-neutral-200">
                     <img
-                        src="{{ asset('images/services/todos-servicios.jpeg') }}"
+                        src="{{ asset('images/services/todos-los-servicios.jpeg') }}"
                         alt="Misión Motoworld"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy">

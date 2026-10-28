@@ -11,13 +11,13 @@
     $contactChannels = [
         [
             'title' => 'Consultas generales y pedidos',
-            'description' => 'Dudas de carácter general o relacionadas con pedidos realizados o que deseas realizar.',
+            'description' => 'Dudas de carácter general o relacionadas con agenda de servicios que deseas realizar.',
             'email' => 'workshop@motoworld.pe',
             'accent' => 'bg-orange-600',
         ],
         [
             'title' => 'Repuestos y pedidos',
-            'description' => 'Dudas sobre repuestos, pedidos realizados o que deseas realizar.',
+            'description' => 'Dudas sobre pedidos realizados o que deseas realizar y envíos.',
             'email' => 'info@motoworld.pe',
             'accent' => 'bg-neutral-900',
         ],
@@ -53,9 +53,9 @@
 
 {{-- Intro --}}
 <section class="bg-neutral-50 border-b border-neutral-100">
-    <div class="mx-auto max-w-3xl px-4 md:px-10 py-10 md:py-12 text-center">
-        <p class="text-sm md:text-base leading-relaxed text-neutral-600">
-            Estamos aquí para resolver tus dudas sobre pedidos, repuestos y cualquier consulta relacionada con Moto World.
+    <div class="mx-auto max-w-6xl px-4 md:px-8 py-10 md:py-12 text-center">
+        <p class="mx-auto max-w-[52rem] text-sm md:text-base leading-snug text-neutral-600">
+            Estamos aquí para resolver tus dudas sobre pedidos, repuestos y cualquier consulta relacionada con Moto World.<br>
             Elige el canal que prefieras y te responderemos lo antes posible.
         </p>
     </div>

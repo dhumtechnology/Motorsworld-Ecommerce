@@ -294,7 +294,7 @@ RELACIONES CARGADAS EN $product
                         :src="mainImage"
                         :style="`transform: translate(${panX}px, ${panY}px) scale(${imageZoom})`"
                         :class="isPanning ? '' : 'transition-transform duration-200'"
-                        class="product-main-image max-h-full max-w-full object-contain object-center select-none"
+                        class="product-main-image absolute inset-0 h-full w-full object-contain object-center p-4 select-none"
                         alt="{{ $product->name }}"
                         draggable="false">
                 </div>
@@ -492,6 +492,8 @@ RELACIONES CARGADAS EN $product
             .product-main-image {
                 transform-origin: center center;
                 will-change: transform;
+                max-width: none;
+                max-height: none;
             }
         </style>
         <script>

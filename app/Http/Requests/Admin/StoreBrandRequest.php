@@ -20,6 +20,7 @@ class StoreBrandRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', 'unique:brands,name'],
             'image' => ['nullable', 'image', 'max:5120'],
+            'is_motorcycle' => ['nullable', 'boolean'],
         ];
     }
 
@@ -42,6 +43,7 @@ class StoreBrandRequest extends FormRequest
     {
         return [
             'name' => trim((string) $this->input('name')),
+            'is_motorcycle' => $this->boolean('is_motorcycle'),
         ];
     }
 

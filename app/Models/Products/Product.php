@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
     'sku',
     'name',
     'description',
+    'short_description',
     'additional_information',
     'price_amount',
     'currency',
@@ -296,6 +297,20 @@ class Product extends Model
         $plain = self::richTextToPlain($this->description);
 
         return $plain !== '' ? $plain : (string) $this->name;
+    }
+
+    /**
+     * Texto de las cards de la tienda: corta si existe, si no la descripción normal.
+     */
+    public function cardDescription(): string
+    {
+        $short = self::richTextToPlain($this->short_description);
+
+        if ($short !== '') {
+            return $short;
+        }
+
+        return self::richTextToPlain($this->description);
     }
 
     public function additionalInformationHtml(): string

@@ -61,6 +61,16 @@
 
             <dl class="space-y-4 text-sm">
                 <div>
+                    <dt class="text-xs uppercase tracking-wider text-muted">Marca de motos</dt>
+                    <dd class="mt-1">
+                        @if ($brand->is_motorcycle)
+                            <span class="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">Sí</span>
+                        @else
+                            <span class="inline-flex items-center rounded border border-border bg-secondary px-2 py-0.5 text-xs font-bold text-text-soft">No</span>
+                        @endif
+                    </dd>
+                </div>
+                <div>
                     <dt class="text-xs uppercase tracking-wider text-muted">Creada</dt>
                     <dd class="mt-1 text-text-soft">{{ $brand->created_at?->format('d/m/Y H:i') ?? '—' }}</dd>
                 </div>

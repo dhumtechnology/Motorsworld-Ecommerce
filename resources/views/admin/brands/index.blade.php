@@ -92,6 +92,7 @@
                         <th scope="col" class="px-5 py-3 font-bold w-14">Orden</th>
                         <th scope="col" class="px-5 py-3 font-bold w-16">Img</th>
                         <th scope="col" class="px-5 py-3 font-bold">Nombre</th>
+                        <th scope="col" class="px-5 py-3 font-bold">Motos</th>
                         <th scope="col" class="px-5 py-3 font-bold">Modelos</th>
                         <th scope="col" class="px-5 py-3 font-bold">Productos</th>
                         <th scope="col" class="px-5 py-3 font-bold text-right">Acciones</th>
@@ -132,6 +133,13 @@
                                 </span>
                             </td>
                             <td class="px-5 py-3">
+                                @if ($brand->is_motorcycle)
+                                    <span class="inline-flex items-center rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">Sí</span>
+                                @else
+                                    <span class="inline-flex items-center rounded border border-border bg-secondary px-2 py-0.5 text-xs font-bold text-text-soft">No</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-3">
                                 <span class="inline-flex items-center rounded border border-border bg-secondary px-2 py-0.5 text-xs font-bold text-text-soft">{{ $brand->vehicle_models_count }}</span>
                             </td>
                             <td class="px-5 py-3">
@@ -155,7 +163,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="px-5 py-12 text-center text-muted">No se encontraron marcas.</td></tr>
+                        <tr><td colspan="8" class="px-5 py-12 text-center text-muted">No se encontraron marcas.</td></tr>
                     @endforelse
                 </tbody>
             </table>

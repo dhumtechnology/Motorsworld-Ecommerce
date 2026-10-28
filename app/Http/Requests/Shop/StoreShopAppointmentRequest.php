@@ -74,7 +74,7 @@ class StoreShopAppointmentRequest extends FormRequest
             $modelId = (int) $this->input('vehicle_model_id');
 
             $brandOk = Brand::query()
-                ->withMotorcycleProducts()
+                ->motorcycle()
                 ->whereKey($brandId)
                 ->exists();
 
@@ -83,7 +83,6 @@ class StoreShopAppointmentRequest extends FormRequest
             }
 
             $belongs = VehicleModel::query()
-                ->withMotorcycleProducts()
                 ->whereKey($modelId)
                 ->where('brand_id', $brandId)
                 ->exists();

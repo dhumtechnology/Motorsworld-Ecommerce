@@ -57,7 +57,7 @@
                             $brand = $popularProduct->vehicleModel?->brand?->name
                                 ?? $popularProduct->category?->name
                                 ?? 'Motoworld';
-                            $description = $popularProduct->descriptionPlain();
+                            $description = $popularProduct->cardDescription();
                             $price = (float) ($popularProduct->effective_price ?? $popularProduct->price_amount);
                             $oldPrice = $popularProduct->is_on_sale
                                 ? (float) $popularProduct->list_price

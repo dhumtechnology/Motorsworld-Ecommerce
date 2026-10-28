@@ -143,6 +143,13 @@
                     </div>
                 </dl>
 
+                @if (filled($product->short_description))
+                    <div class="mt-6">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción corta</h3>
+                        <p class="text-sm text-text-soft">{{ $product->short_description }}</p>
+                    </div>
+                @endif
+
                 @if ($product->descriptionHtml() !== '')
                     <div class="mt-6">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción</h3>

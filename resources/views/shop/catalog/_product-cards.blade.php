@@ -11,6 +11,7 @@
         :currency="$product->currency ?? 'PEN'"
         :href="route('shop.product.show', $product)"
         :cartQty="$cartQuantities[$product->id] ?? 0"
+        :description="$product->cardDescription()"
     />
 @empty
     @if (($products->currentPage() ?? 1) <= 1)

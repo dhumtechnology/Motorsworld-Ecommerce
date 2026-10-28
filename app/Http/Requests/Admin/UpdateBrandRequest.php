@@ -31,6 +31,7 @@ class UpdateBrandRequest extends FormRequest
             ],
             'image' => ['nullable', 'image', 'max:5120'],
             'remove_image' => ['nullable', 'boolean'],
+            'is_motorcycle' => ['nullable', 'boolean'],
         ];
     }
 
@@ -53,6 +54,7 @@ class UpdateBrandRequest extends FormRequest
     {
         return [
             'name' => trim((string) $this->input('name')),
+            'is_motorcycle' => $this->boolean('is_motorcycle'),
         ];
     }
 

@@ -250,6 +250,14 @@
         <p class="mt-1.5 text-xs text-muted">Usa la barra para negrita, cursiva, tamaño, color y más.</p>
     </div>
 
+    <div class="lg:col-span-2">
+        <label for="short_description" class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Descripción corta</label>
+        <textarea id="short_description" name="short_description" rows="3" maxlength="500"
+                  class="{{ $fieldClass }}"
+                  placeholder="Texto breve para las cards de la tienda">{{ old('short_description', $product?->short_description) }}</textarea>
+        <p class="mt-1.5 text-xs text-muted">Solo se muestra en las cards. Si está vacía, la card usará la descripción normal. Máx. 500 caracteres.</p>
+    </div>
+
     <div class="lg:col-span-2 relative z-0" data-quill-field>
         <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Información adicional</label>
         <input type="hidden" name="additional_information" id="additional_information" value="{{ old('additional_information', $product?->additional_information) }}">
