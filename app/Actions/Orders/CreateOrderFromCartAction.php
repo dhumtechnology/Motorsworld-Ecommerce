@@ -5,15 +5,23 @@ namespace App\Actions\Orders;
 use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
+use App\Enums\Payments\PaymentMethod;
 use App\Enums\Products\ProductStatus;
 use App\Models\Auth\User;
 use App\Models\Cart\Cart;
+use App\Models\Coupons\Coupon;
+use App\Models\Coupons\CouponUsage;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
+use App\Models\Products\Product;
 use App\Services\Cart\CartTotalsService;
+use App\Services\Coupons\CouponEvaluator;
+use App\Services\Coupons\CouponQuote;
 use App\Services\Finance\DecolectaExchangeRateService;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +30,7 @@ class CreateOrderFromCartAction
     public function __construct(
         private readonly DecolectaExchangeRateService $exchangeRates,
         private readonly CartTotalsService $cartTotals,
+        private readonly CouponEvaluator $couponEvaluator,
     ) {}
 
     /**
@@ -38,11 +47,15 @@ class CreateOrderFromCartAction
         ?Address $billingAddress = null,
         ?FulfillmentMethod $fulfillmentMethod = null,
         bool $clearCart = true,
+        ?Coupon $coupon = null,
+        ?PaymentMethod $paymentMethod = null,
     ): Order {
         $fulfillmentMethod ??= FulfillmentMethod::Delivery;
 
         $cart->loadMissing([
             'items.product.activeOffer',
+            'items.product.category',
+            'items.product.vehicleModel:id,brand_id',
             'items.variant.inventory',
             'items.variant.product',
         ]);
@@ -55,8 +68,9 @@ class CreateOrderFromCartAction
 
         $exchangeSnapshot = $this->exchangeRates->snapshotForOrder();
 
-        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod, $exchangeSnapshot, $clearCart) {
+        return DB::transaction(function () use ($user, $cart, $shippingAddress, $billingAddress, $fulfillmentMethod, $exchangeSnapshot, $clearCart, $coupon, $paymentMethod) {
             $lines = [];
+            $evalLines = collect();
 
             foreach ($cart->items as $item) {
                 $product = $item->product;
@@ -78,6 +92,12 @@ class CreateOrderFromCartAction
 
                 $pricing = OrderItem::pricingAttributesFor($product, $item->quantity, null, $variant);
                 $lines[] = $pricing;
+                $evalLines->push([
+                    'product' => $product,
+                    'quantity' => $item->quantity,
+                    'line_total' => (float) $pricing['unit_price'] * (int) $pricing['quantity'],
+                    'currency' => $pricing['currency'] ?? 'PEN',
+                ]);
             }
 
             $totals = $this->cartTotals->summarize(
@@ -89,8 +109,25 @@ class CreateOrderFromCartAction
                 $exchangeSnapshot['date'] ?? null,
             );
 
-            $total = $totals->chargeAmount();
+            $subtotal = $totals->chargeAmount();
             $currency = $totals->chargeCurrency();
+            $discount = 0.0;
+            $quote = null;
+
+            if ($coupon !== null) {
+                $quote = $this->applyCoupon(
+                    $coupon,
+                    $user,
+                    $evalLines,
+                    $totals,
+                    $fulfillmentMethod,
+                    $shippingAddress?->city,
+                    $paymentMethod,
+                );
+                $discount = $quote->discountAmount;
+            }
+
+            $total = round($subtotal - $discount, 2);
 
             if ($total < 1) {
                 throw ValidationException::withMessages([
@@ -108,8 +145,12 @@ class CreateOrderFromCartAction
                 'user_id' => $user->id,
                 'status' => OrderStatus::Created,
                 'payment_status' => PaymentStatus::Pending,
+                'subtotal_amount' => round($subtotal, 2),
+                'discount_amount' => round($discount, 2),
                 'total_amount' => round($total, 2),
                 'currency' => $currency,
+                'coupon_id' => $quote?->coupon?->id,
+                'coupon_code' => $quote?->coupon?->code,
                 'exchange_rate_buy' => $exchangeSnapshot['buy'] ?? null,
                 'exchange_rate_sell' => $exchangeSnapshot['sell'] ?? null,
                 'exchange_rate_date' => $exchangeSnapshot['date'] ?? null,
@@ -137,11 +178,64 @@ class CreateOrderFromCartAction
                 'created_at' => now(),
             ]);
 
+            if ($quote !== null) {
+                $this->recordCouponUsage($quote, $user, $order);
+            }
+
             if ($clearCart) {
                 $cart->items()->delete();
             }
 
             return $order->load(['items.product', 'items.variant', 'user.customerProfile']);
         });
+    }
+
+    /**
+     * @param  Collection<int, array{product: Product, quantity: int, line_total: float, currency: string}>  $lines
+     */
+    private function applyCoupon(
+        Coupon $coupon,
+        User $user,
+        $lines,
+        $totals,
+        FulfillmentMethod $fulfillmentMethod,
+        ?string $city,
+        ?PaymentMethod $paymentMethod,
+    ): CouponQuote {
+        $locked = Coupon::query()->whereKey($coupon->id)->lockForUpdate()->first();
+
+        if ($locked === null) {
+            throw ValidationException::withMessages([
+                'coupon_code' => 'El cupón ya no está disponible.',
+            ]);
+        }
+
+        return $this->couponEvaluator->quote(
+            $locked,
+            $lines,
+            $totals,
+            $user,
+            $fulfillmentMethod,
+            $city,
+            $paymentMethod,
+        );
+    }
+
+    private function recordCouponUsage(CouponQuote $quote, User $user, Order $order): void
+    {
+        try {
+            CouponUsage::query()->create([
+                'coupon_id' => $quote->coupon->id,
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'discount_amount' => $quote->discountAmount,
+                'currency' => $quote->currency,
+                'created_at' => now(),
+            ]);
+        } catch (QueryException $e) {
+            throw ValidationException::withMessages([
+                'coupon_code' => 'Ya usaste este cupón en una compra anterior.',
+            ]);
+        }
     }
 }

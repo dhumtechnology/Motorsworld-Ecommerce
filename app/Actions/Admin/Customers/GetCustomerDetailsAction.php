@@ -3,7 +3,12 @@
 namespace App\Actions\Admin\Customers;
 
 use App\Enums\Orders\OrderStatus;
+use App\Models\Appointments\Appointment;
 use App\Models\Auth\User;
+use App\Models\Coupons\Coupon;
+use App\Models\Coupons\CouponUsage;
+use App\Models\Orders\Order;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class GetCustomerDetailsAction
@@ -19,8 +24,11 @@ class GetCustomerDetailsAction
      *         last_order_at: mixed,
      *         last_appointment_at: mixed
      *     },
-     *     orders: Collection<int, \App\Models\Orders\Order>,
-     *     appointments: Collection<int, \App\Models\Appointments\Appointment>
+     *     orders: Collection<int, Order>,
+     *     appointments: Collection<int, Appointment>,
+     *     assignedCoupons: Collection<int, Coupon>,
+     *     usedCoupons: Collection<int, CouponUsage>,
+     *     assignableCoupons: Collection<int, Coupon>
      * }
      */
     public function execute(User $customer): array
@@ -46,6 +54,32 @@ class GetCustomerDetailsAction
             OrderStatus::Delivered->value,
         ];
 
+        $assignedCoupons = $customer->assignedCoupons()
+            ->withCount('usages')
+            ->orderBy('code')
+            ->get();
+
+        $usedCoupons = $customer->couponUsages()
+            ->with(['coupon:id,code,name', 'order:id,total_amount,currency,created_at'])
+            ->orderByDesc('id')
+            ->get();
+
+        $assignedIds = $assignedCoupons->pluck('id')->all();
+        $usedCouponIds = $usedCoupons->pluck('coupon_id')->all();
+
+        $assignableCoupons = Coupon::query()
+            ->activeAt()
+            ->when(
+                $assignedIds !== [],
+                fn (Builder $query) => $query->whereNotIn('id', $assignedIds),
+            )
+            ->when(
+                $usedCouponIds !== [],
+                fn (Builder $query) => $query->whereNotIn('id', $usedCouponIds),
+            )
+            ->orderBy('code')
+            ->get(['id', 'code', 'name']);
+
         $totalSpent = (float) $customer->orders()
             ->whereIn('status', $spendStatuses)
             ->sum('total_amount');
@@ -66,6 +100,9 @@ class GetCustomerDetailsAction
             ],
             'orders' => $orders,
             'appointments' => $appointments,
+            'assignedCoupons' => $assignedCoupons,
+            'usedCoupons' => $usedCoupons,
+            'assignableCoupons' => $assignableCoupons,
         ];
     }
 }

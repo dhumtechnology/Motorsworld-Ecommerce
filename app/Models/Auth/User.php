@@ -7,12 +7,15 @@ use App\Models\Appointments\Appointment;
 use App\Models\Auth\Concerns\HasApiTokens;
 use App\Models\Auth\Concerns\HasRoles;
 use App\Models\Cart\Cart;
+use App\Models\Coupons\Coupon;
+use App\Models\Coupons\CouponUsage;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -100,6 +103,22 @@ class User extends Authenticatable
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * @return BelongsToMany<Coupon, $this>
+     */
+    public function assignedCoupons(): BelongsToMany
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_user');
+    }
+
+    /**
+     * @return HasMany<CouponUsage, $this>
+     */
+    public function couponUsages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
     }
 
     public function isActive(): bool

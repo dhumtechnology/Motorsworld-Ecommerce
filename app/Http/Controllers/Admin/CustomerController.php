@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\Coupons\SyncCustomerCouponAction;
 use App\Actions\Admin\Customers\DeleteCustomersAction;
 use App\Actions\Admin\Customers\GetCustomerDetailsAction;
 use App\Enums\Auth\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AssignCustomerCouponRequest;
 use App\Http\Requests\Admin\CustomerIndexRequest;
 use App\Models\Auth\User;
+use App\Models\Coupons\Coupon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +22,7 @@ class CustomerController extends Controller
     public function __construct(
         private readonly GetCustomerDetailsAction $getCustomerDetails,
         private readonly DeleteCustomersAction $deleteCustomers,
+        private readonly SyncCustomerCouponAction $syncCustomerCoupon,
     ) {}
 
     public function index(CustomerIndexRequest $request): View
@@ -69,6 +73,40 @@ class CustomerController extends Controller
         $this->ensureCustomer($user);
 
         return view('admin.customers.show', $this->getCustomerDetails->execute($user));
+    }
+
+    public function assignCoupon(AssignCustomerCouponRequest $request, User $user): RedirectResponse
+    {
+        $this->ensureCustomer($user);
+
+        $coupon = Coupon::query()->findOrFail($request->couponId());
+        $wasPublic = $coupon->isPublic();
+        $this->syncCustomerCoupon->assign($coupon, $user);
+
+        $message = "Cupón «{$coupon->code}» asignado al cliente.";
+        if ($wasPublic) {
+            $message .= ' El cupón dejó de ser público y ahora solo aplica a los clientes asignados.';
+        }
+
+        return redirect()
+            ->route('admin.customers.show', $user)
+            ->with('status', $message);
+    }
+
+    public function unassignCoupon(User $user, Coupon $coupon): RedirectResponse
+    {
+        $this->ensureCustomer($user);
+
+        $this->syncCustomerCoupon->unassign($coupon, $user);
+
+        $message = "Se quitó el cupón «{$coupon->code}» de este cliente.";
+        if ($coupon->fresh()?->isPublic()) {
+            $message .= ' Al no tener clientes asignados, el cupón volvió a ser público.';
+        }
+
+        return redirect()
+            ->route('admin.customers.show', $user)
+            ->with('status', $message);
     }
 
     public function destroy(User $user): RedirectResponse

@@ -42,6 +42,7 @@
                     <input type="hidden" name="payment_method" id="payment_method" value="card">
                     <input type="hidden" name="culqi_token" id="culqi_token" value="">
                     <input type="hidden" name="device_finger_print_id" id="device_finger_print_id" value="">
+                    <input type="hidden" name="coupon_code" id="coupon_code" value="{{ $couponQuote?->coupon->code }}">
 
                     {{-- Comprador --}}
                     <section class="space-y-4">
@@ -191,7 +192,7 @@
                         id="pay-button"
                         class="group relative w-full overflow-hidden rounded-2xl bg-orange-600 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-lg shadow-orange-600/25 transition hover:bg-orange-500 disabled:opacity-50"
                     >
-                        <span class="relative z-10">Pagar {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
+                        <span class="relative z-10" id="pay-button-label">Pagar {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
                     </button>
 
                     <p class="text-center text-[11px] text-neutral-400">
@@ -227,6 +228,25 @@
                     </div>
                 </div>
 
+                <div class="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm" data-checkout-coupon>
+                    <h2 class="mb-3 text-sm font-black uppercase tracking-[0.14em] text-neutral-900">Cupón de descuento</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="checkout-coupon-input" maxlength="16"
+                               value="{{ $couponQuote?->coupon->code }}"
+                               placeholder="Código"
+                               class="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-mono uppercase text-neutral-900 placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20">
+                        <button type="button" id="checkout-coupon-apply"
+                                class="rounded-xl bg-neutral-900 px-4 py-2.5 text-xs font-black uppercase tracking-wide text-white hover:bg-neutral-800">
+                            Aplicar
+                        </button>
+                    </div>
+                    <p id="checkout-coupon-message" class="mt-2 hidden text-sm"></p>
+                    <div id="checkout-coupon-applied" class="mt-3 {{ $couponQuote ? '' : 'hidden' }} flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                        <span id="checkout-coupon-applied-label">{{ $couponQuote?->appliedLabel() }}</span>
+                        <button type="button" id="checkout-coupon-remove" class="text-xs font-bold uppercase text-emerald-700 hover:underline">Quitar</button>
+                    </div>
+                </div>
+
                 <div class="rounded-3xl border border-neutral-800 bg-neutral-950 p-5 text-white shadow-sm" data-checkout-totals>
                     @if ($totals->hasPen() || $totals->hasUsd())
                         <div class="space-y-2 text-sm text-white/70">
@@ -239,6 +259,25 @@
                         </div>
                     @endif
 
+                    <div id="checkout-discount-row" class="mt-3 {{ $couponQuote ? '' : 'hidden' }}">
+                        <div class="flex justify-between gap-3 text-sm text-emerald-300">
+                            <span>
+                                Cupón <span data-discount-code>{{ $couponQuote?->coupon->code }}</span>
+                                <span data-discount-value>{{ $couponQuote ? '· '.$couponQuote->coupon->discountLabel() : '' }}</span>
+                            </span>
+                            <span data-discount-amount
+                                  data-discount-pen="{{ $couponQuote ? number_format($couponQuote->discountPen, 2, '.', '') : '' }}"
+                                  data-discount-usd="{{ $couponQuote ? number_format($couponQuote->discountUsd, 2, '.', '') : '' }}">
+                                @if ($couponQuote)
+                                    − {{ \App\Support\Currency::format($couponQuote->discountAmount, $couponQuote->currency) }}
+                                @endif
+                            </span>
+                        </div>
+                        <p id="checkout-discount-note" class="mt-1 text-[11px] text-emerald-300/70 {{ $couponQuote?->conversionNote() ? '' : 'hidden' }}">
+                            {{ $couponQuote?->conversionNote() }}
+                        </p>
+                    </div>
+
                     @if ($totals->hasRate)
                         <div class="mt-4 border-t border-white/10 pt-4 space-y-3">
                             <div class="flex items-center justify-between gap-3">
@@ -249,15 +288,17 @@
                                 </div>
                             </div>
                             <p class="text-right text-2xl font-black" data-grand-total
-                               data-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
-                               data-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}">
-                                S/ {{ number_format($totals->grandPen, 2) }}
+                               data-pen="{{ number_format($couponQuote->grandPen ?? $totals->grandPen, 2, '.', '') }}"
+                               data-usd="{{ number_format($couponQuote->grandUsd ?? $totals->grandUsd, 2, '.', '') }}"
+                               data-base-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
+                               data-base-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}">
+                                S/ {{ number_format($couponQuote->grandPen ?? $totals->grandPen, 2) }}
                             </p>
                         </div>
                     @else
                         <div class="mt-4 border-t border-white/10 pt-4 flex items-center justify-between">
                             <span class="text-xs font-bold uppercase tracking-widest text-white/60">Total</span>
-                            <span class="text-2xl font-black">{{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
+                            <span class="text-2xl font-black" data-simple-total>{{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
                         </div>
                     @endif
                 </div>
@@ -285,6 +326,12 @@
     const setCurrency = (currency) => {
         const isPen = currency === 'PEN';
         totalEl.textContent = (isPen ? 'S/ ' : '$ ') + format(totalEl.dataset[isPen ? 'pen' : 'usd']);
+        const discountAmountEl = root.querySelector('[data-discount-amount]');
+        const discountPen = discountAmountEl?.dataset.discountPen;
+        const discountUsd = discountAmountEl?.dataset.discountUsd;
+        if (discountAmountEl && discountPen && discountUsd) {
+            discountAmountEl.textContent = '− ' + (isPen ? 'S/ ' : '$ ') + format(isPen ? discountPen : discountUsd);
+        }
         buttons.forEach((button) => {
             const active = button.dataset.totalCurrency === currency;
             button.classList.toggle('bg-orange-600', active);
@@ -306,6 +353,8 @@ window.MotoworldCheckout = {
     fake: @json((bool) $culqiFake),
     yapeMaxCents: 200000,
     yapeTokenUrl: @json($yapeTokenUrl ?? '/checkout/token-yape'),
+    applyCouponUrl: @json($applyCouponUrl ?? '/checkout/cupon'),
+    removeCouponUrl: @json($removeCouponUrl ?? '/checkout/cupon'),
 };
 </script>
 
@@ -460,6 +509,143 @@ window.MotoworldCheckout = {
         btn.addEventListener('click', () => setPayMethod(btn.dataset.payMethod));
     });
     setPayMethod('card');
+
+    const couponInput = document.getElementById('checkout-coupon-input');
+    const couponHidden = document.getElementById('coupon_code');
+    const couponMessage = document.getElementById('checkout-coupon-message');
+    const couponApplied = document.getElementById('checkout-coupon-applied');
+    const couponAppliedLabel = document.getElementById('checkout-coupon-applied-label');
+    const couponApplyBtn = document.getElementById('checkout-coupon-apply');
+    const couponRemoveBtn = document.getElementById('checkout-coupon-remove');
+    const discountRow = document.getElementById('checkout-discount-row');
+    const discountNote = document.getElementById('checkout-discount-note');
+    const payLabel = document.getElementById('pay-button-label');
+    const grandTotalEl = document.querySelector('[data-grand-total]');
+    const simpleTotalEl = document.querySelector('[data-simple-total]');
+
+    function formatMoney(amount, currency) {
+        const symbol = currency === 'USD' ? '$' : 'S/';
+        return symbol + ' ' + Number(amount).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function couponContext() {
+        return {
+            coupon_code: (couponInput?.value || '').trim(),
+            fulfillment_method: selectedFulfillment(),
+            address_city: document.getElementById('address_city')?.value || '',
+            payment_method: paymentMethodInput?.value || 'card',
+        };
+    }
+
+    function applyTotals(data, applied) {
+        cfg.amount = Number(data.total || 0);
+        cfg.amountCents = Number(data.amount_cents || Math.round(cfg.amount * 100));
+        cfg.currency = data.currency || cfg.currency;
+        if (payLabel) payLabel.textContent = 'Pagar ' + formatMoney(cfg.amount, cfg.currency);
+        if (grandTotalEl) {
+            if (data.grand_pen != null) grandTotalEl.dataset.pen = Number(data.grand_pen).toFixed(2);
+            if (data.grand_usd != null) grandTotalEl.dataset.usd = Number(data.grand_usd).toFixed(2);
+            const active = document.querySelector('[data-total-currency].bg-orange-600')?.dataset.totalCurrency || 'PEN';
+            const isPen = active === 'PEN';
+            grandTotalEl.textContent = (isPen ? 'S/ ' : '$ ') + Number(isPen ? grandTotalEl.dataset.pen : grandTotalEl.dataset.usd).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        if (simpleTotalEl) simpleTotalEl.textContent = formatMoney(cfg.amount, cfg.currency);
+        if (couponHidden) couponHidden.value = applied ? (data.code || '') : '';
+        if (discountRow) {
+            discountRow.classList.toggle('hidden', !applied);
+            const codeEl = discountRow.querySelector('[data-discount-code]');
+            const valueEl = discountRow.querySelector('[data-discount-value]');
+            const amountEl = discountRow.querySelector('[data-discount-amount]');
+            if (codeEl) codeEl.textContent = data.code || '';
+            if (valueEl) valueEl.textContent = applied && data.value_label ? '· ' + data.value_label : '';
+            if (amountEl) {
+                amountEl.dataset.discountPen = applied && data.discount_pen != null ? Number(data.discount_pen).toFixed(2) : '';
+                amountEl.dataset.discountUsd = applied && data.discount_usd != null ? Number(data.discount_usd).toFixed(2) : '';
+                const currency = document.querySelector('[data-total-currency].bg-orange-600')?.dataset.totalCurrency
+                    || data.currency
+                    || 'PEN';
+                const amount = currency === 'USD'
+                    ? (data.discount_usd ?? data.discount_amount)
+                    : (data.discount_pen ?? data.discount_amount);
+                amountEl.textContent = applied ? '− ' + formatMoney(amount, currency) : '';
+            }
+        }
+        if (discountNote) {
+            discountNote.textContent = applied ? (data.conversion_note || '') : '';
+            discountNote.classList.toggle('hidden', !(applied && data.conversion_note));
+        }
+        if (couponApplied) couponApplied.classList.toggle('hidden', !applied);
+        if (couponAppliedLabel) couponAppliedLabel.textContent = applied ? (data.applied_label || ('Cupón ' + data.code)) : '';
+    }
+
+    function showCouponMessage(text, isError) {
+        if (!couponMessage) return;
+        couponMessage.textContent = text || '';
+        couponMessage.classList.toggle('hidden', !text);
+        couponMessage.classList.toggle('text-red-600', !!isError);
+        couponMessage.classList.toggle('text-emerald-700', !isError);
+    }
+
+    async function applyCoupon() {
+        const code = (couponInput?.value || '').trim();
+        if (!code) {
+            showCouponMessage('Ingresa un código de cupón.', true);
+            return;
+        }
+        showCouponMessage('');
+        try {
+            const body = new FormData();
+            Object.entries(couponContext()).forEach(([key, value]) => body.set(key, String(value || '')));
+            const response = await fetch(cfg.applyCouponUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                credentials: 'same-origin',
+                body,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(firstError(data) || data.errors?.coupon_code?.[0] || 'No se pudo aplicar el cupón.');
+            }
+            applyTotals(data, true);
+            showCouponMessage(data.message || 'Cupón aplicado.', false);
+        } catch (err) {
+            showCouponMessage(err?.message || 'No se pudo aplicar el cupón.', true);
+        }
+    }
+
+    async function removeCoupon() {
+        try {
+            const response = await fetch(cfg.removeCouponUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                credentials: 'same-origin',
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(firstError(data));
+            if (couponInput) couponInput.value = '';
+            applyTotals(data, false);
+            showCouponMessage(data.message || 'Cupón quitado.', false);
+        } catch (err) {
+            showCouponMessage(err?.message || 'No se pudo quitar el cupón.', true);
+        }
+    }
+
+    couponApplyBtn?.addEventListener('click', applyCoupon);
+    couponRemoveBtn?.addEventListener('click', removeCoupon);
+    couponInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            applyCoupon();
+        }
+    });
 
     function randomId(prefix) {
         return prefix + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);

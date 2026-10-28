@@ -78,6 +78,12 @@
                             {{ number_format((float) $order->total_amount, 2) }}
                             <span class="text-sm text-muted font-semibold">{{ $order->currency }}</span>
                         </dd>
+                        @if ($order->hasDiscount())
+                            <p class="mt-1 text-xs text-muted">
+                                Subtotal {{ number_format($order->subtotalAmount(), 2) }}
+                                · Cupón {{ $order->coupon_code }}{{ $order->coupon ? ' · '.$order->coupon->discountLabel() : '' }} − {{ number_format((float) $order->discount_amount, 2) }}
+                            </p>
+                        @endif
                     </div>
                     <div>
                         <dt class="text-xs uppercase tracking-wider text-muted">Entrega</dt>

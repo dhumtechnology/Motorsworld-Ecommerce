@@ -95,6 +95,12 @@
                     'active' => request()->routeIs('admin.payments.*'),
                     'permission' => 'payments.view',
                 ],
+                [
+                    'label' => 'Cupones',
+                    'route' => 'admin.coupons.index',
+                    'active' => request()->routeIs('admin.coupons.*'),
+                    'permission' => 'coupons.view',
+                ],
             ],
         ],
         [

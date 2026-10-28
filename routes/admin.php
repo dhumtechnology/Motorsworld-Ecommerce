@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClaimBookController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeBannerController;
@@ -134,12 +135,25 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Clientes
     Route::get('/clientes', [CustomerController::class, 'index'])->middleware('permission:customer_profiles.view')->name('customers.index');
     Route::get('/clientes/{user}', [CustomerController::class, 'show'])->middleware('permission:customer_profiles.view')->name('customers.show');
+    Route::post('/clientes/{user}/cupones', [CustomerController::class, 'assignCoupon'])->middleware('permission:coupons.update')->name('customers.coupons.assign');
+    Route::delete('/clientes/{user}/cupones/{coupon}', [CustomerController::class, 'unassignCoupon'])->middleware('permission:coupons.update')->name('customers.coupons.unassign');
     Route::delete('/clientes/{user}', [CustomerController::class, 'destroy'])->middleware('permission:customer_profiles.delete')->name('customers.destroy');
 
     // Órdenes
     Route::get('/ordenes', [OrderController::class, 'index'])->middleware('permission:orders.view')->name('orders.index');
     Route::get('/ordenes/{order}', [OrderController::class, 'show'])->middleware('permission:orders.view')->name('orders.show');
     Route::put('/ordenes/{order}/estado', [OrderController::class, 'updateStatus'])->middleware('permission:orders.update')->name('orders.update-status');
+
+    // Cupones
+    Route::get('/cupones', [CouponController::class, 'index'])->middleware('permission:coupons.view')->name('coupons.index');
+    Route::get('/cupones/crear', [CouponController::class, 'create'])->middleware('permission:coupons.create')->name('coupons.create');
+    Route::post('/cupones/generar-codigo', [CouponController::class, 'generateCode'])->middleware('permission:coupons.create,coupons.update')->name('coupons.generate-code');
+    Route::post('/cupones', [CouponController::class, 'store'])->middleware('permission:coupons.create')->name('coupons.store');
+    Route::get('/cupones/{coupon}', [CouponController::class, 'show'])->middleware('permission:coupons.view')->name('coupons.show');
+    Route::get('/cupones/{coupon}/editar', [CouponController::class, 'edit'])->middleware('permission:coupons.update')->name('coupons.edit');
+    Route::put('/cupones/{coupon}', [CouponController::class, 'update'])->middleware('permission:coupons.update')->name('coupons.update');
+    Route::delete('/cupones/{coupon}', [CouponController::class, 'destroy'])->middleware('permission:coupons.delete')->name('coupons.destroy');
+    Route::delete('/cupones', [CouponController::class, 'bulkDestroy'])->middleware('permission:coupons.delete')->name('coupons.bulk-destroy');
 
     // Pagos
     Route::get('/pagos', [PaymentController::class, 'index'])->middleware('permission:payments.view')->name('payments.index');

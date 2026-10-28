@@ -49,6 +49,7 @@ class CheckoutPayRequest extends FormRequest
             'address_line1' => [$isDelivery ? 'required' : 'nullable', 'string', 'max:255'],
             'address_city' => [$isDelivery ? 'required' : 'nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],
+            'coupon_code' => ['nullable', 'string', 'max:16'],
         ];
     }
 
@@ -78,6 +79,13 @@ class CheckoutPayRequest extends FormRequest
     public function fulfillmentMethod(): FulfillmentMethod
     {
         return FulfillmentMethod::from($this->string('fulfillment_method')->toString());
+    }
+
+    public function couponCode(): ?string
+    {
+        $code = strtoupper(preg_replace('/\s+/', '', (string) $this->input('coupon_code', '')) ?? '');
+
+        return $code === '' ? null : $code;
     }
 
     public function culqiToken(): string

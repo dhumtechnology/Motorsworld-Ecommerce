@@ -3,18 +3,18 @@
 use App\Http\Controllers\Shop\AboutController;
 use App\Http\Controllers\Shop\AccountController;
 use App\Http\Controllers\Shop\BlogController;
-use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CartController;
+use App\Http\Controllers\Shop\CatalogController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\ClaimBookController;
 use App\Http\Controllers\Shop\ContactController;
 use App\Http\Controllers\Shop\FaqController;
-use App\Http\Controllers\Shop\HomeController;
-use App\Http\Controllers\Shop\ProductController;
-use App\Http\Controllers\Shop\ServiceController;
 use App\Http\Controllers\Shop\HelpController;
+use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\PaymentPromotionsController;
 use App\Http\Controllers\Shop\PrivacyPolicyController;
+use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Shop\ServiceController;
 use App\Http\Controllers\Shop\ShippingReturnsController;
 use Illuminate\Support\Facades\Route;
 
@@ -111,6 +111,8 @@ Route::prefix('carrito')->name('cart.')->group(function () {
 Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'show'])->name('show');
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
+    Route::post('/cupon', [CheckoutController::class, 'applyCoupon'])->name('coupon.apply');
+    Route::delete('/cupon', [CheckoutController::class, 'removeCoupon'])->name('coupon.remove');
     Route::post('/token-yape', [CheckoutController::class, 'yapeToken'])->name('yapeToken');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
     Route::get('/pedidos/{order}/estado', [CheckoutController::class, 'paymentStatus'])->name('orders.status');

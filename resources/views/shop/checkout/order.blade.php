@@ -44,6 +44,16 @@
                 </p>
             </div>
         @endforeach
+        @if ($order->hasDiscount())
+            <div class="flex justify-between p-4 text-sm">
+                <span class="text-neutral-500">Subtotal</span>
+                <span class="font-semibold">{{ $orderCurrencySymbol }} {{ number_format($order->subtotalAmount(), 2) }}</span>
+            </div>
+            <div class="flex justify-between px-4 pb-3 text-sm text-emerald-700">
+                <span>Cupón {{ $order->coupon_code }}{{ $order->coupon ? ' · '.$order->coupon->discountLabel() : '' }}</span>
+                <span>− {{ $orderCurrencySymbol }} {{ number_format((float) $order->discount_amount, 2) }}</span>
+            </div>
+        @endif
         <div class="flex justify-between p-4">
             <span class="text-neutral-500 uppercase text-xs font-bold tracking-widest">Total</span>
             <span class="text-xl font-black text-neutral-900">{{ $orderCurrencySymbol }} {{ number_format((float) $order->total_amount, 2) }}</span>

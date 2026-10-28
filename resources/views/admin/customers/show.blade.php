@@ -230,6 +230,86 @@
         </div>
     </div>
 
+    <div class="rounded-lg border border-border bg-surface overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-sm font-title text-text">Cupones</h2>
+                <p class="text-xs text-muted mt-1">Asignar un cupón a este cliente lo vuelve exclusivo (deja de ser para todos) y le envía un correo con el código.</p>
+            </div>
+            @can('coupons.update')
+                @if ($assignableCoupons->isNotEmpty())
+                    <form method="POST" action="{{ route('admin.customers.coupons.assign', $customer) }}" class="flex flex-wrap items-center gap-2">
+                        @csrf
+                        <select name="coupon_id" required
+                                class="rounded border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                            <option value="">Seleccionar cupón…</option>
+                            @foreach ($assignableCoupons as $assignable)
+                                <option value="{{ $assignable->id }}">{{ $assignable->code }}{{ $assignable->hasTitle() ? ' — '.$assignable->name : '' }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="rounded bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-primary-hover transition-colors">
+                            Asignar
+                        </button>
+                    </form>
+                @endif
+            @endcan
+        </div>
+
+        @if ($errors->has('coupon_id'))
+            <div class="mx-5 mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ $errors->first('coupon_id') }}</div>
+        @endif
+
+        <div class="grid gap-6 lg:grid-cols-2 p-5">
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-3">Asignados</h3>
+                <ul class="divide-y divide-border rounded border border-border">
+                    @forelse ($assignedCoupons as $assigned)
+                        @php $assignedMeta = $assigned->lifecycleMeta(); @endphp
+                        <li class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                            <div>
+                                <a href="{{ route('admin.coupons.show', $assigned) }}" class="font-mono font-bold text-sky-700 hover:underline">{{ $assigned->code }}</a>
+                                <p class="text-xs text-muted">{{ $assigned->hasTitle() ? $assigned->name.' · ' : '' }}{{ $assigned->discountLabel() }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center rounded border px-2 py-0.5 text-[10px] font-bold uppercase {{ $assignedMeta['class'] }}">{{ $assignedMeta['label'] }}</span>
+                                @can('coupons.update')
+                                    <form method="POST" action="{{ route('admin.customers.coupons.unassign', [$customer, $assigned]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs font-bold uppercase text-red-600 hover:underline">Quitar</button>
+                                    </form>
+                                @endcan
+                            </div>
+                        </li>
+                    @empty
+                        <li class="px-4 py-8 text-center text-sm text-muted">Sin cupones asignados.</li>
+                    @endforelse
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-muted mb-3">Usados</h3>
+                <ul class="divide-y divide-border rounded border border-border">
+                    @forelse ($usedCoupons as $usage)
+                        <li class="px-4 py-3 text-sm">
+                            <p class="font-mono font-bold text-text">{{ $usage->coupon?->code ?? '—' }}</p>
+                            <p class="text-xs text-muted">
+                                Pedido
+                                @if ($usage->order)
+                                    <a href="{{ route('admin.orders.show', $usage->order) }}" class="text-sky-700 hover:underline">#{{ $usage->order->id }}</a>
+                                @else
+                                    —
+                                @endif
+                                · {{ $usage->created_at?->format('d/m/Y H:i') }}
+                            </p>
+                        </li>
+                    @empty
+                        <li class="px-4 py-8 text-center text-sm text-muted">Aún no usó cupones.</li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <x-confirm-modal
         id="single-delete-modal"
         title="Eliminar cliente"

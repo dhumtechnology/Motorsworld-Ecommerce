@@ -6,17 +6,25 @@ use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\OrderStatus;
 use App\Enums\Orders\PaymentStatus;
 use App\Models\Auth\User;
+use App\Models\Coupons\Coupon;
+use App\Models\Coupons\CouponUsage;
+use App\Support\Currency;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'user_id',
     'status',
     'payment_status',
+    'subtotal_amount',
+    'discount_amount',
     'total_amount',
     'currency',
+    'coupon_id',
+    'coupon_code',
     'exchange_rate_buy',
     'exchange_rate_sell',
     'exchange_rate_date',
@@ -74,6 +82,36 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    /**
+     * @return BelongsTo<Coupon, $this>
+     */
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
+    /**
+     * @return HasOne<CouponUsage, $this>
+     */
+    public function couponUsage(): HasOne
+    {
+        return $this->hasOne(CouponUsage::class);
+    }
+
+    public function hasDiscount(): bool
+    {
+        return (float) ($this->discount_amount ?? 0) > 0;
+    }
+
+    public function subtotalAmount(): float
+    {
+        if ($this->subtotal_amount !== null) {
+            return (float) $this->subtotal_amount;
+        }
+
+        return round((float) $this->total_amount + (float) ($this->discount_amount ?? 0), 2);
+    }
+
     public function latestPayment(): ?Payment
     {
         return $this->payments()->latest('id')->first();
@@ -88,6 +126,8 @@ class Order extends Model
             'status' => OrderStatus::class,
             'payment_status' => PaymentStatus::class,
             'fulfillment_method' => FulfillmentMethod::class,
+            'subtotal_amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'exchange_rate_buy' => 'decimal:4',
             'exchange_rate_sell' => 'decimal:4',
@@ -97,7 +137,7 @@ class Order extends Model
 
     public function amountIn(string $targetCurrency): float
     {
-        return \App\Support\Currency::convert(
+        return Currency::convert(
             (float) $this->total_amount,
             $this->currency,
             $targetCurrency,

@@ -67,6 +67,7 @@ class OrderController extends Controller
         $order->load([
             'user.customerProfile',
             'items.product',
+            'coupon',
             'shippingAddress',
             'billingAddress',
             'statusHistory' => fn ($query) => $query->orderByDesc('created_at')->orderByDesc('id'),

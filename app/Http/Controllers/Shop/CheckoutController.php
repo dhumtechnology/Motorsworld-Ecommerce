@@ -12,14 +12,17 @@ use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\PaymentStatus;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Shop\ApplyCheckoutCouponRequest;
 use App\Http\Requests\Shop\CheckoutPayRequest;
 use App\Http\Requests\Shop\ConfirmCulqi3DSRequest;
 use App\Models\Auth\User;
+use App\Models\Coupons\Coupon;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
-use App\Services\Orders\ProductPricingService;
+use App\Services\Coupons\CheckoutCouponService;
+use App\Services\Coupons\CouponQuote;
 use App\Services\Payments\Culqi\CulqiClient;
 use App\Services\Payments\Culqi\Exceptions\CulqiApiException;
 use Illuminate\Contracts\View\View;
@@ -36,7 +39,6 @@ class CheckoutController extends Controller
 
     public function __construct(
         private readonly CartResolver $cartResolver,
-        private readonly ProductPricingService $pricing,
         private readonly CartTotalsService $cartTotals,
         private readonly CreateOrderFromCartAction $createOrderFromCart,
         private readonly DiscardFailedCheckoutOrderAction $discardFailedOrder,
@@ -44,6 +46,7 @@ class CheckoutController extends Controller
         private readonly RefreshCulqiPaymentStatusAction $refreshPaymentStatus,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
         private readonly ResolveOrCreateCustomerAction $resolveOrCreateCustomer,
+        private readonly CheckoutCouponService $checkoutCoupons,
     ) {}
 
     public function show(Request $request): View|RedirectResponse
@@ -53,57 +56,89 @@ class CheckoutController extends Controller
             $request->session()->getId(),
         );
 
-        $cart->loadMissing([
-            'items.product.category',
-            'items.product.primaryImage',
-            'items.product.activeOffer',
-            'items.variant.inventory',
-            'items.variant.images',
-            'items.variant.colors',
-        ]);
-
         if ($cart->items->isEmpty()) {
             return redirect()
                 ->route('shop.catalog')
                 ->with('status', 'Tu carrito está vacío.');
         }
 
-        $lines = $cart->items
-            ->filter(fn ($item) => $item->product !== null)
-            ->map(function ($item) {
-                $product = $item->product;
-                $pricing = $this->pricing->resolve($product);
-
-                return [
-                    'product' => $product,
-                    'variant' => $item->variant,
-                    'quantity' => $item->quantity,
-                    'unit_price' => (float) $pricing->unitPrice,
-                    'list_unit_price' => (float) $pricing->listUnitPrice,
-                    'line_total' => (float) $pricing->unitPrice * $item->quantity,
-                    'is_on_sale' => $pricing->hasOffer(),
-                    'currency' => $pricing->currency,
-                    'color_label' => $item->variant?->colorLabel(),
-                ];
-            });
-
+        $lines = $this->checkoutCoupons->cartLines($cart);
         $totals = $this->cartTotals->summarize($lines);
         $user = $request->user();
         $profile = $user?->customerProfile;
+        $quote = $this->sessionCouponQuote($request, $lines, $totals);
+        $chargeAmount = $quote?->chargeAmount ?? $totals->chargeAmount();
+        $chargeCurrency = $quote?->currency ?? $totals->chargeCurrency();
 
         return view('shop.checkout.index', [
             'cart' => $cart,
             'lines' => $lines,
             'totals' => $totals,
-            'total' => $totals->chargeAmount(),
-            'currency' => $totals->chargeCurrency(),
+            'couponQuote' => $quote,
+            'total' => $chargeAmount,
+            'currency' => $chargeCurrency,
             'culqiPublicKey' => config('services.culqi.public_key'),
             'culqiFake' => (bool) config('services.culqi.fake'),
             'profile' => $profile,
             'user' => $user,
-            'amount' => round((float) $totals->chargeAmount(), 2),
-            'amountCents' => (int) round((float) $totals->chargeAmount() * 100),
+            'amount' => round((float) $chargeAmount, 2),
+            'amountCents' => (int) round((float) $chargeAmount * 100),
             'yapeTokenUrl' => route('shop.checkout.yapeToken', absolute: false),
+            'applyCouponUrl' => route('shop.checkout.coupon.apply', absolute: false),
+            'removeCouponUrl' => route('shop.checkout.coupon.remove', absolute: false),
+        ]);
+    }
+
+    public function applyCoupon(ApplyCheckoutCouponRequest $request): JsonResponse
+    {
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+
+        if ($cart->items->isEmpty()) {
+            throw ValidationException::withMessages([
+                'coupon_code' => 'Tu carrito está vacío.',
+            ]);
+        }
+
+        $lines = $this->checkoutCoupons->cartLines($cart);
+        $totals = $this->cartTotals->summarize($lines);
+        $quote = $this->checkoutCoupons->quote(
+            $request->couponCode(),
+            $lines,
+            $totals,
+            $request->user(),
+            $request->fulfillmentMethod(),
+            $request->city(),
+            $request->paymentMethod(),
+        );
+
+        $request->session()->put(CheckoutCouponService::SESSION_KEY, $quote->coupon->code);
+
+        return response()->json($this->checkoutCoupons->payload($quote));
+    }
+
+    public function removeCoupon(Request $request): JsonResponse
+    {
+        $request->session()->forget(CheckoutCouponService::SESSION_KEY);
+
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+        $lines = $this->checkoutCoupons->cartLines($cart);
+        $totals = $this->cartTotals->summarize($lines);
+
+        return response()->json([
+            'valid' => false,
+            'code' => null,
+            'value_label' => null,
+            'applied_label' => null,
+            'conversion_note' => null,
+            'discount_amount' => 0,
+            'discount_pen' => 0,
+            'discount_usd' => 0,
+            'total' => $totals->chargeAmount(),
+            'amount_cents' => $totals->amountCents(),
+            'currency' => $totals->chargeCurrency(),
+            'grand_pen' => $totals->grandPen,
+            'grand_usd' => $totals->grandUsd,
+            'message' => 'Cupón quitado.',
         ]);
     }
 
@@ -116,10 +151,6 @@ class CheckoutController extends Controller
         ]);
 
         $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
-        $cart->loadMissing([
-            'items.product.activeOffer',
-            'items.variant',
-        ]);
 
         if ($cart->items->isEmpty()) {
             return response()->json([
@@ -127,23 +158,14 @@ class CheckoutController extends Controller
             ], 422);
         }
 
-        $lines = $cart->items
-            ->filter(fn ($item) => $item->product !== null)
-            ->map(function ($item) {
-                $pricing = $this->pricing->resolve($item->product);
-
-                return [
-                    'quantity' => $item->quantity,
-                    'unit_price' => (float) $pricing->unitPrice,
-                    'line_total' => (float) $pricing->unitPrice * $item->quantity,
-                    'currency' => $pricing->currency,
-                ];
-            });
-
+        $lines = $this->checkoutCoupons->cartLines($cart);
         $totals = $this->cartTotals->summarize($lines);
-        $amountCents = (int) round((float) $totals->chargeAmount() * 100);
+        $quote = $this->sessionCouponQuote($request, $lines, $totals);
+        $chargeAmount = $quote?->chargeAmount ?? $totals->chargeAmount();
+        $chargeCurrency = $quote?->currency ?? $totals->chargeCurrency();
+        $amountCents = (int) round((float) $chargeAmount * 100);
 
-        if (strtoupper((string) $totals->chargeCurrency()) !== 'PEN') {
+        if (strtoupper((string) $chargeCurrency) !== 'PEN') {
             return response()->json([
                 'message' => 'Yape solo acepta pagos en soles.',
             ], 422);
@@ -213,6 +235,8 @@ class CheckoutController extends Controller
                 $shippingAddress,
                 $request->fulfillmentMethod(),
                 clearCart: false,
+                coupon: $this->couponFromRequest($request),
+                paymentMethod: $request->paymentMethod(),
             );
 
             $result = $this->processPayment->execute(
@@ -312,6 +336,7 @@ class CheckoutController extends Controller
         }
 
         $cart->items()->delete();
+        $request->session()->forget(CheckoutCouponService::SESSION_KEY);
 
         if (! $payment->isPaid()) {
             if ($request->wantsJson()) {
@@ -412,6 +437,7 @@ class CheckoutController extends Controller
 
         $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
         $cart->items()->delete();
+        $request->session()->forget(CheckoutCouponService::SESSION_KEY);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -450,6 +476,7 @@ class CheckoutController extends Controller
             'user.customerProfile',
             'shippingAddress',
             'billingAddress',
+            'coupon',
         ]);
 
         $payment = $order->latestPayment();
@@ -531,6 +558,48 @@ class CheckoutController extends Controller
         return redirect()
             ->route('shop.checkout.orders.show', $order)
             ->with('status', 'Pago simulado correctamente (modo fake).');
+    }
+
+    private function sessionCouponQuote(Request $request, $lines, $totals): ?CouponQuote
+    {
+        $code = $request->session()->get(CheckoutCouponService::SESSION_KEY);
+
+        if (! is_string($code) || trim($code) === '') {
+            return null;
+        }
+
+        $quote = $this->checkoutCoupons->quoteOrNull(
+            $code,
+            $lines,
+            $totals,
+            $request->user(),
+        );
+
+        if ($quote === null) {
+            $request->session()->forget(CheckoutCouponService::SESSION_KEY);
+        }
+
+        return $quote;
+    }
+
+    private function couponFromRequest(CheckoutPayRequest $request): ?Coupon
+    {
+        $code = $request->couponCode()
+            ?: $request->session()->get(CheckoutCouponService::SESSION_KEY);
+
+        if (! is_string($code) || trim($code) === '') {
+            return null;
+        }
+
+        $coupon = $this->checkoutCoupons->findByCode($code);
+
+        if ($coupon === null) {
+            throw ValidationException::withMessages([
+                'coupon_code' => 'El cupón no existe.',
+            ]);
+        }
+
+        return $coupon;
     }
 
     private function assertCanAccessOrder(Request $request, Order $order): void
