@@ -8,6 +8,7 @@ use App\Enums\Orders\PaymentStatus;
 use App\Models\Auth\User;
 use App\Models\Coupons\Coupon;
 use App\Models\Coupons\CouponUsage;
+use App\Models\Shipping\ShippingRate;
 use App\Support\Currency;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'payment_status',
     'subtotal_amount',
     'discount_amount',
+    'shipping_amount',
+    'shipping_rate_id',
     'total_amount',
     'currency',
     'coupon_id',
@@ -91,6 +94,14 @@ class Order extends Model
     }
 
     /**
+     * @return BelongsTo<ShippingRate, $this>
+     */
+    public function shippingRate(): BelongsTo
+    {
+        return $this->belongsTo(ShippingRate::class);
+    }
+
+    /**
      * @return HasOne<CouponUsage, $this>
      */
     public function couponUsage(): HasOne
@@ -101,6 +112,11 @@ class Order extends Model
     public function hasDiscount(): bool
     {
         return (float) ($this->discount_amount ?? 0) > 0;
+    }
+
+    public function hasShipping(): bool
+    {
+        return (float) ($this->shipping_amount ?? 0) > 0;
     }
 
     public function subtotalAmount(): float
@@ -128,6 +144,7 @@ class Order extends Model
             'fulfillment_method' => FulfillmentMethod::class,
             'subtotal_amount' => 'decimal:2',
             'discount_amount' => 'decimal:2',
+            'shipping_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'exchange_rate_buy' => 'decimal:4',
             'exchange_rate_sell' => 'decimal:4',

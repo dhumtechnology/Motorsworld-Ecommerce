@@ -18,6 +18,7 @@ use App\Models\Products\Brand;
 use App\Models\Products\Category;
 use App\Models\Products\Product;
 use App\Services\Coupons\CouponCodeGenerator;
+use App\Services\Locations\LocationCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +34,7 @@ class CouponController extends Controller
         private readonly DeleteCouponsAction $deleteCoupons,
         private readonly GetCouponDetailsAction $getCouponDetails,
         private readonly CouponCodeGenerator $codeGenerator,
+        private readonly LocationCatalog $locations,
     ) {}
 
     public function index(CouponIndexRequest $request): View
@@ -112,11 +114,19 @@ class CouponController extends Controller
 
     public function edit(Coupon $coupon): View
     {
-        $coupon->load(['customers:id', 'products:id', 'categories:id', 'brands:id']);
+        $coupon->load([
+            'customers:id',
+            'products:id',
+            'categories:id',
+            'brands:id',
+            'departments:id',
+            'provinces:id',
+            'districts:id',
+        ]);
 
         return view('admin.coupons.edit', [
             'coupon' => $coupon,
-            ...$this->formOptions(),
+            ...$this->formOptions($coupon),
         ]);
     }
 
@@ -175,8 +185,10 @@ class CouponController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function formOptions(): array
+    private function formOptions(?Coupon $coupon = null): array
     {
+        $districtIds = array_map('intval', (array) old('district_ids', $coupon?->districts->pluck('id')->all() ?? []));
+
         return [
             'types' => CouponType::cases(),
             'paymentMethods' => [
@@ -193,6 +205,10 @@ class CouponController extends Controller
             'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
             'brands' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'customers' => $this->customersForSelect(),
+            'departments' => $this->locations->departments(),
+            'provinces' => $this->locations->provincesForSelect(),
+            'districts' => $this->locations->districtsByIds($districtIds),
+            'districtsSource' => route('admin.locations.districts'),
         ];
     }
 

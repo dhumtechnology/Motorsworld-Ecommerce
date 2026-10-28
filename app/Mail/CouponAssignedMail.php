@@ -26,6 +26,9 @@ class CouponAssignedMail extends Mailable
             'products:id,name',
             'categories:id,name',
             'brands:id,name',
+            'departments:id,name',
+            'provinces.department:id,name',
+            'districts.province:id,name',
         ]);
         $this->customer->loadMissing('customerProfile');
     }
@@ -101,11 +104,11 @@ class CouponAssignedMail extends Mailable
             ];
         }
 
-        $cities = $coupon->allowedCities();
-        if ($cities !== []) {
+        $zones = $coupon->zoneLabels();
+        if ($zones !== []) {
             $lines[] = [
                 'label' => 'Zonas de entrega',
-                'value' => implode(', ', $cities),
+                'value' => implode(', ', $zones),
             ];
         }
 

@@ -101,6 +101,12 @@
                     'active' => request()->routeIs('admin.coupons.*'),
                     'permission' => 'coupons.view',
                 ],
+                [
+                    'label' => 'Tarifas',
+                    'route' => 'admin.shipping-rates.index',
+                    'active' => request()->routeIs('admin.shipping-rates.*'),
+                    'permission' => 'shipping_rates.view',
+                ],
             ],
         ],
         [

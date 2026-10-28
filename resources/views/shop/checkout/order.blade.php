@@ -44,15 +44,23 @@
                 </p>
             </div>
         @endforeach
-        @if ($order->hasDiscount())
+        @if ($order->hasDiscount() || $order->hasShipping())
             <div class="flex justify-between p-4 text-sm">
                 <span class="text-neutral-500">Subtotal</span>
                 <span class="font-semibold">{{ $orderCurrencySymbol }} {{ number_format($order->subtotalAmount(), 2) }}</span>
             </div>
-            <div class="flex justify-between px-4 pb-3 text-sm text-emerald-700">
-                <span>Cupón {{ $order->coupon_code }}{{ $order->coupon ? ' · '.$order->coupon->discountLabel() : '' }}</span>
-                <span>− {{ $orderCurrencySymbol }} {{ number_format((float) $order->discount_amount, 2) }}</span>
-            </div>
+            @if ($order->hasDiscount())
+                <div class="flex justify-between px-4 pb-3 text-sm text-emerald-700">
+                    <span>Cupón {{ $order->coupon_code }}{{ $order->coupon ? ' · '.$order->coupon->discountLabel() : '' }}</span>
+                    <span>− {{ $orderCurrencySymbol }} {{ number_format((float) $order->discount_amount, 2) }}</span>
+                </div>
+            @endif
+            @if ($order->hasShipping())
+                <div class="flex justify-between px-4 pb-3 text-sm text-neutral-600">
+                    <span>{{ $order->shippingRate?->name ?? 'Envío' }}</span>
+                    <span>{{ $orderCurrencySymbol }} {{ number_format((float) $order->shipping_amount, 2) }}</span>
+                </div>
+            @endif
         @endif
         <div class="flex justify-between p-4">
             <span class="text-neutral-500 uppercase text-xs font-bold tracking-widest">Total</span>
@@ -102,7 +110,7 @@
             @elseif ($shipping)
                 <p class="text-sm font-semibold text-neutral-900 mt-2">{{ $shipping->line1 }}</p>
                 <p class="text-sm text-neutral-600">
-                    {{ $shipping->city }}
+                    {{ $shipping->locationLabel() }}
                     @if ($shipping->postal_code)
                         · {{ $shipping->postal_code }}
                     @endif

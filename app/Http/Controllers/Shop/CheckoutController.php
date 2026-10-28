@@ -10,17 +10,23 @@ use App\Actions\Payments\RefreshCulqiPaymentStatusAction;
 use App\Actions\Shop\ResolveOrCreateCustomerAction;
 use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Orders\PaymentStatus;
+use App\Enums\Payments\PaymentMethod;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\ApplyCheckoutCouponRequest;
 use App\Http\Requests\Shop\CheckoutPayRequest;
 use App\Http\Requests\Shop\ConfirmCulqi3DSRequest;
+use App\Http\Requests\Shop\QuoteCheckoutRequest;
 use App\Models\Auth\User;
 use App\Models\Coupons\Coupon;
+use App\Models\Locations\Department;
+use App\Models\Locations\District;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
+use App\Services\Checkout\CheckoutCharge;
+use App\Services\Checkout\CheckoutChargeAssembler;
 use App\Services\Coupons\CheckoutCouponService;
 use App\Services\Coupons\CouponQuote;
 use App\Services\Payments\Culqi\CulqiClient;
@@ -47,6 +53,7 @@ class CheckoutController extends Controller
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
         private readonly ResolveOrCreateCustomerAction $resolveOrCreateCustomer,
         private readonly CheckoutCouponService $checkoutCoupons,
+        private readonly CheckoutChargeAssembler $checkoutCharges,
     ) {}
 
     public function show(Request $request): View|RedirectResponse
@@ -67,25 +74,31 @@ class CheckoutController extends Controller
         $user = $request->user();
         $profile = $user?->customerProfile;
         $quote = $this->sessionCouponQuote($request, $lines, $totals);
-        $chargeAmount = $quote?->chargeAmount ?? $totals->chargeAmount();
-        $chargeCurrency = $quote?->currency ?? $totals->chargeCurrency();
+        $charge = $this->checkoutCharges->assemble($totals, $quote, FulfillmentMethod::Delivery, null);
 
         return view('shop.checkout.index', [
             'cart' => $cart,
             'lines' => $lines,
             'totals' => $totals,
             'couponQuote' => $quote,
-            'total' => $chargeAmount,
-            'currency' => $chargeCurrency,
+            'charge' => $charge,
+            'total' => $charge->total,
+            'currency' => $charge->currency,
             'culqiPublicKey' => config('services.culqi.public_key'),
             'culqiFake' => (bool) config('services.culqi.fake'),
             'profile' => $profile,
             'user' => $user,
-            'amount' => round((float) $chargeAmount, 2),
-            'amountCents' => (int) round((float) $chargeAmount * 100),
+            'amount' => $charge->total,
+            'amountCents' => $charge->amountCents(),
             'yapeTokenUrl' => route('shop.checkout.yapeToken', absolute: false),
             'applyCouponUrl' => route('shop.checkout.coupon.apply', absolute: false),
             'removeCouponUrl' => route('shop.checkout.coupon.remove', absolute: false),
+            'quoteUrl' => route('shop.checkout.quote', absolute: false),
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
+            'locationUrls' => [
+                'provinces' => url('/ubicaciones/departamentos/__department__/provincias'),
+                'districts' => url('/ubicaciones/provincias/__province__/distritos'),
+            ],
         ]);
     }
 
@@ -107,13 +120,49 @@ class CheckoutController extends Controller
             $totals,
             $request->user(),
             $request->fulfillmentMethod(),
-            $request->city(),
+            $request->district(),
             $request->paymentMethod(),
         );
 
         $request->session()->put(CheckoutCouponService::SESSION_KEY, $quote->coupon->code);
 
-        return response()->json($this->checkoutCoupons->payload($quote));
+        $charge = $this->checkoutCharges->assemble(
+            $totals,
+            $quote,
+            $request->fulfillmentMethod() ?? FulfillmentMethod::Delivery,
+            $request->district(),
+        );
+
+        return response()->json($this->totalsPayload($charge, $this->checkoutCoupons->payload($quote)['message'] ?? null));
+    }
+
+    public function quote(QuoteCheckoutRequest $request): JsonResponse
+    {
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+
+        if ($cart->items->isEmpty()) {
+            return response()->json([
+                'message' => 'Tu carrito está vacío.',
+            ], 422);
+        }
+
+        $lines = $this->checkoutCoupons->cartLines($cart);
+        $totals = $this->cartTotals->summarize($lines);
+        $fulfillment = $request->fulfillmentMethod() ?? FulfillmentMethod::Delivery;
+        $district = $request->district();
+        $enforceRules = $fulfillment === FulfillmentMethod::Pickup || $district !== null;
+        $quote = $this->sessionCouponQuote(
+            $request,
+            $lines,
+            $totals,
+            $fulfillment,
+            $district,
+            $request->paymentMethodOrNull(),
+            $enforceRules,
+        );
+        $charge = $this->checkoutCharges->assemble($totals, $quote, $fulfillment, $district);
+
+        return response()->json($this->totalsPayload($charge));
     }
 
     public function removeCoupon(Request $request): JsonResponse
@@ -124,22 +173,12 @@ class CheckoutController extends Controller
         $lines = $this->checkoutCoupons->cartLines($cart);
         $totals = $this->cartTotals->summarize($lines);
 
-        return response()->json([
-            'valid' => false,
-            'code' => null,
-            'value_label' => null,
-            'applied_label' => null,
-            'conversion_note' => null,
-            'discount_amount' => 0,
-            'discount_pen' => 0,
-            'discount_usd' => 0,
-            'total' => $totals->chargeAmount(),
-            'amount_cents' => $totals->amountCents(),
-            'currency' => $totals->chargeCurrency(),
-            'grand_pen' => $totals->grandPen,
-            'grand_usd' => $totals->grandUsd,
-            'message' => 'Cupón quitado.',
-        ]);
+        $district = $this->districtFromRequest($request);
+        $fulfillment = FulfillmentMethod::tryFrom((string) $request->input('fulfillment_method', ''))
+            ?? FulfillmentMethod::Delivery;
+        $charge = $this->checkoutCharges->assemble($totals, null, $fulfillment, $district);
+
+        return response()->json($this->totalsPayload($charge, 'Cupón quitado.'));
     }
 
     public function yapeToken(Request $request): JsonResponse
@@ -160,10 +199,14 @@ class CheckoutController extends Controller
 
         $lines = $this->checkoutCoupons->cartLines($cart);
         $totals = $this->cartTotals->summarize($lines);
-        $quote = $this->sessionCouponQuote($request, $lines, $totals);
-        $chargeAmount = $quote?->chargeAmount ?? $totals->chargeAmount();
-        $chargeCurrency = $quote?->currency ?? $totals->chargeCurrency();
-        $amountCents = (int) round((float) $chargeAmount * 100);
+        $district = $this->districtFromRequest($request);
+        $fulfillment = FulfillmentMethod::tryFrom((string) $request->input('fulfillment_method', ''))
+            ?? FulfillmentMethod::Delivery;
+        $quote = $this->sessionCouponQuote($request, $lines, $totals, $fulfillment, $district);
+        $charge = $this->checkoutCharges->assemble($totals, $quote, $fulfillment, $district);
+        $chargeAmount = $charge->total;
+        $chargeCurrency = $charge->currency;
+        $amountCents = $charge->amountCents();
 
         if (strtoupper((string) $chargeCurrency) !== 'PEN') {
             return response()->json([
@@ -474,9 +517,12 @@ class CheckoutController extends Controller
             'items.variant.colors',
             'payments',
             'user.customerProfile',
-            'shippingAddress',
+            'shippingAddress.district',
+            'shippingAddress.province',
+            'shippingAddress.department',
             'billingAddress',
             'coupon',
+            'shippingRate',
         ]);
 
         $payment = $order->latestPayment();
@@ -560,8 +606,15 @@ class CheckoutController extends Controller
             ->with('status', 'Pago simulado correctamente (modo fake).');
     }
 
-    private function sessionCouponQuote(Request $request, $lines, $totals): ?CouponQuote
-    {
+    private function sessionCouponQuote(
+        Request $request,
+        $lines,
+        $totals,
+        ?FulfillmentMethod $fulfillment = null,
+        ?District $district = null,
+        ?PaymentMethod $paymentMethod = null,
+        bool $enforceCheckoutRules = false,
+    ): ?CouponQuote {
         $code = $request->session()->get(CheckoutCouponService::SESSION_KEY);
 
         if (! is_string($code) || trim($code) === '') {
@@ -573,6 +626,10 @@ class CheckoutController extends Controller
             $lines,
             $totals,
             $request->user(),
+            $fulfillment,
+            $district,
+            $paymentMethod,
+            $enforceCheckoutRules,
         );
 
         if ($quote === null) {
@@ -580,6 +637,45 @@ class CheckoutController extends Controller
         }
 
         return $quote;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function totalsPayload(CheckoutCharge $charge, ?string $message = null): array
+    {
+        $payload = $charge->coupon
+            ? array_merge($this->checkoutCoupons->payload($charge->coupon), $charge->payload())
+            : array_merge([
+                'valid' => false,
+                'code' => null,
+                'name' => null,
+                'type' => null,
+                'value_label' => null,
+                'applied_label' => null,
+                'conversion_note' => null,
+                'discount_amount' => 0,
+                'discount_formatted' => null,
+                'discount_pen' => 0,
+                'discount_usd' => 0,
+            ], $charge->payload());
+
+        if ($message !== null) {
+            $payload['message'] = $message;
+        }
+
+        return $payload;
+    }
+
+    private function districtFromRequest(Request $request): ?District
+    {
+        $id = (int) $request->input('district_id', 0);
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        return District::query()->find($id);
     }
 
     private function couponFromRequest(CheckoutPayRequest $request): ?Coupon
@@ -658,20 +754,24 @@ class CheckoutController extends Controller
         }
 
         $line1 = trim((string) $request->input('address_line1', ''));
-        $city = trim((string) $request->input('address_city', ''));
+        $district = $request->district();
 
-        if ($line1 === '' || $city === '') {
+        if ($line1 === '' || $district === null) {
             throw ValidationException::withMessages([
-                'address_line1' => 'La dirección y ciudad son obligatorias para delivery.',
+                'address_line1' => 'La dirección, provincia y distrito son obligatorios para delivery.',
             ]);
         }
 
         return Address::query()->create([
             'user_id' => $userId,
             'line1' => $line1,
-            'city' => $city,
-            'postal_code' => $request->input('postal_code') ?: '15001',
+            'city' => $district->name,
+            'postal_code' => $request->input('postal_code') ?: null,
             'country' => 'PE',
+            'country_id' => $request->peruCountryId() ?? $district->department?->country_id,
+            'department_id' => $district->department_id,
+            'province_id' => $district->province_id,
+            'district_id' => $district->id,
         ]);
     }
 

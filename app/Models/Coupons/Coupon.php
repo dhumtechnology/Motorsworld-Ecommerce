@@ -5,6 +5,9 @@ namespace App\Models\Coupons;
 use App\Enums\Coupons\CouponType;
 use App\Enums\Payments\PaymentMethod;
 use App\Models\Auth\User;
+use App\Models\Locations\Department;
+use App\Models\Locations\District;
+use App\Models\Locations\Province;
 use App\Models\Orders\Order;
 use App\Models\Products\Brand;
 use App\Models\Products\Category;
@@ -30,7 +33,6 @@ use Illuminate\Support\Carbon;
     'min_subtotal',
     'min_subtotal_currency',
     'payment_methods',
-    'cities',
     'is_active',
 ])]
 class Coupon extends Model
@@ -65,6 +67,30 @@ class Coupon extends Model
     public function brands(): BelongsToMany
     {
         return $this->belongsToMany(Brand::class, 'coupon_brand');
+    }
+
+    /**
+     * @return BelongsToMany<Department, $this>
+     */
+    public function departments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'coupon_department');
+    }
+
+    /**
+     * @return BelongsToMany<Province, $this>
+     */
+    public function provinces(): BelongsToMany
+    {
+        return $this->belongsToMany(Province::class, 'coupon_province');
+    }
+
+    /**
+     * @return BelongsToMany<District, $this>
+     */
+    public function districts(): BelongsToMany
+    {
+        return $this->belongsToMany(District::class, 'coupon_district');
     }
 
     /**
@@ -118,17 +144,43 @@ class Coupon extends Model
         )));
     }
 
+    public function hasZoneRestriction(): bool
+    {
+        if ($this->relationLoaded('departments') && $this->relationLoaded('provinces') && $this->relationLoaded('districts')) {
+            return $this->departments->isNotEmpty()
+                || $this->provinces->isNotEmpty()
+                || $this->districts->isNotEmpty();
+        }
+
+        return $this->departments()->exists()
+            || $this->provinces()->exists()
+            || $this->districts()->exists();
+    }
+
     /**
      * @return list<string>
      */
-    public function allowedCities(): array
+    public function zoneLabels(): array
     {
-        $cities = $this->cities ?? [];
+        $labels = [];
 
-        return array_values(array_filter(array_map(
-            fn ($city) => is_string($city) ? trim($city) : '',
-            is_array($cities) ? $cities : [],
-        )));
+        if ($this->relationLoaded('departments')) {
+            $labels = array_merge($labels, $this->departments->pluck('name')->all());
+        }
+
+        if ($this->relationLoaded('provinces')) {
+            $labels = array_merge($labels, $this->provinces->map(
+                fn (Province $province) => $province->name.($province->department ? ' / '.$province->department->name : ''),
+            )->all());
+        }
+
+        if ($this->relationLoaded('districts')) {
+            $labels = array_merge($labels, $this->districts->map(
+                fn (District $district) => $district->name.($district->province ? ' / '.$district->province->name : ''),
+            )->all());
+        }
+
+        return array_values(array_filter(array_map('strval', $labels)));
     }
 
     public function allowsPaymentMethod(?PaymentMethod $method): bool
@@ -146,27 +198,37 @@ class Coupon extends Model
         return in_array($method->value, $allowed, true);
     }
 
-    public function allowsCity(?string $city): bool
+    public function allowsDistrict(?District $district): bool
     {
-        $allowed = $this->allowedCities();
-
-        if ($allowed === []) {
+        if (! $this->hasZoneRestriction()) {
             return true;
         }
 
-        $normalized = $this->normalizeCity($city);
-
-        if ($normalized === '') {
+        if ($district === null) {
             return false;
         }
 
-        foreach ($allowed as $allowedCity) {
-            if ($this->normalizeCity($allowedCity) === $normalized) {
-                return true;
-            }
+        $districtIds = $this->relationLoaded('districts')
+            ? $this->districts->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : $this->districts()->pluck('districts.id')->map(fn ($id) => (int) $id)->all();
+
+        if (in_array((int) $district->id, $districtIds, true)) {
+            return true;
         }
 
-        return false;
+        $provinceIds = $this->relationLoaded('provinces')
+            ? $this->provinces->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : $this->provinces()->pluck('provinces.id')->map(fn ($id) => (int) $id)->all();
+
+        if (in_array((int) $district->province_id, $provinceIds, true)) {
+            return true;
+        }
+
+        $departmentIds = $this->relationLoaded('departments')
+            ? $this->departments->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : $this->departments()->pluck('departments.id')->map(fn ($id) => (int) $id)->all();
+
+        return in_array((int) $district->department_id, $departmentIds, true);
     }
 
     public function wasUsedBy(?int $userId): bool
@@ -292,7 +354,6 @@ class Coupon extends Model
             'min_products' => 'integer',
             'min_subtotal' => 'decimal:2',
             'payment_methods' => 'array',
-            'cities' => 'array',
             'is_active' => 'boolean',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',

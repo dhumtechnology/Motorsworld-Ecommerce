@@ -4,6 +4,8 @@ namespace App\Http\Requests\Shop;
 
 use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Payments\PaymentMethod;
+use App\Models\Locations\Country;
+use App\Models\Locations\District;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -47,7 +49,28 @@ class CheckoutPayRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:80'],
             'phone' => ['required', 'string', 'max:20'],
             'address_line1' => [$isDelivery ? 'required' : 'nullable', 'string', 'max:255'],
-            'address_city' => [$isDelivery ? 'required' : 'nullable', 'string', 'max:100'],
+            'department_id' => [$isDelivery ? 'required' : 'nullable', 'integer', 'exists:departments,id'],
+            'province_id' => [
+                $isDelivery ? 'required' : 'nullable',
+                'integer',
+                Rule::exists('provinces', 'id')->where(function ($query) {
+                    if ($this->filled('department_id')) {
+                        $query->where('department_id', $this->integer('department_id'));
+                    }
+                }),
+            ],
+            'district_id' => [
+                $isDelivery ? 'required' : 'nullable',
+                'integer',
+                Rule::exists('districts', 'id')->where(function ($query) {
+                    if ($this->filled('province_id')) {
+                        $query->where('province_id', $this->integer('province_id'));
+                    }
+                    if ($this->filled('department_id')) {
+                        $query->where('department_id', $this->integer('department_id'));
+                    }
+                }),
+            ],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'coupon_code' => ['nullable', 'string', 'max:16'],
         ];
@@ -66,7 +89,9 @@ class CheckoutPayRequest extends FormRequest
             'last_name' => 'apellido',
             'phone' => 'teléfono',
             'address_line1' => 'dirección',
-            'address_city' => 'ciudad',
+            'department_id' => 'departamento',
+            'province_id' => 'provincia',
+            'district_id' => 'distrito',
             'culqi_token' => 'token de pago',
         ];
     }
@@ -122,7 +147,7 @@ class CheckoutPayRequest extends FormRequest
             'last_name' => $this->nullableString('last_name'),
             'phone' => $this->nullableString('phone'),
             'address' => $this->nullableString('address_line1'),
-            'city' => $this->nullableString('address_city'),
+            'city' => $this->district()?->name ?? $this->nullableString('address_city'),
             'email' => $payload['customer_email'] !== '' ? $payload['customer_email'] : null,
             'document' => $payload['customer_document'] !== '' ? $payload['customer_document'] : null,
         ];
@@ -161,6 +186,24 @@ class CheckoutPayRequest extends FormRequest
             'customer_phone' => $this->nullableString('phone') ?? (string) ($profile?->phone ?? ''),
             'customer_email' => $email ?? '',
         ];
+    }
+
+    public function district(): ?District
+    {
+        $id = (int) $this->input('district_id', 0);
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        return District::query()
+            ->with(['province', 'department', 'department.country'])
+            ->find($id);
+    }
+
+    public function peruCountryId(): ?int
+    {
+        return Country::query()->where('iso2', 'PE')->value('id');
     }
 
     private function nullableString(string $key): ?string

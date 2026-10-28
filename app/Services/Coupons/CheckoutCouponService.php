@@ -7,6 +7,7 @@ use App\Enums\Payments\PaymentMethod;
 use App\Models\Auth\User;
 use App\Models\Cart\Cart;
 use App\Models\Coupons\Coupon;
+use App\Models\Locations\District;
 use App\Models\Products\Product;
 use App\Services\Cart\CartCurrencyTotals;
 use App\Services\Cart\CartTotalsService;
@@ -72,7 +73,7 @@ class CheckoutCouponService
         CartCurrencyTotals $totals,
         ?User $user,
         ?FulfillmentMethod $fulfillment = null,
-        ?string $city = null,
+        ?District $district = null,
         ?PaymentMethod $paymentMethod = null,
         bool $enforceCheckoutRules = true,
     ): CouponQuote {
@@ -90,7 +91,7 @@ class CheckoutCouponService
             $totals,
             $user,
             $fulfillment,
-            $city,
+            $district,
             $paymentMethod,
             enforceAudience: true,
             enforceCheckoutRules: $enforceCheckoutRules,
@@ -106,15 +107,16 @@ class CheckoutCouponService
         CartCurrencyTotals $totals,
         ?User $user,
         ?FulfillmentMethod $fulfillment = null,
-        ?string $city = null,
+        ?District $district = null,
         ?PaymentMethod $paymentMethod = null,
+        bool $enforceCheckoutRules = false,
     ): ?CouponQuote {
         if ($code === null || trim($code) === '') {
             return null;
         }
 
         try {
-            return $this->quote($code, $lines, $totals, $user, $fulfillment, $city, $paymentMethod, false);
+            return $this->quote($code, $lines, $totals, $user, $fulfillment, $district, $paymentMethod, $enforceCheckoutRules);
         } catch (ValidationException) {
             return null;
         }

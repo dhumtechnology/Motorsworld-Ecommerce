@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServicePackageController;
 use App\Http\Controllers\Admin\ServiceTypeController;
+use App\Http\Controllers\Admin\ShippingRateController;
 use App\Http\Controllers\Admin\VehicleModelController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +41,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/ubicaciones/distritos', [LocationController::class, 'districts'])->name('locations.districts');
 
     Route::get('/perfil', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
@@ -154,6 +158,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/cupones/{coupon}', [CouponController::class, 'update'])->middleware('permission:coupons.update')->name('coupons.update');
     Route::delete('/cupones/{coupon}', [CouponController::class, 'destroy'])->middleware('permission:coupons.delete')->name('coupons.destroy');
     Route::delete('/cupones', [CouponController::class, 'bulkDestroy'])->middleware('permission:coupons.delete')->name('coupons.bulk-destroy');
+
+    // Tarifas de envío
+    Route::get('/tarifas', [ShippingRateController::class, 'index'])->middleware('permission:shipping_rates.view')->name('shipping-rates.index');
+    Route::get('/tarifas/crear', [ShippingRateController::class, 'create'])->middleware('permission:shipping_rates.create')->name('shipping-rates.create');
+    Route::post('/tarifas', [ShippingRateController::class, 'store'])->middleware('permission:shipping_rates.create')->name('shipping-rates.store');
+    Route::get('/tarifas/{shippingRate}/editar', [ShippingRateController::class, 'edit'])->middleware('permission:shipping_rates.update')->name('shipping-rates.edit');
+    Route::put('/tarifas/{shippingRate}', [ShippingRateController::class, 'update'])->middleware('permission:shipping_rates.update')->name('shipping-rates.update');
+    Route::delete('/tarifas/{shippingRate}', [ShippingRateController::class, 'destroy'])->middleware('permission:shipping_rates.delete')->name('shipping-rates.destroy');
+    Route::delete('/tarifas', [ShippingRateController::class, 'bulkDestroy'])->middleware('permission:shipping_rates.delete')->name('shipping-rates.bulk-destroy');
 
     // Pagos
     Route::get('/pagos', [PaymentController::class, 'index'])->middleware('permission:payments.view')->name('payments.index');

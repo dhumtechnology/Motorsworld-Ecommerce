@@ -78,10 +78,15 @@
                             {{ number_format((float) $order->total_amount, 2) }}
                             <span class="text-sm text-muted font-semibold">{{ $order->currency }}</span>
                         </dd>
-                        @if ($order->hasDiscount())
+                        @if ($order->hasDiscount() || $order->hasShipping())
                             <p class="mt-1 text-xs text-muted">
                                 Subtotal {{ number_format($order->subtotalAmount(), 2) }}
-                                · Cupón {{ $order->coupon_code }}{{ $order->coupon ? ' · '.$order->coupon->discountLabel() : '' }} − {{ number_format((float) $order->discount_amount, 2) }}
+                                @if ($order->hasDiscount())
+                                    · Cupón {{ $order->coupon_code }}{{ $order->coupon ? ' · '.$order->coupon->discountLabel() : '' }} − {{ number_format((float) $order->discount_amount, 2) }}
+                                @endif
+                                @if ($order->hasShipping())
+                                    · {{ $order->shippingRate?->name ?? 'Envío' }} {{ number_format((float) $order->shipping_amount, 2) }}
+                                @endif
                             </p>
                         @endif
                     </div>
@@ -277,7 +282,7 @@
                     <h2 class="text-sm font-title text-text mb-4">Dirección de envío</h2>
                     <p class="text-sm text-text-soft leading-relaxed">
                         {{ $order->shippingAddress->line1 }}<br>
-                        {{ $order->shippingAddress->city }}
+                        {{ $order->shippingAddress->locationLabel() }}
                         @if ($order->shippingAddress->postal_code)
                             · {{ $order->shippingAddress->postal_code }}
                         @endif

@@ -57,7 +57,12 @@ class ProcessCulqiPaymentAction
             ]);
         }
 
-        $order->loadMissing(['user.customerProfile', 'shippingAddress']);
+        $order->loadMissing([
+            'user.customerProfile',
+            'shippingAddress.district',
+            'shippingAddress.province',
+            'shippingAddress.department',
+        ]);
 
         $this->assertValidToken($method, $culqiToken);
         $this->assertYapeLimits($order, $method);
@@ -173,7 +178,10 @@ class ProcessCulqiPaymentAction
             'last_name' => $customer['last_name'] ?? $profile?->last_name,
             'phone_number' => $this->normalizePhone($customer['phone'] ?? $profile?->phone),
             'address' => $customer['address'] ?? $order->shippingAddress?->line1,
-            'address_city' => $customer['city'] ?? $order->shippingAddress?->city ?? 'Lima',
+            'address_city' => $customer['city']
+                ?? $order->shippingAddress?->locationLabel()
+                ?? $order->shippingAddress?->city
+                ?? 'Lima',
             'country_code' => 'PE',
             'device_finger_print_id' => $deviceId !== '' ? $deviceId : null,
         ], fn ($value) => $value !== null && $value !== '');

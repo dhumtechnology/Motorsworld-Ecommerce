@@ -11,12 +11,14 @@ use App\Models\Auth\User;
 use App\Models\Cart\Cart;
 use App\Models\Coupons\Coupon;
 use App\Models\Coupons\CouponUsage;
+use App\Models\Locations\District;
 use App\Models\Orders\Address;
 use App\Models\Orders\Order;
 use App\Models\Orders\OrderItem;
 use App\Models\Orders\OrderStatusHistory;
 use App\Models\Products\Product;
 use App\Services\Cart\CartTotalsService;
+use App\Services\Checkout\CheckoutChargeAssembler;
 use App\Services\Coupons\CouponEvaluator;
 use App\Services\Coupons\CouponQuote;
 use App\Services\Finance\DecolectaExchangeRateService;
@@ -31,6 +33,7 @@ class CreateOrderFromCartAction
         private readonly DecolectaExchangeRateService $exchangeRates,
         private readonly CartTotalsService $cartTotals,
         private readonly CouponEvaluator $couponEvaluator,
+        private readonly CheckoutChargeAssembler $checkoutCharges,
     ) {}
 
     /**
@@ -109,9 +112,8 @@ class CreateOrderFromCartAction
                 $exchangeSnapshot['date'] ?? null,
             );
 
-            $subtotal = $totals->chargeAmount();
-            $currency = $totals->chargeCurrency();
-            $discount = 0.0;
+            $shippingAddress?->loadMissing('district');
+            $district = $shippingAddress?->district;
             $quote = null;
 
             if ($coupon !== null) {
@@ -121,13 +123,17 @@ class CreateOrderFromCartAction
                     $evalLines,
                     $totals,
                     $fulfillmentMethod,
-                    $shippingAddress?->city,
+                    $district,
                     $paymentMethod,
                 );
-                $discount = $quote->discountAmount;
             }
 
-            $total = round($subtotal - $discount, 2);
+            $charge = $this->checkoutCharges->assemble($totals, $quote, $fulfillmentMethod, $district);
+            $subtotal = $charge->subtotal;
+            $discount = $charge->discount;
+            $shipping = $charge->shipping;
+            $total = $charge->total;
+            $currency = $charge->currency;
 
             if ($total < 1) {
                 throw ValidationException::withMessages([
@@ -147,6 +153,8 @@ class CreateOrderFromCartAction
                 'payment_status' => PaymentStatus::Pending,
                 'subtotal_amount' => round($subtotal, 2),
                 'discount_amount' => round($discount, 2),
+                'shipping_amount' => round($shipping, 2),
+                'shipping_rate_id' => $charge->shippingQuote->rate?->id,
                 'total_amount' => round($total, 2),
                 'currency' => $currency,
                 'coupon_id' => $quote?->coupon?->id,
@@ -199,7 +207,7 @@ class CreateOrderFromCartAction
         $lines,
         $totals,
         FulfillmentMethod $fulfillmentMethod,
-        ?string $city,
+        ?District $district,
         ?PaymentMethod $paymentMethod,
     ): CouponQuote {
         $locked = Coupon::query()->whereKey($coupon->id)->lockForUpdate()->first();
@@ -216,7 +224,7 @@ class CreateOrderFromCartAction
             $totals,
             $user,
             $fulfillmentMethod,
-            $city,
+            $district,
             $paymentMethod,
         );
     }

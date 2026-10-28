@@ -4,28 +4,11 @@
 
 @section('content')
 @php
-    $zones = [
-        [
-            'label' => 'Zona Cercana',
-            'price' => 'S/ 12',
-            'areas' => 'Miraflores, San Isidro, Barranco, Surquillo, San Borja, Santiago de Surco, Magdalena, Lince, Jesús María, San Miguel, La Victoria',
-        ],
-        [
-            'label' => 'Zona Intermedia',
-            'price' => 'S/ 18',
-            'areas' => 'Lima Cercado, Breña, San Luis, Pueblo Libre, Rímac, Chorrillos, La Molina, Ate, Santa Anita, El Agustino, Callao',
-        ],
-        [
-            'label' => 'Zona Lejana',
-            'price' => 'S/ 25',
-            'areas' => 'Los Olivos, San Martín de Porres, San Juan de Lurigancho, Villa El Salvador, Villa María del Triunfo, Lurín, Lurigancho',
-        ],
-        [
-            'label' => 'Provincias',
-            'price' => 'S/ 35',
-            'areas' => 'Envío vía Shalom u Olva a nivel nacional.',
-        ],
-    ];
+    $zones = $rates->map(fn ($rate) => [
+        'label' => $rate->name,
+        'price' => $rate->priceLabel(),
+        'areas' => $rate->areasLabel(),
+    ]);
 
     $returnExclusions = [
         'Si se modifican, alteran o sustituyen algunos de los datos de la misma o del ticket o factura de compra.',
@@ -72,7 +55,7 @@
         </div>
 
         <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            @foreach ($zones as $zone)
+            @forelse ($zones as $zone)
                 <article class="flex h-full flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 shadow-sm transition-shadow hover:shadow-md">
                     <div class="bg-orange-600 px-5 py-4">
                         <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-100">{{ $zone['label'] }}</p>
@@ -82,7 +65,9 @@
                         <p class="text-sm leading-relaxed text-neutral-600">{{ $zone['areas'] }}</p>
                     </div>
                 </article>
-            @endforeach
+            @empty
+                <p class="sm:col-span-2 xl:col-span-4 text-sm text-neutral-500">Las tarifas de envío se publicarán pronto.</p>
+            @endforelse
         </div>
     </div>
 </section>

@@ -8,7 +8,7 @@
     @php
         $meta = $coupon->lifecycleMeta();
         $payments = $coupon->allowedPaymentMethods();
-        $cities = $coupon->allowedCities();
+        $zones = $coupon->zoneLabels();
         $paymentLabels = [
             'card' => 'Tarjeta',
             'yape' => 'Yape',
@@ -97,7 +97,7 @@
                 </div>
                 <div>
                     <dt class="text-xs uppercase tracking-wider text-muted">Zonas de entrega</dt>
-                    <dd class="mt-1 text-text-soft">{{ $cities === [] ? 'Todas' : implode(', ', $cities) }}</dd>
+                    <dd class="mt-1 text-text-soft">{{ $zones === [] ? 'Todo el Perú' : implode(', ', $zones) }}</dd>
                 </div>
             </dl>
         </div>

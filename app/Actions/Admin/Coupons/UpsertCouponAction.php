@@ -14,7 +14,7 @@ class UpsertCouponAction
 
     /**
      * @param  array<string, mixed>  $attributes
-     * @param  array{customer_ids?: list<int>, product_ids?: list<int>, category_ids?: list<int>, brand_ids?: list<int>}  $relations
+     * @param  array{customer_ids?: list<int>, product_ids?: list<int>, category_ids?: list<int>, brand_ids?: list<int>, department_ids?: list<int>, province_ids?: list<int>, district_ids?: list<int>}  $relations
      */
     public function execute(array $attributes, array $relations = [], ?Coupon $coupon = null): Coupon
     {
@@ -33,12 +33,18 @@ class UpsertCouponAction
             $coupon->products()->sync($relations['product_ids'] ?? []);
             $coupon->categories()->sync($relations['category_ids'] ?? []);
             $coupon->brands()->sync($relations['brand_ids'] ?? []);
+            $coupon->departments()->sync($relations['department_ids'] ?? []);
+            $coupon->provinces()->sync($relations['province_ids'] ?? []);
+            $coupon->districts()->sync($relations['district_ids'] ?? []);
 
             return $coupon->fresh([
                 'customers.customerProfile',
                 'products:id,sku,name',
                 'categories:id,name',
                 'brands:id,name',
+                'departments:id,name',
+                'provinces:id,name,department_id',
+                'districts:id,name,province_id',
             ]);
         });
 

@@ -16,6 +16,9 @@ class GetCouponDetailsAction
             'products:id,sku,name',
             'categories:id,name',
             'brands:id,name',
+            'departments:id,name',
+            'provinces.department:id,name',
+            'districts.province:id,name',
         ]);
 
         $usages = $coupon->usages()

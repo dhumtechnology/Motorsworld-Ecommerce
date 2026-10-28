@@ -7,6 +7,7 @@ use App\Enums\Orders\FulfillmentMethod;
 use App\Enums\Payments\PaymentMethod;
 use App\Models\Auth\User;
 use App\Models\Coupons\Coupon;
+use App\Models\Locations\District;
 use App\Models\Products\Product;
 use App\Services\Cart\CartCurrencyTotals;
 use App\Services\Cart\CartTotalsService;
@@ -31,12 +32,21 @@ class CouponEvaluator
         CartCurrencyTotals $totals,
         ?User $user,
         ?FulfillmentMethod $fulfillment = null,
-        ?string $city = null,
+        ?District $district = null,
         ?PaymentMethod $paymentMethod = null,
         bool $enforceAudience = true,
         bool $enforceCheckoutRules = true,
     ): CouponQuote {
-        $coupon->loadMissing(['customers:id', 'products:id', 'categories:id', 'brands:id', 'usages']);
+        $coupon->loadMissing([
+            'customers:id',
+            'products:id',
+            'categories:id',
+            'brands:id',
+            'usages',
+            'departments:id',
+            'provinces:id',
+            'districts:id',
+        ]);
 
         $this->assertUsable($coupon, $user, $enforceAudience);
 
@@ -48,12 +58,19 @@ class CouponEvaluator
 
         if ($enforceCheckoutRules
             && $fulfillment === FulfillmentMethod::Delivery
-            && $coupon->allowedCities() !== []
-            && ! $coupon->allowsCity($city)
+            && $coupon->hasZoneRestriction()
         ) {
-            throw ValidationException::withMessages([
-                'coupon_code' => 'Este cupón no aplica a la zona de entrega indicada.',
-            ]);
+            if ($district === null) {
+                throw ValidationException::withMessages([
+                    'coupon_code' => 'Selecciona provincia y distrito para validar este cupón.',
+                ]);
+            }
+
+            if (! $coupon->allowsDistrict($district)) {
+                throw ValidationException::withMessages([
+                    'coupon_code' => 'Este cupón no aplica a la zona de entrega indicada.',
+                ]);
+            }
         }
 
         $eligible = $this->eligibleLines($coupon, $lines);

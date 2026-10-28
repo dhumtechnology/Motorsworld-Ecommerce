@@ -68,8 +68,11 @@ class OrderController extends Controller
             'user.customerProfile',
             'items.product',
             'coupon',
-            'shippingAddress',
+            'shippingAddress.district',
+            'shippingAddress.province',
+            'shippingAddress.department',
             'billingAddress',
+            'shippingRate',
             'statusHistory' => fn ($query) => $query->orderByDesc('created_at')->orderByDesc('id'),
             'payments' => fn ($query) => $query->orderByDesc('id'),
         ]);

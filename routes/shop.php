@@ -11,6 +11,7 @@ use App\Http\Controllers\Shop\ContactController;
 use App\Http\Controllers\Shop\FaqController;
 use App\Http\Controllers\Shop\HelpController;
 use App\Http\Controllers\Shop\HomeController;
+use App\Http\Controllers\Shop\LocationController;
 use App\Http\Controllers\Shop\PaymentPromotionsController;
 use App\Http\Controllers\Shop\PrivacyPolicyController;
 use App\Http\Controllers\Shop\ProductController;
@@ -35,6 +36,12 @@ Route::get('/contacto', [ContactController::class, 'index'])->name('contact');
 Route::post('/contacto', [ContactController::class, 'store'])->name('contact.store');
 
 Route::get('/envios-y-devoluciones', [ShippingReturnsController::class, 'index'])->name('shipping-returns');
+
+Route::prefix('ubicaciones')->name('locations.')->group(function () {
+    Route::get('/departamentos', [LocationController::class, 'departments'])->name('departments');
+    Route::get('/departamentos/{department}/provincias', [LocationController::class, 'provinces'])->name('provinces');
+    Route::get('/provincias/{province}/distritos', [LocationController::class, 'districts'])->name('districts');
+});
 
 Route::get('/politica-de-privacidad', [PrivacyPolicyController::class, 'index'])->name('privacy-policy');
 
@@ -113,6 +120,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
     Route::post('/cupon', [CheckoutController::class, 'applyCoupon'])->name('coupon.apply');
     Route::delete('/cupon', [CheckoutController::class, 'removeCoupon'])->name('coupon.remove');
+    Route::post('/cotizar', [CheckoutController::class, 'quote'])->name('quote');
     Route::post('/token-yape', [CheckoutController::class, 'yapeToken'])->name('yapeToken');
     Route::get('/pedidos/{order}', [CheckoutController::class, 'showOrder'])->name('orders.show');
     Route::get('/pedidos/{order}/estado', [CheckoutController::class, 'paymentStatus'])->name('orders.status');

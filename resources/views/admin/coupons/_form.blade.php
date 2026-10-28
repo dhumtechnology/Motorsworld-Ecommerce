@@ -10,7 +10,9 @@
     $selectedCategories = old('category_ids', $coupon?->categories->pluck('id')->all() ?? []);
     $selectedBrands = old('brand_ids', $coupon?->brands->pluck('id')->all() ?? []);
     $selectedPayments = old('payment_methods', $coupon?->allowedPaymentMethods() ?? []);
-    $selectedCities = old('cities', $coupon?->allowedCities() ?? []);
+    $selectedDepartments = old('department_ids', $coupon?->departments->pluck('id')->all() ?? []);
+    $selectedProvinces = old('province_ids', $coupon?->provinces->pluck('id')->all() ?? []);
+    $selectedDistricts = old('district_ids', $coupon?->districts->pluck('id')->all() ?? []);
     $defaultStarts = $coupon?->starts_at?->format('Y-m-d\\TH:i') ?? now()->format('Y-m-d\\TH:i');
     $defaultEnds = $coupon?->ends_at?->format('Y-m-d\\TH:i') ?? now()->addMonth()->format('Y-m-d\\TH:i');
 @endphp
@@ -27,24 +29,13 @@
 
 <div
     class="grid gap-6"
+    data-coupon-form
     x-data="{
         type: @js(old('type', $coupon?->type?->value ?? CouponType::Percent->value)),
         code: @js(old('code', $coupon?->code ?? '')),
-        cities: @js($selectedCities),
-        cityInput: '',
         generating: false,
         generateUrl: @js(route('admin.coupons.generate-code')),
         csrf: @js(csrf_token()),
-        addCity() {
-            const city = this.cityInput.trim();
-            if (!city) return;
-            const exists = this.cities.some((item) => item.toLowerCase() === city.toLowerCase());
-            if (!exists) this.cities.push(city);
-            this.cityInput = '';
-        },
-        removeCity(index) {
-            this.cities.splice(index, 1);
-        },
         async generateCode() {
             this.generating = true;
             try {
@@ -205,7 +196,7 @@
     <div class="border-t border-border pt-5 space-y-5">
         <div>
             <h2 class="text-sm font-title text-text">Checkout</h2>
-            <p class="text-xs text-muted mt-1">Vacío = todos los métodos o zonas. Las zonas se comparan con la ciudad de delivery.</p>
+            <p class="text-xs text-muted mt-1">Vacío = todos los métodos o zonas. Las zonas se comparan con el distrito de delivery.</p>
         </div>
         <div>
             <p class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Métodos de pago</p>
@@ -220,22 +211,30 @@
                 @endforeach
             </div>
         </div>
-        <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-2">Zonas de entrega (ciudades)</label>
-            <div class="rounded border border-border bg-surface px-3 py-2">
-                <div class="flex flex-wrap gap-2 mb-2" x-show="cities.length">
-                    <template x-for="(city, index) in cities" :key="city + index">
-                        <span class="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-text">
-                            <input type="hidden" name="cities[]" :value="city">
-                            <span x-text="city"></span>
-                            <button type="button" class="text-muted hover:text-red-600" @click="removeCity(index)" aria-label="Quitar">&times;</button>
-                        </span>
-                    </template>
-                </div>
-                <input type="text" x-model="cityInput" @keydown.enter.prevent="addCity()"
-                       placeholder="Escribe una ciudad y pulsa Enter (ej. Lima)"
-                       class="w-full border-0 bg-transparent px-1 py-1 text-sm text-text placeholder-muted focus:outline-none">
-            </div>
+        <div class="sm:col-span-2 grid gap-4">
+            <p class="text-xs text-muted">Zonas de entrega. Vacío = todo el Perú. Puedes elegir departamentos, provincias o distritos.</p>
+            <x-multi-select
+                name="department_ids"
+                label="Departamentos"
+                placeholder="Todos los departamentos"
+                :options="$departments ?? []"
+                :selected="$selectedDepartments"
+            />
+            <x-multi-select
+                name="province_ids"
+                label="Provincias"
+                placeholder="Todas las provincias"
+                :options="$provinces ?? []"
+                :selected="$selectedProvinces"
+            />
+            <x-multi-select
+                name="district_ids"
+                label="Distritos"
+                placeholder="Todos los distritos"
+                :options="$districts ?? []"
+                :selected="$selectedDistricts"
+                :source="$districtsSource ?? null"
+            />
         </div>
     </div>
 </div>
@@ -256,6 +255,7 @@
             if (!form) return;
 
             document.querySelectorAll('[data-multi-select]').forEach((root) => {
+                if (root.dataset.multiSelectSource) return;
                 const trigger = root.querySelector('[data-multi-select-trigger]');
                 const panel = root.querySelector('[data-multi-select-panel]');
                 const summary = root.querySelector('[data-multi-select-summary]');

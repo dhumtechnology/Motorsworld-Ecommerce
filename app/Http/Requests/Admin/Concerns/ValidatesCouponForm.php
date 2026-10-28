@@ -54,8 +54,12 @@ trait ValidatesCouponForm
                 PaymentMethod::Card->value,
                 PaymentMethod::Yape->value,
             ])],
-            'cities' => ['nullable', 'array'],
-            'cities.*' => ['string', 'max:100'],
+            'department_ids' => ['nullable', 'array'],
+            'department_ids.*' => ['integer', 'exists:departments,id'],
+            'province_ids' => ['nullable', 'array'],
+            'province_ids.*' => ['integer', 'exists:provinces,id'],
+            'district_ids' => ['nullable', 'array'],
+            'district_ids.*' => ['integer', 'exists:districts,id'],
         ];
     }
 
@@ -87,13 +91,6 @@ trait ValidatesCouponForm
     {
         $code = strtoupper(preg_replace('/\s+/', '', (string) $this->input('code', '')) ?? '');
 
-        $cities = collect($this->input('cities', []))
-            ->map(fn ($city) => trim((string) $city))
-            ->filter()
-            ->unique(fn ($city) => mb_strtolower($city))
-            ->values()
-            ->all();
-
         $this->merge([
             'code' => $code,
             'name' => $this->optionalText('name'),
@@ -103,8 +100,10 @@ trait ValidatesCouponForm
             'product_ids' => array_values(array_unique(array_map('intval', $this->input('product_ids', [])))),
             'category_ids' => array_values(array_unique(array_map('intval', $this->input('category_ids', [])))),
             'brand_ids' => array_values(array_unique(array_map('intval', $this->input('brand_ids', [])))),
+            'department_ids' => array_values(array_unique(array_map('intval', $this->input('department_ids', [])))),
+            'province_ids' => array_values(array_unique(array_map('intval', $this->input('province_ids', [])))),
+            'district_ids' => array_values(array_unique(array_map('intval', $this->input('district_ids', [])))),
             'payment_methods' => array_values(array_unique(array_filter((array) $this->input('payment_methods', [])))),
-            'cities' => $cities,
         ]);
     }
 
@@ -142,7 +141,6 @@ trait ValidatesCouponForm
                     ? Currency::normalize($this->input('min_subtotal_currency') ?: 'PEN')
                     : null,
                 'payment_methods' => $this->input('payment_methods', []) ?: null,
-                'cities' => $this->input('cities', []) ?: null,
                 'is_active' => $this->boolean('is_active'),
             ],
             'relations' => [
@@ -150,6 +148,9 @@ trait ValidatesCouponForm
                 'product_ids' => array_values(array_filter($this->input('product_ids', []))),
                 'category_ids' => array_values(array_filter($this->input('category_ids', []))),
                 'brand_ids' => array_values(array_filter($this->input('brand_ids', []))),
+                'department_ids' => array_values(array_filter($this->input('department_ids', []))),
+                'province_ids' => array_values(array_filter($this->input('province_ids', []))),
+                'district_ids' => array_values(array_filter($this->input('district_ids', []))),
             ],
         ];
     }

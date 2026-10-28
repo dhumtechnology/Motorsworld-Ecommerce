@@ -130,13 +130,29 @@
                                        class="{{ $fieldClass }}">
                             </div>
                             <div>
-                                <label class="{{ $labelClass }}" for="address_city">Ciudad *</label>
-                                <input id="address_city" name="address_city" value="{{ old('address_city', 'Lima') }}"
-                                       class="{{ $fieldClass }}">
+                                <label class="{{ $labelClass }}" for="department_id">Departamento *</label>
+                                <select id="department_id" name="department_id" class="{{ $fieldClass }}" data-selected="{{ old('department_id') }}">
+                                    <option value="">Selecciona departamento</option>
+                                    @foreach ($departments as $department)
+                                        <option value="{{ $department->id }}" @selected((string) old('department_id') === (string) $department->id)>{{ $department->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="province_id">Provincia *</label>
+                                <select id="province_id" name="province_id" class="{{ $fieldClass }}" data-selected="{{ old('province_id') }}">
+                                    <option value="">Selecciona provincia</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="{{ $labelClass }}" for="district_id">Distrito *</label>
+                                <select id="district_id" name="district_id" class="{{ $fieldClass }}" data-selected="{{ old('district_id') }}">
+                                    <option value="">Selecciona distrito</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="{{ $labelClass }}" for="postal_code">C.P.</label>
-                                <input id="postal_code" name="postal_code" value="{{ old('postal_code', '15001') }}"
+                                <input id="postal_code" name="postal_code" value="{{ old('postal_code') }}"
                                        class="{{ $fieldClass }}">
                             </div>
                         </div>
@@ -259,6 +275,19 @@
                         </div>
                     @endif
 
+                    <div id="checkout-shipping-row" class="mt-3 {{ ($charge->shipping ?? 0) > 0 ? '' : 'hidden' }}">
+                        <div class="flex justify-between gap-3 text-sm text-white/70">
+                            <span data-shipping-label>{{ $charge->shippingQuote->label() ?? 'Envío' }}</span>
+                            <span data-shipping-amount
+                                  data-shipping-pen="{{ number_format($charge->shippingQuote->amountPen ?? 0, 2, '.', '') }}"
+                                  data-shipping-usd="{{ number_format($charge->shippingQuote->amountUsd ?? 0, 2, '.', '') }}">
+                                @if (($charge->shipping ?? 0) > 0)
+                                    {{ \App\Support\Currency::format($charge->shipping, $charge->currency) }}
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+
                     <div id="checkout-discount-row" class="mt-3 {{ $couponQuote ? '' : 'hidden' }}">
                         <div class="flex justify-between gap-3 text-sm text-emerald-300">
                             <span>
@@ -288,11 +317,11 @@
                                 </div>
                             </div>
                             <p class="text-right text-2xl font-black" data-grand-total
-                               data-pen="{{ number_format($couponQuote->grandPen ?? $totals->grandPen, 2, '.', '') }}"
-                               data-usd="{{ number_format($couponQuote->grandUsd ?? $totals->grandUsd, 2, '.', '') }}"
+                               data-pen="{{ number_format($charge->grandPen, 2, '.', '') }}"
+                               data-usd="{{ number_format($charge->grandUsd, 2, '.', '') }}"
                                data-base-pen="{{ number_format($totals->grandPen, 2, '.', '') }}"
                                data-base-usd="{{ number_format($totals->grandUsd, 2, '.', '') }}">
-                                S/ {{ number_format($couponQuote->grandPen ?? $totals->grandPen, 2) }}
+                                S/ {{ number_format($charge->grandPen, 2) }}
                             </p>
                         </div>
                     @else
@@ -332,6 +361,12 @@
         if (discountAmountEl && discountPen && discountUsd) {
             discountAmountEl.textContent = '− ' + (isPen ? 'S/ ' : '$ ') + format(isPen ? discountPen : discountUsd);
         }
+        const shippingAmountEl = root.querySelector('[data-shipping-amount]');
+        const shippingPen = shippingAmountEl?.dataset.shippingPen;
+        const shippingUsd = shippingAmountEl?.dataset.shippingUsd;
+        if (shippingAmountEl && shippingPen && shippingUsd) {
+            shippingAmountEl.textContent = (isPen ? 'S/ ' : '$ ') + format(isPen ? shippingPen : shippingUsd);
+        }
         buttons.forEach((button) => {
             const active = button.dataset.totalCurrency === currency;
             button.classList.toggle('bg-orange-600', active);
@@ -355,6 +390,9 @@ window.MotoworldCheckout = {
     yapeTokenUrl: @json($yapeTokenUrl ?? '/checkout/token-yape'),
     applyCouponUrl: @json($applyCouponUrl ?? '/checkout/cupon'),
     removeCouponUrl: @json($removeCouponUrl ?? '/checkout/cupon'),
+    quoteUrl: @json($quoteUrl ?? '/checkout/cotizar'),
+    provincesUrl: @json($locationUrls['provinces'] ?? '/ubicaciones/departamentos/__department__/provincias'),
+    districtsUrl: @json($locationUrls['districts'] ?? '/ubicaciones/provincias/__province__/distritos'),
 };
 </script>
 
@@ -387,7 +425,9 @@ window.MotoworldCheckout = {
 
     const deliveryFields = document.getElementById('delivery-address-fields');
     const addressLine = document.getElementById('address_line1');
-    const addressCity = document.getElementById('address_city');
+    const departmentSelect = document.getElementById('department_id');
+    const provinceSelect = document.getElementById('province_id');
+    const districtSelect = document.getElementById('district_id');
 
     function selectedFulfillment() {
         return form.querySelector('input[name="fulfillment_method"]:checked')?.value || 'delivery';
@@ -397,7 +437,9 @@ window.MotoworldCheckout = {
         const isDelivery = selectedFulfillment() === 'delivery';
         if (deliveryFields) deliveryFields.classList.toggle('hidden', !isDelivery);
         if (addressLine) addressLine.required = isDelivery;
-        if (addressCity) addressCity.required = isDelivery;
+        if (departmentSelect) departmentSelect.required = isDelivery;
+        if (provinceSelect) provinceSelect.required = isDelivery;
+        if (districtSelect) districtSelect.required = isDelivery;
     }
 
     form.querySelectorAll('[data-fulfillment-option]').forEach((el) => {
@@ -532,7 +574,9 @@ window.MotoworldCheckout = {
         return {
             coupon_code: (couponInput?.value || '').trim(),
             fulfillment_method: selectedFulfillment(),
-            address_city: document.getElementById('address_city')?.value || '',
+            department_id: departmentSelect?.value || '',
+            province_id: provinceSelect?.value || '',
+            district_id: districtSelect?.value || '',
             payment_method: paymentMethodInput?.value || 'card',
         };
     }
@@ -576,6 +620,21 @@ window.MotoworldCheckout = {
         }
         if (couponApplied) couponApplied.classList.toggle('hidden', !applied);
         if (couponAppliedLabel) couponAppliedLabel.textContent = applied ? (data.applied_label || ('Cupón ' + data.code)) : '';
+        const shippingRow = document.getElementById('checkout-shipping-row');
+        const shippingLabelEl = document.querySelector('[data-shipping-label]');
+        const shippingAmountEl = document.querySelector('[data-shipping-amount]');
+        const hasShipping = Number(data.shipping_amount || 0) > 0;
+        if (shippingRow) shippingRow.classList.toggle('hidden', !hasShipping);
+        if (shippingLabelEl) shippingLabelEl.textContent = data.shipping_label || 'Envío';
+        if (shippingAmountEl) {
+            shippingAmountEl.dataset.shippingPen = data.shipping_pen != null ? Number(data.shipping_pen).toFixed(2) : '0.00';
+            shippingAmountEl.dataset.shippingUsd = data.shipping_usd != null ? Number(data.shipping_usd).toFixed(2) : '0.00';
+            const currency = document.querySelector('[data-total-currency].bg-orange-600')?.dataset.totalCurrency
+                || data.currency
+                || 'PEN';
+            const amount = currency === 'USD' ? (data.shipping_usd ?? data.shipping_amount) : (data.shipping_pen ?? data.shipping_amount);
+            shippingAmountEl.textContent = hasShipping ? formatMoney(amount, currency) : '';
+        }
     }
 
     function showCouponMessage(text, isError) {
@@ -619,7 +678,8 @@ window.MotoworldCheckout = {
 
     async function removeCoupon() {
         try {
-            const response = await fetch(cfg.removeCouponUrl, {
+            const params = new URLSearchParams(couponContext());
+            const response = await fetch(cfg.removeCouponUrl + '?' + params.toString(), {
                 method: 'DELETE',
                 headers: {
                     'Accept': 'application/json',
@@ -646,6 +706,97 @@ window.MotoworldCheckout = {
             applyCoupon();
         }
     });
+
+    async function fillSelect(select, url, selected, placeholder) {
+        if (!select) return;
+        const current = selected ?? select.dataset.selected ?? '';
+        select.innerHTML = '<option value="">' + placeholder + '</option>';
+        if (!url) return;
+        try {
+            const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            const payload = await response.json().catch(() => ({ data: [] }));
+            (payload.data || []).forEach((item) => {
+                const option = document.createElement('option');
+                option.value = String(item.id);
+                option.textContent = item.name;
+                if (String(item.id) === String(current)) option.selected = true;
+                select.appendChild(option);
+            });
+        } catch (err) {
+            console.warn('No se pudieron cargar ubicaciones', err);
+        }
+        select.dataset.selected = select.value || '';
+    }
+
+    async function loadProvinces() {
+        const departmentId = departmentSelect?.value;
+        if (!provinceSelect) return;
+        if (!departmentId) {
+            provinceSelect.innerHTML = '<option value="">Selecciona provincia</option>';
+            if (districtSelect) districtSelect.innerHTML = '<option value="">Selecciona distrito</option>';
+            return;
+        }
+        const url = String(cfg.provincesUrl || '').replace('__department__', encodeURIComponent(departmentId));
+        await fillSelect(provinceSelect, url, provinceSelect.value || provinceSelect.dataset.selected, 'Selecciona provincia');
+        await loadDistricts();
+    }
+
+    async function loadDistricts() {
+        const provinceId = provinceSelect?.value;
+        if (!districtSelect) return;
+        if (!provinceId) {
+            districtSelect.innerHTML = '<option value="">Selecciona distrito</option>';
+            return;
+        }
+        const url = String(cfg.districtsUrl || '').replace('__province__', encodeURIComponent(provinceId));
+        await fillSelect(districtSelect, url, districtSelect.value || districtSelect.dataset.selected, 'Selecciona distrito');
+    }
+
+    async function refreshQuote() {
+        if (!cfg.quoteUrl) return;
+        try {
+            const body = new FormData();
+            Object.entries(couponContext()).forEach(([key, value]) => body.set(key, String(value || '')));
+            const response = await fetch(cfg.quoteUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                credentials: 'same-origin',
+                body,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) return;
+            applyTotals(data, !!data.valid && !!data.code);
+        } catch (err) {
+            console.warn('No se pudo cotizar el envío', err);
+        }
+    }
+
+    departmentSelect?.addEventListener('change', async () => {
+        if (provinceSelect) provinceSelect.dataset.selected = '';
+        if (districtSelect) districtSelect.dataset.selected = '';
+        await loadProvinces();
+        refreshQuote();
+    });
+    provinceSelect?.addEventListener('change', async () => {
+        if (districtSelect) districtSelect.dataset.selected = '';
+        await loadDistricts();
+        refreshQuote();
+    });
+    districtSelect?.addEventListener('change', refreshQuote);
+    form.querySelectorAll('[data-fulfillment-option]').forEach((el) => {
+        el.addEventListener('change', refreshQuote);
+    });
+    document.querySelectorAll('[data-pay-method]').forEach((btn) => {
+        btn.addEventListener('click', refreshQuote);
+    });
+
+    if (departmentSelect?.value) {
+        loadProvinces().then(() => refreshQuote());
+    }
 
     function randomId(prefix) {
         return prefix + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);

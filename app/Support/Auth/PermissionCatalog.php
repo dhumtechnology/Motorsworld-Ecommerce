@@ -37,6 +37,7 @@ final class PermissionCatalog
         'inventory_movements' => 'Movimientos de inventario',
         'orders' => 'Órdenes',
         'coupons' => 'Cupones',
+        'shipping_rates' => 'Tarifas de envío',
         'order_items' => 'Ítems de orden',
         'order_status_histories' => 'Historial de estados de orden',
         'addresses' => 'Direcciones',
