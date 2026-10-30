@@ -43,6 +43,14 @@ return [
         'order_expiration_hours' => (int) env('CULQI_ORDER_EXPIRATION_HOURS', 24),
     ],
 
+    'paypal' => [
+        // true = simula PayPal sin cuenta (solo desarrollo local)
+        'fake' => filter_var(env('PAYPAL_FAKE', false), FILTER_VALIDATE_BOOLEAN),
+        'client_id' => ($id = env('PAYPAL_CLIENT_ID')) ? trim((string) $id) : null,
+        'secret' => ($secret = env('PAYPAL_SECRET')) ? trim((string) $secret) : null,
+        'mode' => strtolower((string) env('PAYPAL_MODE', 'sandbox')) === 'live' ? 'live' : 'sandbox',
+    ],
+
     'mercadopago' => [
         // Legado: el checkout usa Culqi. Se mantiene por cobros históricos.
         'fake' => (bool) env('MERCADOPAGO_FAKE', true),

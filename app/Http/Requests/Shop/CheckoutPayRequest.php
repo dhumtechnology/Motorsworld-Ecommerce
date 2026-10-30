@@ -29,8 +29,17 @@ class CheckoutPayRequest extends FormRequest
             'payment_method' => ['required', 'string', Rule::in([
                 PaymentMethod::Card->value,
                 PaymentMethod::Yape->value,
+                PaymentMethod::Paypal->value,
             ])],
-            'culqi_token' => ['required', 'string', 'max:80'],
+            'culqi_token' => [
+                Rule::requiredIf(fn () => in_array($this->input('payment_method'), [
+                    PaymentMethod::Card->value,
+                    PaymentMethod::Yape->value,
+                ], true)),
+                'nullable',
+                'string',
+                'max:80',
+            ],
             'device_finger_print_id' => ['nullable', 'string', 'max:80'],
             'authentication_3DS' => ['nullable', 'array'],
             'authentication_3DS.eci' => ['nullable', 'string', 'max:8'],

@@ -24,6 +24,12 @@ class PaymentMethodSeeder extends Seeder
                 'sort_order' => 20,
             ],
             [
+                'code' => PaymentMethodEnum::Paypal->value,
+                'name' => 'PayPal',
+                'description' => 'Pago con cuenta PayPal (pasarela PayPal).',
+                'sort_order' => 25,
+            ],
+            [
                 'code' => PaymentMethodEnum::Plin->value,
                 'name' => 'Plin',
                 'description' => 'Pago asíncrono con Plin vía Culqi.',

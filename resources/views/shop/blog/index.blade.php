@@ -8,33 +8,13 @@
 @section('title', 'Blog — '.config('app.name'))
 
 @section('content')
-@php
-    $bannerPath = public_path('images/home/portadas/BLOG.jpg');
-    $banner = file_exists($bannerPath)
-        ? asset('images/home/portadas/BLOG.jpg')
-        : asset('images/services/banner-servicios.png');
-@endphp
-
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Blog Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motoworld</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Blog
-            </h1>
-            <p class="mt-2 max-w-xl text-sm md:text-base text-white/85">
-                Noticias, tips y novedades del mundo motociclista.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="blog"
+    eyebrow="Motoworld"
+    title="Blog"
+    subtitle="Noticias, tips y novedades del mundo motociclista."
+    alt="Blog Motoworld"
+/>
 
 <section class="bg-white">
     <div class="mx-auto max-w-[95%] px-4 md:px-8 py-12 md:py-16">

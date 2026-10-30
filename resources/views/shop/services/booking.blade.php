@@ -7,33 +7,18 @@
 
 @section('content')
 @php
-$bannerPath = public_path('images/home/portadas/NUESTROS SERVICIOS.jpg');
-$banner = file_exists($bannerPath)
-? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
-: asset('images/services/banner-servicios.png');
 $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400';
 $label = 'mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
 $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transparent px-5 py-3 text-sm text-neutral-900 outline-none focus:ring-0 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400';
 @endphp
 
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Agendar servicio"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Agenda tu servicio
-            </h1>
-            <p class="mt-2 text-sm md:text-base text-white/85 max-w-xl">
-                Horario de atención: lunes a viernes de 9:00 a 13:00 h y de 14:00 a 18:30 h. Sábados, de 9:00 a 14:00 h.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="services_booking"
+    title="Agenda tu servicio"
+    subtitle="Horario de atención: lunes a viernes de 9:00 a 13:00 h y de 14:00 a 18:30 h. Sábados, de 9:00 a 14:00 h."
+    alt="Agendar servicio"
+    overlay="from-black/70 via-black/25 to-black/20"
+/>
 
 <section class="relative bg-neutral-100">
     <div class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-neutral-200/60 to-transparent"></div>
@@ -316,7 +301,7 @@ $datetimePart = 'relative z-10 w-full min-w-0 cursor-pointer border-0 bg-transpa
         <br>
         <a
             href="{{ route('shop.services.list') }}"
-            class="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-700 focus-visible:ring-offset-2">
+            class="inline-flex items-center justify-center rounded-lg border border-orange-600 bg-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-orange-600 transition hover:bg-orange-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
             Ver todos los servicios
         </a>
     </div>

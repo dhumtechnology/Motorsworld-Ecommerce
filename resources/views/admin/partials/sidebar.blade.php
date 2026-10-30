@@ -144,6 +144,12 @@
                     'permission' => 'home_banners.view',
                 ],
                 [
+                    'label' => 'Banners de páginas',
+                    'route' => 'admin.page-banners.index',
+                    'active' => request()->routeIs('admin.page-banners.*'),
+                    'permission' => 'page_banners.view',
+                ],
+                [
                     'label' => 'Blog',
                     'route' => 'admin.blog-posts.index',
                     'active' => request()->routeIs('admin.blog-posts.*'),

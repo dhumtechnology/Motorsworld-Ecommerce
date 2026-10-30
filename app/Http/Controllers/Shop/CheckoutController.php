@@ -6,6 +6,7 @@ use App\Actions\Orders\CreateOrderFromCartAction;
 use App\Actions\Orders\DiscardFailedCheckoutOrderAction;
 use App\Actions\Orders\MarkOrderAsPaidAction;
 use App\Actions\Payments\ProcessCulqiPaymentAction;
+use App\Actions\Payments\ProcessPaypalPaymentAction;
 use App\Actions\Payments\RefreshCulqiPaymentStatusAction;
 use App\Actions\Shop\ResolveOrCreateCustomerAction;
 use App\Enums\Orders\FulfillmentMethod;
@@ -14,6 +15,7 @@ use App\Enums\Payments\PaymentMethod;
 use App\Enums\Payments\PaymentRecordStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shop\ApplyCheckoutCouponRequest;
+use App\Http\Requests\Shop\CapturePaypalCheckoutRequest;
 use App\Http\Requests\Shop\CheckoutPayRequest;
 use App\Http\Requests\Shop\ConfirmCulqi3DSRequest;
 use App\Http\Requests\Shop\QuoteCheckoutRequest;
@@ -31,6 +33,7 @@ use App\Services\Coupons\CheckoutCouponService;
 use App\Services\Coupons\CouponQuote;
 use App\Services\Payments\Culqi\CulqiClient;
 use App\Services\Payments\Culqi\Exceptions\CulqiApiException;
+use App\Services\Payments\Paypal\Exceptions\PaypalApiException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -43,12 +46,15 @@ class CheckoutController extends Controller
 {
     private const ACCESSIBLE_ORDERS_SESSION_KEY = 'checkout.accessible_order_ids';
 
+    private const PENDING_PAYPAL_ORDER_SESSION_KEY = 'checkout.pending_paypal_order_id';
+
     public function __construct(
         private readonly CartResolver $cartResolver,
         private readonly CartTotalsService $cartTotals,
         private readonly CreateOrderFromCartAction $createOrderFromCart,
         private readonly DiscardFailedCheckoutOrderAction $discardFailedOrder,
         private readonly ProcessCulqiPaymentAction $processPayment,
+        private readonly ProcessPaypalPaymentAction $processPaypal,
         private readonly RefreshCulqiPaymentStatusAction $refreshPaymentStatus,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
         private readonly ResolveOrCreateCustomerAction $resolveOrCreateCustomer,
@@ -86,6 +92,11 @@ class CheckoutController extends Controller
             'currency' => $charge->currency,
             'culqiPublicKey' => config('services.culqi.public_key'),
             'culqiFake' => (bool) config('services.culqi.fake'),
+            'paypalClientId' => config('services.paypal.client_id'),
+            'paypalFake' => (bool) config('services.paypal.fake'),
+            'paypalCreateUrl' => route('shop.checkout.paypal.create', absolute: false),
+            'paypalCaptureUrl' => route('shop.checkout.paypal.capture', absolute: false),
+            'paypalCancelUrl' => route('shop.checkout.paypal.cancel', absolute: false),
             'profile' => $profile,
             'user' => $user,
             'amount' => $charge->total,
@@ -240,47 +251,16 @@ class CheckoutController extends Controller
 
     public function pay(CheckoutPayRequest $request): JsonResponse|RedirectResponse
     {
-        $authenticated = $request->user();
-        $cart = $this->cartResolver->resolve($authenticated, $request->session()->getId());
-
-        try {
-            $customer = $this->resolveOrCreateCustomer->execute(
-                $request->customerPayload(),
-                $authenticated,
-            );
-        } catch (ValidationException $e) {
-            throw $e;
-        }
-
-        if ($authenticated === null && blank($request->customerPayload()['customer_document'])) {
+        if ($request->paymentMethod() === PaymentMethod::Paypal) {
             throw ValidationException::withMessages([
-                'customer_document' => 'El documento es obligatorio para comprar como invitado.',
+                'payment_method' => 'El pago con PayPal se confirma con el botón de PayPal.',
             ]);
         }
-
-        if ($authenticated === null && blank($request->customerPayload()['customer_email'])) {
-            throw ValidationException::withMessages([
-                'customer_email' => 'El correo es obligatorio para comprar como invitado.',
-            ]);
-        }
-
-        $shippingAddress = $this->resolveAddress($request, $customer->id, $request->fulfillmentMethod());
-        $this->syncCustomerProfile($customer, $request->customerDetails());
 
         $order = null;
 
         try {
-            // No vaciar carrito hasta confirmar pago (aprobado o en confirmación).
-            $order = $this->createOrderFromCart->execute(
-                $customer,
-                $cart,
-                $shippingAddress,
-                $shippingAddress,
-                $request->fulfillmentMethod(),
-                clearCart: false,
-                coupon: $this->couponFromRequest($request),
-                paymentMethod: $request->paymentMethod(),
-            );
+            $order = $this->placeCheckoutOrder($request);
 
             $result = $this->processPayment->execute(
                 $order,
@@ -378,6 +358,7 @@ class CheckoutController extends Controller
                 ->with('status', 'Tu banco requiere autenticación 3D Secure. Completa el desafío para confirmar el pago.');
         }
 
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
         $cart->items()->delete();
         $request->session()->forget(CheckoutCouponService::SESSION_KEY);
 
@@ -418,6 +399,150 @@ class CheckoutController extends Controller
         return redirect()
             ->route('shop.checkout.orders.show', $order)
             ->with('status', '¡Pago exitoso! Gracias por tu compra.');
+    }
+
+    public function createPaypalOrder(CheckoutPayRequest $request): JsonResponse
+    {
+        if ($request->paymentMethod() !== PaymentMethod::Paypal) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'Este endpoint solo crea órdenes de PayPal.',
+            ]);
+        }
+
+        $this->discardPendingPaypalCheckout($request);
+
+        $order = null;
+
+        try {
+            $order = $this->placeCheckoutOrder($request);
+            $result = $this->processPaypal->create($order);
+        } catch (ValidationException $e) {
+            if ($order !== null) {
+                $this->discardFailedOrder->execute($order);
+            }
+
+            throw $e;
+        } catch (PaypalApiException $e) {
+            Log::error('PayPal order create failed', [
+                'message' => $e->getMessage(),
+                'payload' => $e->payload,
+                'order_id' => $order?->id,
+            ]);
+
+            if ($order !== null) {
+                $this->discardFailedOrder->execute($order);
+            }
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => ['payment' => [$e->getMessage()]],
+                'paypal' => $e->payload,
+            ], 422);
+        } catch (Throwable $e) {
+            report($e);
+
+            if ($order !== null) {
+                $this->discardFailedOrder->execute($order);
+            }
+
+            return response()->json([
+                'message' => 'No se pudo crear el pago de PayPal. Inténtalo de nuevo.',
+                'errors' => ['payment' => ['No se pudo crear el pago de PayPal. Inténtalo de nuevo.']],
+            ], 500);
+        }
+
+        $this->rememberAccessibleOrder($request, $result['order']);
+        $request->session()->put(self::PENDING_PAYPAL_ORDER_SESSION_KEY, $result['order']->id);
+
+        return response()->json([
+            'id' => $result['paypal_order_id'],
+            'order_id' => $result['order']->id,
+        ]);
+    }
+
+    public function capturePaypalOrder(CapturePaypalCheckoutRequest $request): JsonResponse
+    {
+        $order = Order::query()->findOrFail($request->orderId());
+        $this->assertCanAccessOrder($request, $order);
+
+        try {
+            $result = $this->processPaypal->capture($order, $request->paypalOrderId());
+        } catch (ValidationException $e) {
+            if ($order->payment_status !== PaymentStatus::Paid) {
+                $this->discardFailedOrder->execute($order);
+            }
+            $request->session()->forget(self::PENDING_PAYPAL_ORDER_SESSION_KEY);
+
+            throw $e;
+        } catch (PaypalApiException $e) {
+            Log::error('PayPal capture failed', [
+                'message' => $e->getMessage(),
+                'payload' => $e->payload,
+                'order_id' => $order->id,
+            ]);
+
+            if ($order->payment_status !== PaymentStatus::Paid) {
+                $this->discardFailedOrder->execute($order);
+            }
+            $request->session()->forget(self::PENDING_PAYPAL_ORDER_SESSION_KEY);
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => ['payment' => [$e->getMessage()]],
+                'paypal' => $e->payload,
+            ], 422);
+        } catch (Throwable $e) {
+            report($e);
+
+            if ($order->payment_status !== PaymentStatus::Paid) {
+                $this->discardFailedOrder->execute($order);
+            }
+            $request->session()->forget(self::PENDING_PAYPAL_ORDER_SESSION_KEY);
+
+            return response()->json([
+                'message' => 'No se pudo completar el pago con PayPal. Inténtalo de nuevo.',
+                'errors' => ['payment' => ['No se pudo completar el pago con PayPal. Inténtalo de nuevo.']],
+            ], 500);
+        }
+
+        $order = $result['order'];
+        $payment = $result['payment'];
+
+        if (! $payment->isPaid()) {
+            $this->discardFailedOrder->execute($order);
+            $request->session()->forget(self::PENDING_PAYPAL_ORDER_SESSION_KEY);
+
+            return response()->json([
+                'message' => 'PayPal no confirmó el cobro.',
+                'errors' => ['payment' => ['PayPal no confirmó el cobro.']],
+            ], 422);
+        }
+
+        $cart = $this->cartResolver->resolve($request->user(), $request->session()->getId());
+        $cart->items()->delete();
+        $request->session()->forget(CheckoutCouponService::SESSION_KEY);
+        $request->session()->forget(self::PENDING_PAYPAL_ORDER_SESSION_KEY);
+
+        return response()->json([
+            'message' => 'Pago realizado correctamente.',
+            'order_id' => $order->id,
+            'payment' => [
+                'id' => $payment->id,
+                'method' => $payment->method->value,
+                'status' => $payment->status->value,
+                'paypal_order_id' => $payment->paypal_order_id,
+            ],
+            'redirect_url' => route('shop.checkout.orders.show', $order),
+        ]);
+    }
+
+    public function cancelPaypalOrder(Request $request): JsonResponse
+    {
+        $this->discardPendingPaypalCheckout($request);
+
+        return response()->json([
+            'cancelled' => true,
+        ]);
     }
 
     public function confirmThreeDS(ConfirmCulqi3DSRequest $request, Order $order): JsonResponse|RedirectResponse
@@ -773,6 +898,73 @@ class CheckoutController extends Controller
             'province_id' => $district->province_id,
             'district_id' => $district->id,
         ]);
+    }
+
+    private function placeCheckoutOrder(CheckoutPayRequest $request): Order
+    {
+        $authenticated = $request->user();
+        $cart = $this->cartResolver->resolve($authenticated, $request->session()->getId());
+
+        $customer = $this->resolveOrCreateCustomer->execute(
+            $request->customerPayload(),
+            $authenticated,
+        );
+
+        if ($authenticated === null && blank($request->customerPayload()['customer_document'])) {
+            throw ValidationException::withMessages([
+                'customer_document' => 'El documento es obligatorio para comprar como invitado.',
+            ]);
+        }
+
+        if ($authenticated === null && blank($request->customerPayload()['customer_email'])) {
+            throw ValidationException::withMessages([
+                'customer_email' => 'El correo es obligatorio para comprar como invitado.',
+            ]);
+        }
+
+        $shippingAddress = $this->resolveAddress($request, $customer->id, $request->fulfillmentMethod());
+        $this->syncCustomerProfile($customer, $request->customerDetails());
+
+        return $this->createOrderFromCart->execute(
+            $customer,
+            $cart,
+            $shippingAddress,
+            $shippingAddress,
+            $request->fulfillmentMethod(),
+            clearCart: false,
+            coupon: $this->couponFromRequest($request),
+            paymentMethod: $request->paymentMethod(),
+        );
+    }
+
+    private function discardPendingPaypalCheckout(Request $request): void
+    {
+        $orderId = (int) ($request->input('order_id') ?: $request->session()->get(self::PENDING_PAYPAL_ORDER_SESSION_KEY, 0));
+        $request->session()->forget(self::PENDING_PAYPAL_ORDER_SESSION_KEY);
+
+        if ($orderId <= 0) {
+            return;
+        }
+
+        $order = Order::query()->find($orderId);
+
+        if ($order === null || $order->payment_status === PaymentStatus::Paid) {
+            return;
+        }
+
+        try {
+            $this->assertCanAccessOrder($request, $order);
+        } catch (Throwable) {
+            return;
+        }
+
+        $payment = $order->latestPayment();
+
+        if ($payment !== null && $payment->provider !== 'paypal') {
+            return;
+        }
+
+        $this->discardFailedOrder->execute($order);
     }
 
     private function yapeTokenErrorMessage(CulqiApiException $e): string

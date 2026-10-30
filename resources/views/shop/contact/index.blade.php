@@ -9,36 +9,17 @@
 
 @section('content')
 @php
-    $bannerPath = public_path('images/home/portadas/Enllantado.jpg');
-    $banner = file_exists($bannerPath)
-        ? asset('images/home/portadas/Enllantado.jpg')
-        : asset('images/services/banner-servicios.png');
-
     $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20';
     $label = 'mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
 @endphp
 
-{{-- Banner --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Contáctanos Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Motoworld</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Contáctanos
-            </h1>
-            <p class="mt-2 max-w-xl text-sm md:text-base text-white/85">
-                Estamos listos para ayudarte. Escríbenos o visita nuestro taller.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="contact"
+    eyebrow="Motoworld"
+    title="Contáctanos"
+    subtitle="Estamos listos para ayudarte. Escríbenos o visita nuestro taller."
+    alt="Contáctanos Motoworld"
+/>
 
 {{-- Formulario + info --}}
 <section class="bg-neutral-100">

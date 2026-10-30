@@ -9,35 +9,17 @@
 
 @section('content')
 @php
-    $bannerPath = public_path('images/home/portadas/Scaneo de motocicleta.jpg');
-    $banner = file_exists($bannerPath)
-        ? asset('images/home/portadas/Scaneo de motocicleta.jpg')
-        : asset('images/services/banner-servicios.png');
-
     $field = 'w-full rounded-lg border border-neutral-200 bg-white px-5 py-2.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20';
     $label = 'mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500';
 @endphp
 
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Libro de reclamaciones Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Atención al consumidor</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Libro de reclamaciones
-            </h1>
-            <p class="mt-2 max-w-xl text-sm md:text-base text-white/85">
-                Conforme al Código de Protección y Defensa del Consumidor (Ley N.º 29571).
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="claim_book"
+    eyebrow="Atención al consumidor"
+    title="Libro de reclamaciones"
+    subtitle="Conforme al Código de Protección y Defensa del Consumidor (Ley N.º 29571)."
+    alt="Libro de reclamaciones Motoworld"
+/>
 
 <section class="bg-neutral-100">
     <div class="mx-auto max-w-[95%] px-4 md:px-8 py-12 md:py-16">

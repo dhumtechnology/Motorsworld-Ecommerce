@@ -23,6 +23,7 @@ trait ResolvesCheckoutLocation
             'payment_method' => ['nullable', 'string', Rule::in([
                 PaymentMethod::Card->value,
                 PaymentMethod::Yape->value,
+                PaymentMethod::Paypal->value,
             ])],
         ];
     }

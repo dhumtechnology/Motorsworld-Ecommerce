@@ -71,7 +71,7 @@ class GetShopFooterLinksAction
             'Formas de pago y promociones' => route('shop.payment-promotions'),
             'Política de privacidad' => route('shop.privacy-policy'),
             'Ayuda' => route('shop.help'),
-            'Ventas al por mayor' => '#',
+            'Ventas al por mayor' => route('shop.wholesale'),
         ];
     }
 

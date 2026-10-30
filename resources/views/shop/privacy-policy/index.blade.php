@@ -4,10 +4,6 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/home/portadas/Enllantado.jpg'))
-        ? asset('images/home/portadas/Enllantado.jpg')
-        : asset('images/services/banner-servicios.png');
-
     $directCollectionItems = [
         'Cuando compras algo en nuestra tienda, como parte del proceso, recopilaremos tu nombre, tu dirección de correo electrónico y algunos detalles de la transacción, como los correspondientes datos de facturación o entrega.',
         'Si solicitas un reembolso mediante transferencia bancaria directa, es posible que recopilemos los datos bancarios necesarios para procesar el pago. Estos datos se almacenarán de forma segura dentro de nuestro sistema de asistencia, de acuerdo con nuestras políticas de privacidad y conservación de datos, para garantizar el procesamiento preciso y el mantenimiento de registros de los reembolsos. Al proporcionar estos datos, nos das tu consentimiento para su almacenamiento seguro para tramitar el reembolso.',
@@ -26,27 +22,14 @@
     ];
 @endphp
 
-{{-- Hero --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Política de privacidad Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="eager"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/25"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Información legal</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Política de privacidad
-            </h1>
-            <p class="mt-2 max-w-2xl text-sm md:text-base text-white/85">
-                Cómo recopilamos, usamos y protegemos tus datos personales en Moto World Enterprise S.A.C.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="privacy_policy"
+    eyebrow="Información legal"
+    title="Política de privacidad"
+    subtitle="Cómo recopilamos, usamos y protegemos tus datos personales en Moto World Enterprise S.A.C."
+    alt="Política de privacidad Motoworld"
+    overlay="from-black/80 via-black/35 to-black/25"
+/>
 
 {{-- Contenido --}}
 <section class="bg-neutral-50 border-b border-neutral-100">

@@ -12,6 +12,7 @@
         $paymentLabels = [
             'card' => 'Tarjeta',
             'yape' => 'Yape',
+            'paypal' => 'PayPal',
         ];
     @endphp
 

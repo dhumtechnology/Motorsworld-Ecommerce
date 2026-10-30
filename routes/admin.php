@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PageBannerController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -212,6 +213,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/configuracion/{homeBanner}', [HomeBannerController::class, 'update'])->middleware('permission:home_banners.update')->name('home-banners.update');
     Route::delete('/configuracion/{homeBanner}', [HomeBannerController::class, 'destroy'])->middleware('permission:home_banners.delete')->name('home-banners.destroy');
     Route::delete('/configuracion', [HomeBannerController::class, 'bulkDestroy'])->middleware('permission:home_banners.delete')->name('home-banners.bulk-destroy');
+
+    // Banners de páginas estáticas
+    Route::get('/banners-de-paginas', [PageBannerController::class, 'index'])->middleware('permission:page_banners.view')->name('page-banners.index');
+    Route::get('/banners-de-paginas/{pageBanner}/editar', [PageBannerController::class, 'edit'])->middleware('permission:page_banners.update')->name('page-banners.edit');
+    Route::put('/banners-de-paginas/{pageBanner}', [PageBannerController::class, 'update'])->middleware('permission:page_banners.update')->name('page-banners.update');
 
     // Blog
     Route::get('/blog', [BlogPostController::class, 'index'])->middleware('permission:blog_posts.view')->name('blog-posts.index');

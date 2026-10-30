@@ -6,31 +6,13 @@
 @section('title', 'Todos los servicios — '.config('app.name'))
 
 @section('content')
-@php
-$bannerPath = public_path('images/home/portadas/NUESTROS SERVICIOS.jpg');
-$banner = file_exists($bannerPath)
-? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
-: asset('images/services/banner-servicios.png');
-@endphp
-
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Servicios Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Todos nuestros servicios
-            </h1>
-            <p class="mt-2 text-sm md:text-base text-white/85 max-w-xl">
-                Conoce las soluciones que tenemos para mantener tu moto en óptimo estado.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="services_list"
+    title="Todos nuestros servicios"
+    subtitle="Conoce las soluciones que tenemos para mantener tu moto en óptimo estado."
+    alt="Servicios Motoworld"
+    overlay="from-black/70 via-black/25 to-black/20"
+/>
 
 @if ($serviceTypes->isNotEmpty())
 <section class="bg-white">

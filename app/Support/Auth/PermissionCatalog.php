@@ -51,6 +51,7 @@ final class PermissionCatalog
         'service_packages' => 'Paquetes de servicio',
         'blog_posts' => 'Publicaciones del blog',
         'home_banners' => 'Banners del home',
+        'page_banners' => 'Banners de páginas',
         'claim_book_entries' => 'Incidencias',
         'contact_messages' => 'Contactos',
     ];

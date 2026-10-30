@@ -4,10 +4,6 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/home/portadas/Enllantado.jpg'))
-        ? asset('images/home/portadas/Enllantado.jpg')
-        : asset('images/services/banner-servicios.png');
-
     $customerServiceItems = [
         [
             'label' => 'Correo electrónico',
@@ -28,27 +24,14 @@
     ];
 @endphp
 
-{{-- Hero --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Preguntas frecuentes Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="eager"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/25"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Información para clientes</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Preguntas frecuentes
-            </h1>
-            <p class="mt-2 max-w-2xl text-sm md:text-base text-white/85">
-                Respuestas sobre atención al cliente y cómo encontrar productos en nuestra tienda.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="faq"
+    eyebrow="Información para clientes"
+    title="Preguntas frecuentes"
+    subtitle="Respuestas sobre atención al cliente y cómo encontrar productos en nuestra tienda."
+    alt="Preguntas frecuentes Motoworld"
+    overlay="from-black/80 via-black/35 to-black/25"
+/>
 
 {{-- Navegación rápida --}}
 <nav class="sticky top-16 z-30 border-b border-neutral-200 bg-white/95 backdrop-blur sm:top-[4.25rem] lg:top-20" aria-label="Secciones de preguntas frecuentes">

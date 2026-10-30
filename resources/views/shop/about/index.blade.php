@@ -28,25 +28,12 @@ $policies = [
 ];
 @endphp
 
-{{-- Banner --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ asset('images/about/NOSOTROS.jpg') }}"
-            alt="Nosotros Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Nosotros
-            </h1>
-            <p class="mt-2 max-w-xl text-sm md:text-base text-white/85">
-                Pasión por las motos, compromiso con el servicio y calidad en cada detalle.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="about"
+    title="Nosotros"
+    subtitle="Pasión por las motos, compromiso con el servicio y calidad en cada detalle."
+    alt="Nosotros Motoworld"
+/>
 
 {{-- Historia / presentación --}}
 <section class="bg-neutral-50 border-b border-neutral-100">

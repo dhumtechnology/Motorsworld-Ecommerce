@@ -8,34 +8,18 @@
 
 @section('content')
 @php
-$bannerPath = public_path('images/home/portadas/NUESTROS SERVICIOS.jpg');
-$banner = file_exists($bannerPath)
-? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
-: asset('images/services/banner-servicios.png');
-
 // Variables para las imágenes de las tarjetas
 $imgExplorar = asset('images/services/explorar-servicios.jpg');
 $imgReservar = asset('images/services/reservar-servicio.jpg');
 @endphp
 
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Servicios Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.classList.add('opacity-0'); this.parentElement.classList.add('bg-neutral-800');">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/20"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Servicio Técnico Especializado
-            </h1>
-            <p class="mt-2 text-sm md:text-base text-white/85 max-w-xl">
-                Horario de atención: lunes a viernes de 9:00 a 13:00 h y de 14:00 a 18:30 h. Sábados, de 9:00 a 14:00 h.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="services"
+    title="Servicio Técnico Especializado"
+    subtitle="Horario de atención: lunes a viernes de 9:00 a 13:00 h y de 14:00 a 18:30 h. Sábados, de 9:00 a 14:00 h."
+    alt="Servicios Motoworld"
+    overlay="from-black/70 via-black/25 to-black/20"
+/>
 
 <section class="bg-white">
     <div class="mx-auto max-w-[95%] px-4 md:px-8 py-12 md:py-16">
@@ -68,7 +52,7 @@ $imgReservar = asset('images/services/reservar-servicio.jpg');
                     </p>
                     <a
                         href="{{ route('shop.services.list') }}"
-                        class="mt-6 inline-flex w-full sm:w-auto self-start items-center justify-center rounded-lg bg-neutral-900 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-700 focus-visible:ring-offset-2">
+                        class="mt-6 inline-flex w-full sm:w-auto self-start items-center justify-center rounded-lg border border-orange-600 bg-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-orange-600 transition hover:bg-orange-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
                         Ver servicios
                     </a>
                 </div>
@@ -93,7 +77,7 @@ $imgReservar = asset('images/services/reservar-servicio.jpg');
                     </p>
                     <a
                         href="{{ route('shop.services.booking') }}"
-                        class="mt-6 inline-flex w-full sm:w-auto self-start items-center justify-center rounded-lg bg-orange-600 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-orange-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
+                        class="mt-6 inline-flex w-full sm:w-auto self-start items-center justify-center rounded-lg border border-orange-600 bg-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-orange-600 transition hover:bg-orange-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2">
                         Ir al formulario
                     </a>
                 </div>

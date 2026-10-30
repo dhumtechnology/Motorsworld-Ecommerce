@@ -13,7 +13,7 @@
         <div class="mb-8 md:mb-10">
             <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-orange-500">Pago seguro</p>
             <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-wide text-neutral-900">Checkout</h1>
-            <p class="mt-2 max-w-xl text-sm text-neutral-500">Tarjeta de crédito/débito o Yape · Culqi</p>
+            <p class="mt-2 max-w-xl text-sm text-neutral-500">Tarjeta y Yape · Culqi · PayPal</p>
         </div>
 
         @if ($errors->any())
@@ -26,6 +26,13 @@
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 Configura <code class="font-mono">CULQI_PUBLIC_KEY</code> y <code class="font-mono">CULQI_SECRET_KEY</code>,
                 o usa <code class="font-mono">CULQI_FAKE=true</code> para probar sin llaves.
+            </div>
+        @endif
+
+        @if (! ($paypalFake ?? true) && ! ($paypalClientId ?? null))
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Configura <code class="font-mono">PAYPAL_CLIENT_ID</code> y <code class="font-mono">PAYPAL_SECRET</code>,
+                o usa <code class="font-mono">PAYPAL_FAKE=true</code> para probar sin llaves.
             </div>
         @endif
 
@@ -158,23 +165,28 @@
                         </div>
                     </section>
 
-                    {{-- Pago: un solo formulario de tarjeta (crédito+débito) + Yape aparte --}}
+                    {{-- Pago: tarjeta/Yape (Culqi) + PayPal (pasarela propia) --}}
                     <section class="space-y-4 border-t border-neutral-100 pt-5">
                         <div class="flex items-center gap-3">
                             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-xs font-black text-white">3</span>
                             <h2 class="text-sm font-black uppercase tracking-[0.14em] text-neutral-900">Pago</h2>
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2" id="payment-method-tabs">
+                        <div class="grid gap-3 sm:grid-cols-3" id="payment-method-tabs">
                             <button type="button" data-pay-method="card"
                                     class="rounded-2xl border border-orange-600 bg-orange-50 px-4 py-3 text-left text-sm font-bold text-neutral-900">
                                 Tarjeta
-                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">Crédito o débito · Culqi Checkout</span>
+                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">Crédito o débito · Culqi</span>
                             </button>
                             <button type="button" data-pay-method="yape"
                                     class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-bold text-neutral-900">
                                 Yape
-                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">App Yape · Culqi Checkout</span>
+                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">App Yape · Culqi</span>
+                            </button>
+                            <button type="button" data-pay-method="paypal"
+                                    class="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-bold text-neutral-900">
+                                PayPal
+                                <span class="mt-0.5 block text-xs font-normal text-neutral-500">Cuenta PayPal</span>
                             </button>
                         </div>
 
@@ -199,6 +211,18 @@
                                 </p>
                             </div>
                         </div>
+
+                        <div id="paypal-payment-panel" class="hidden space-y-3">
+                            <div class="space-y-3 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-4">
+                                <p class="text-xs text-neutral-500">
+                                    Completa tus datos de comprador y entrega. El cobro se confirma en PayPal; no pasa por Culqi.
+                                    @if ($paypalFake ?? true)
+                                        Modo fake: no se envía a PayPal.
+                                    @endif
+                                </p>
+                                <div id="paypal-button-container" class="@if ($paypalFake ?? true) hidden @endif min-h-[48px]"></div>
+                            </div>
+                        </div>
                     </section>
 
                     <p id="payment-error" class="hidden rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"></p>
@@ -211,7 +235,7 @@
                         <span class="relative z-10" id="pay-button-label">Pagar {{ $chargeCurrencySymbol }} {{ number_format($total, 2) }}</span>
                     </button>
 
-                    <p class="text-center text-[11px] text-neutral-400">
+                    <p id="pay-provider-note" class="text-center text-[11px] text-neutral-400">
                         Procesado por Culqi · Datos de tarjeta tokenizados (PCI)
                     </p>
                 </form>
@@ -386,6 +410,11 @@ window.MotoworldCheckout = {
     amountCents: {{ (int) $amountCents }},
     currency: @json($currency ?? 'PEN'),
     fake: @json((bool) $culqiFake),
+    paypalClientId: @json($paypalClientId ?? null),
+    paypalFake: @json((bool) ($paypalFake ?? true)),
+    paypalCreateUrl: @json($paypalCreateUrl ?? '/checkout/paypal/orden'),
+    paypalCaptureUrl: @json($paypalCaptureUrl ?? '/checkout/paypal/capturar'),
+    paypalCancelUrl: @json($paypalCancelUrl ?? '/checkout/paypal/cancelar'),
     yapeMaxCents: 200000,
     yapeTokenUrl: @json($yapeTokenUrl ?? '/checkout/token-yape'),
     applyCouponUrl: @json($applyCouponUrl ?? '/checkout/cupon'),
@@ -414,6 +443,9 @@ window.MotoworldCheckout = {
     const deviceInput = document.getElementById('device_finger_print_id');
     const cardPanel = document.getElementById('card-payment-panel');
     const yapePanel = document.getElementById('yape-payment-panel');
+    const paypalPanel = document.getElementById('paypal-payment-panel');
+    const paypalButtonsEl = document.getElementById('paypal-button-container');
+    const payProviderNote = document.getElementById('pay-provider-note');
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
         || form.querySelector('input[name="_token"]')?.value
         || '';
@@ -422,6 +454,9 @@ window.MotoworldCheckout = {
     let selectedPayMethod = 'card';
     let pending3DS = null;
     let paying = false;
+    let paypalSdkCurrency = null;
+    let paypalButtons = null;
+    let paypalLocalOrderId = null;
 
     const deliveryFields = document.getElementById('delivery-address-fields');
     const addressLine = document.getElementById('address_line1');
@@ -545,6 +580,19 @@ window.MotoworldCheckout = {
 
         cardPanel.classList.toggle('hidden', method !== 'card');
         yapePanel.classList.toggle('hidden', method !== 'yape');
+        if (paypalPanel) paypalPanel.classList.toggle('hidden', method !== 'paypal');
+
+        const usePaypalSdk = method === 'paypal' && !cfg.paypalFake && !!cfg.paypalClientId;
+        if (payButton) payButton.classList.toggle('hidden', usePaypalSdk);
+        if (paypalButtonsEl) paypalButtonsEl.classList.toggle('hidden', method !== 'paypal' || !!cfg.paypalFake);
+        if (payProviderNote) {
+            payProviderNote.textContent = method === 'paypal'
+                ? 'Procesado por PayPal'
+                : 'Procesado por Culqi · Datos de tarjeta tokenizados (PCI)';
+        }
+        if (usePaypalSdk) {
+            renderPaypalButtons();
+        }
     }
 
     document.querySelectorAll('[data-pay-method]').forEach((btn) => {
@@ -634,6 +682,9 @@ window.MotoworldCheckout = {
                 || 'PEN';
             const amount = currency === 'USD' ? (data.shipping_usd ?? data.shipping_amount) : (data.shipping_pen ?? data.shipping_amount);
             shippingAmountEl.textContent = hasShipping ? formatMoney(amount, currency) : '';
+        }
+        if (selectedPayMethod === 'paypal' && !cfg.paypalFake && cfg.paypalClientId) {
+            renderPaypalButtons();
         }
     }
 
@@ -1016,6 +1067,131 @@ window.MotoworldCheckout = {
         }
     });
 
+    function paypalSdkSrc(currency) {
+        const params = new URLSearchParams({
+            'client-id': String(cfg.paypalClientId || ''),
+            currency: currency || 'PEN',
+            intent: 'capture',
+            components: 'buttons',
+            locale: 'es_PE',
+            'disable-funding': 'card,credit,paylater,venmo',
+            'enable-funding': 'paypal',
+        });
+        return 'https://www.paypal.com/sdk/js?' + params.toString();
+    }
+
+    function loadPaypalSdk(currency) {
+        return new Promise((resolve, reject) => {
+            if (window.paypal && paypalSdkCurrency === currency) {
+                resolve();
+                return;
+            }
+            const existing = document.getElementById('paypal-sdk');
+            if (existing) existing.remove();
+            const script = document.createElement('script');
+            script.id = 'paypal-sdk';
+            script.src = paypalSdkSrc(currency);
+            script.async = true;
+            script.onload = () => {
+                paypalSdkCurrency = currency;
+                resolve();
+            };
+            script.onerror = () => reject(new Error('No se pudo cargar PayPal. Recarga la página.'));
+            document.head.appendChild(script);
+        });
+    }
+
+    async function renderPaypalButtons() {
+        if (cfg.paypalFake || !cfg.paypalClientId || !paypalButtonsEl) return;
+        const currency = cfg.currency || 'PEN';
+        try {
+            await loadPaypalSdk(currency);
+        } catch (err) {
+            showError(err?.message || 'No se pudo cargar PayPal.');
+            return;
+        }
+        if (typeof paypal === 'undefined' || typeof paypal.Buttons !== 'function') {
+            showError('No se pudo inicializar PayPal.');
+            return;
+        }
+        if (paypalButtons && typeof paypalButtons.close === 'function') {
+            try { paypalButtons.close(); } catch (e) {}
+        }
+        paypalButtonsEl.innerHTML = '';
+        paypalButtons = paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+            onClick: function (data, actions) {
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return actions.reject();
+                }
+                return actions.resolve();
+            },
+            createOrder: async function () {
+                errorEl.classList.add('hidden');
+                paymentMethodInput.value = 'paypal';
+                setLoading(true, 'Conectando con PayPal', 'Te redirigimos a PayPal para confirmar el pago.');
+                const data = await postJson(cfg.paypalCreateUrl, { payment_method: 'paypal' });
+                paypalLocalOrderId = data.order_id || null;
+                if (!data.id) throw new Error('PayPal no devolvió una orden.');
+                setLoading(true, 'Confirma en PayPal', 'No cierres esta ventana hasta terminar el pago.');
+                return data.id;
+            },
+            onApprove: async function (data) {
+                setLoading(true, 'Confirmando pago', 'PayPal está capturando el cobro. No cierres esta ventana.');
+                const result = await postJson(cfg.paypalCaptureUrl, {
+                    paypal_order_id: data.orderID,
+                    order_id: paypalLocalOrderId,
+                    payment_method: 'paypal',
+                });
+                if (result.redirect_url) {
+                    window.location.href = result.redirect_url;
+                    return;
+                }
+                throw new Error(result.message || 'No se recibió confirmación del pago.');
+            },
+            onCancel: async function () {
+                try {
+                    await postJson(cfg.paypalCancelUrl, {
+                        order_id: paypalLocalOrderId || '',
+                        payment_method: 'paypal',
+                    });
+                } catch (e) {}
+                paypalLocalOrderId = null;
+                setLoading(false);
+            },
+            onError: async function (err) {
+                try {
+                    await postJson(cfg.paypalCancelUrl, {
+                        order_id: paypalLocalOrderId || '',
+                        payment_method: 'paypal',
+                    });
+                } catch (e) {}
+                paypalLocalOrderId = null;
+                showError(err?.message || 'No se pudo completar el pago con PayPal.');
+            },
+        });
+        paypalButtons.render(paypalButtonsEl).catch((err) => {
+            showError(err?.message || 'No se pudieron mostrar los botones de PayPal.');
+        });
+    }
+
+    async function payWithPaypalFake() {
+        paymentMethodInput.value = 'paypal';
+        setLoading(true, 'Procesando pago PayPal', 'Modo fake: no se envía a PayPal.');
+        const created = await postJson(cfg.paypalCreateUrl, { payment_method: 'paypal' });
+        const captured = await postJson(cfg.paypalCaptureUrl, {
+            paypal_order_id: created.id,
+            order_id: created.order_id,
+            payment_method: 'paypal',
+        });
+        if (captured.redirect_url) {
+            window.location.href = captured.redirect_url;
+            return;
+        }
+        throw new Error(captured.message || 'No se recibió confirmación del pago.');
+    }
+
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         if (paying) return;
@@ -1024,6 +1200,15 @@ window.MotoworldCheckout = {
         setPayingLock(true);
 
         try {
+            if (selectedPayMethod === 'paypal') {
+                if (!cfg.paypalFake) {
+                    setPayingLock(false);
+                    return;
+                }
+                await payWithPaypalFake();
+                return;
+            }
+
             const token = await openCulqiCheckout(selectedPayMethod);
             setLoading(true, 'Procesando pago', 'No cierres esta ventana ni pulses pagar otra vez.');
             const method = String(token).startsWith('ype_') ? 'yape' : 'card';

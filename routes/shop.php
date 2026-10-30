@@ -17,6 +17,7 @@ use App\Http\Controllers\Shop\PrivacyPolicyController;
 use App\Http\Controllers\Shop\ProductController;
 use App\Http\Controllers\Shop\ServiceController;
 use App\Http\Controllers\Shop\ShippingReturnsController;
+use App\Http\Controllers\Shop\WholesaleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +47,8 @@ Route::prefix('ubicaciones')->name('locations.')->group(function () {
 Route::get('/politica-de-privacidad', [PrivacyPolicyController::class, 'index'])->name('privacy-policy');
 
 Route::get('/ayuda', [HelpController::class, 'index'])->name('help');
+
+Route::get('/ventas-al-por-mayor', [WholesaleController::class, 'index'])->name('wholesale');
 
 Route::get('/formas-de-pago-y-promociones', [PaymentPromotionsController::class, 'index'])->name('payment-promotions');
 
@@ -104,7 +107,7 @@ Route::prefix('carrito')->name('cart.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Checkout + Culqi
+| Checkout + Culqi / PayPal
 |--------------------------------------------------------------------------
 |
 | Público (como reservas): si no hay sesión, el pedido se asocia a un usuario
@@ -118,6 +121,9 @@ Route::prefix('carrito')->name('cart.')->group(function () {
 Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'show'])->name('show');
     Route::post('/pagar', [CheckoutController::class, 'pay'])->name('pay');
+    Route::post('/paypal/orden', [CheckoutController::class, 'createPaypalOrder'])->name('paypal.create');
+    Route::post('/paypal/capturar', [CheckoutController::class, 'capturePaypalOrder'])->name('paypal.capture');
+    Route::post('/paypal/cancelar', [CheckoutController::class, 'cancelPaypalOrder'])->name('paypal.cancel');
     Route::post('/cupon', [CheckoutController::class, 'applyCoupon'])->name('coupon.apply');
     Route::delete('/cupon', [CheckoutController::class, 'removeCoupon'])->name('coupon.remove');
     Route::post('/cotizar', [CheckoutController::class, 'quote'])->name('quote');

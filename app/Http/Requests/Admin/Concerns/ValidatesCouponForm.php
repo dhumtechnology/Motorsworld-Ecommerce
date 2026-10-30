@@ -53,6 +53,7 @@ trait ValidatesCouponForm
             'payment_methods.*' => ['string', Rule::in([
                 PaymentMethod::Card->value,
                 PaymentMethod::Yape->value,
+                PaymentMethod::Paypal->value,
             ])],
             'department_ids' => ['nullable', 'array'],
             'department_ids.*' => ['integer', 'exists:departments,id'],

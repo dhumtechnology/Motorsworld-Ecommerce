@@ -217,13 +217,13 @@
         <div class="flex flex-wrap gap-3">
             <a
                 href="{{ route('shop.contact') }}"
-                class="inline-flex items-center justify-center rounded-xl bg-orange-600 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-orange-500 transition-colors"
+                class="inline-flex items-center justify-center rounded-xl border border-orange-600 bg-white px-6 py-3 text-sm font-bold uppercase tracking-wider text-orange-600 transition-colors hover:bg-orange-600 hover:text-white"
             >
                 Contáctanos
             </a>
             <a
                 href="{{ route('shop.catalog', ['section' => 'accesorios']) }}"
-                class="inline-flex items-center justify-center rounded-xl border border-neutral-200 px-6 py-3 text-sm font-bold uppercase tracking-wider text-neutral-800 hover:border-orange-500 hover:text-orange-600 transition-colors"
+                class="inline-flex items-center justify-center rounded-xl border border-orange-600 bg-white px-6 py-3 text-sm font-bold uppercase tracking-wider text-orange-600 transition-colors hover:bg-orange-600 hover:text-white"
             >
                 Ver tienda
             </a>

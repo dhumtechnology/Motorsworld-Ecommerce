@@ -194,6 +194,7 @@ class CouponController extends Controller
             'paymentMethods' => [
                 PaymentMethod::Card,
                 PaymentMethod::Yape,
+                PaymentMethod::Paypal,
             ],
             'products' => Product::query()
                 ->orderBy('name')

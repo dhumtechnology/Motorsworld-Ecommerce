@@ -6,6 +6,7 @@ enum PaymentMethod: string
 {
     case Card = 'card';
     case Yape = 'yape';
+    case Paypal = 'paypal';
     case Plin = 'plin';
     case PagoEfectivo = 'pagoefectivo';
 
@@ -14,6 +15,7 @@ enum PaymentMethod: string
         return match ($this) {
             self::Card => 'Tarjeta',
             self::Yape => 'Yape',
+            self::Paypal => 'PayPal',
             self::Plin => 'Plin',
             self::PagoEfectivo => 'PagoEfectivo',
         };
@@ -26,7 +28,7 @@ enum PaymentMethod: string
     {
         return match ($this) {
             self::Card, self::Yape => true,
-            self::Plin, self::PagoEfectivo => false,
+            self::Paypal, self::Plin, self::PagoEfectivo => false,
         };
     }
 
@@ -45,7 +47,7 @@ enum PaymentMethod: string
     {
         return match ($this) {
             self::Plin, self::PagoEfectivo => true,
-            self::Card, self::Yape => false,
+            self::Card, self::Yape, self::Paypal => false,
         };
     }
 }

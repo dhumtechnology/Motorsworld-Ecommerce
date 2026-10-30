@@ -4,10 +4,6 @@
 
 @section('content')
 @php
-    $banner = file_exists(public_path('images/home/portadas/NUESTROS SERVICIOS.jpg'))
-        ? asset('images/home/portadas/NUESTROS SERVICIOS.jpg')
-        : asset('images/services/banner-servicios.png');
-
     $contactChannels = [
         [
             'title' => 'Consultas generales y pedidos',
@@ -29,27 +25,14 @@
     ];
 @endphp
 
-{{-- Hero --}}
-<section class="relative w-full overflow-hidden bg-neutral-900">
-    <div class="shop-page-banner">
-        <img
-            src="{{ $banner }}"
-            alt="Ayuda Motoworld"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="eager"
-        >
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/25"></div>
-        <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-400">Atención al cliente</p>
-            <h1 class="text-2xl md:text-4xl font-black uppercase tracking-wide text-white font-title">
-                Ayuda
-            </h1>
-            <p class="mt-2 max-w-2xl text-sm md:text-base text-white/85">
-                ¿Necesitas ayuda? Consulta a nuestros expertos por correo, WhatsApp o teléfono.
-            </p>
-        </div>
-    </div>
-</section>
+<x-shop.page-header
+    page="help"
+    eyebrow="Atención al cliente"
+    title="Ayuda"
+    subtitle="¿Necesitas ayuda? Consulta a nuestros expertos por correo, WhatsApp o teléfono."
+    alt="Ayuda Motoworld"
+    overlay="from-black/80 via-black/35 to-black/25"
+/>
 
 {{-- Intro --}}
 <section class="bg-neutral-50 border-b border-neutral-100">

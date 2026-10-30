@@ -11,6 +11,7 @@ use App\Services\Cart\CartResolver;
 use App\Services\Cart\CartTotalsService;
 use App\Services\Payments\Culqi\CulqiClient;
 use App\Services\Payments\MercadoPago\MercadoPagoClient;
+use App\Services\Payments\Paypal\PaypalClient;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(CulqiClient::class, fn () => CulqiClient::fromConfig());
         $this->app->singleton(MercadoPagoClient::class, fn () => MercadoPagoClient::fromConfig());
+        $this->app->singleton(PaypalClient::class, fn () => PaypalClient::fromConfig());
     }
 
     /**
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureSharedHostingMail();
         $this->configureProductionCulqi();
+        $this->configureProductionPaypal();
         $this->configureSharedHostingPublicDisk();
 
         Gate::before(function ($user, string $ability) {
@@ -182,6 +185,20 @@ class AppServiceProvider extends ServiceProvider
 
         if (str_starts_with($public, 'pk_live_') && str_starts_with($secret, 'sk_live_')) {
             config(['services.culqi.fake' => false]);
+        }
+    }
+
+    /**
+     * Credenciales live nunca deben simular PayPal aunque PAYPAL_FAKE haya quedado en true.
+     */
+    private function configureProductionPaypal(): void
+    {
+        $clientId = trim((string) config('services.paypal.client_id'));
+        $secret = trim((string) config('services.paypal.secret'));
+        $mode = (string) config('services.paypal.mode', 'sandbox');
+
+        if ($mode === 'live' && $clientId !== '' && $secret !== '') {
+            config(['services.paypal.fake' => false]);
         }
     }
 

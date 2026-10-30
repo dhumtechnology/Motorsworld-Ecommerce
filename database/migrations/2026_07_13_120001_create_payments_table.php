@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
             $table->string('provider', 32)->default('culqi');
-            $table->enum('method', ['card', 'yape', 'plin', 'pagoefectivo']);
+            $table->enum('method', ['card', 'yape', 'paypal', 'plin', 'pagoefectivo']);
             $table->enum('status', ['pending', 'paid', 'failed', 'expired', 'refunded'])
                 ->default('pending');
             $table->unsignedBigInteger('amount_cents');
