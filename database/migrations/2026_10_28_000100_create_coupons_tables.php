@@ -16,8 +16,8 @@ return new class extends Migration
             $table->enum('type', ['percent', 'amount']);
             $table->decimal('value', 12, 2);
             $table->char('currency', 3)->nullable();
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->dateTime('starts_at');
+            $table->dateTime('ends_at');
             $table->unsignedInteger('min_products')->nullable();
             $table->decimal('min_subtotal', 12, 2)->nullable();
             $table->char('min_subtotal_currency', 3)->nullable();

@@ -185,6 +185,7 @@ echo str_repeat('=', 40)."\n\n";
 $commands = [
     'optimize:clear',
     'migrate --force',
+    'db:seed --class=Database\\Seeders\\RoleAndPermissionSeeder --force',
     'storage:link',
     'config:cache',
     'route:cache',
