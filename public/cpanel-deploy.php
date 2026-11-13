@@ -186,6 +186,8 @@ $commands = [
     'optimize:clear',
     'migrate --force',
     'db:seed --class=Database\\Seeders\\RoleAndPermissionSeeder --force',
+    'db:seed --class=Database\\Seeders\\PeruLocationSeeder --force',
+    'db:seed --class=Database\\Seeders\\ShippingRateSeeder --force',
     'storage:link',
     'config:cache',
     'route:cache',
