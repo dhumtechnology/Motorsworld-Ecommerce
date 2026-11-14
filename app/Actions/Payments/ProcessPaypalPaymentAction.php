@@ -37,7 +37,7 @@ class ProcessPaypalPaymentAction
 
         if ($amountCents < 100) {
             throw ValidationException::withMessages([
-                'payment' => 'El monto mínimo para pagar con PayPal es 1.00.',
+                'payment' => $this->minimumAmountMessage($order, $amountCents),
             ]);
         }
 
@@ -227,6 +227,24 @@ class ProcessPaypalPaymentAction
     private function amountInCents(Order $order): int
     {
         return (int) round($this->paypalAmount($order) * 100);
+    }
+
+    private function minimumAmountMessage(Order $order, int $amountCents): string
+    {
+        $chargedUsd = number_format($amountCents / 100, 2, '.', '');
+        $message = 'El monto mínimo para pagar con PayPal es USD 1.00.';
+
+        $rate = $order->exchange_rate_sell !== null ? (float) $order->exchange_rate_sell : 0;
+
+        if (Currency::normalize($order->currency) !== self::PAYPAL_CURRENCY && $rate > 0) {
+            $minInOrderCurrency = Currency::convert(1.00, self::PAYPAL_CURRENCY, $order->currency, $rate);
+            $message .= ' Equivale a aprox. '.Currency::format($minInOrderCurrency, $order->currency)
+                .' al tipo de cambio venta '.number_format($rate, 4, '.', '').'.';
+        }
+
+        $message .= ' Este pedido equivale a USD '.$chargedUsd.'.';
+
+        return $message;
     }
 
     private function formatAmount(Order $order): string
