@@ -216,7 +216,7 @@ class PaypalClient
      */
     private function fakeCreatedOrder(array $payload): array
     {
-        $amount = $payload['purchase_units'][0]['amount'] ?? ['currency_code' => 'PEN', 'value' => '1.00'];
+        $amount = $payload['purchase_units'][0]['amount'] ?? ['currency_code' => 'USD', 'value' => '1.00'];
 
         return [
             'id' => is_string($payload['id'] ?? null) && $payload['id'] !== ''
@@ -247,7 +247,7 @@ class PaypalClient
                         'id' => 'PAYPAL_CAPTURE_FAKE_'.Str::upper(Str::random(10)),
                         'status' => 'COMPLETED',
                         'amount' => [
-                            'currency_code' => 'PEN',
+                            'currency_code' => 'USD',
                             'value' => '0.00',
                         ],
                     ]],

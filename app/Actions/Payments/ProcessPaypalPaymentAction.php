@@ -10,10 +10,13 @@ use App\Models\Orders\Order;
 use App\Models\Orders\Payment;
 use App\Services\Payments\Paypal\Exceptions\PaypalApiException;
 use App\Services\Payments\Paypal\PaypalClient;
+use App\Support\Currency;
 use Illuminate\Validation\ValidationException;
 
 class ProcessPaypalPaymentAction
 {
+    private const PAYPAL_CURRENCY = 'USD';
+
     public function __construct(
         private readonly PaypalClient $paypal,
         private readonly MarkOrderAsPaidAction $markOrderAsPaid,
@@ -44,7 +47,7 @@ class ProcessPaypalPaymentAction
             'method' => PaymentMethod::Paypal,
             'status' => PaymentRecordStatus::Pending,
             'amount_cents' => $amountCents,
-            'currency' => $order->currency,
+            'currency' => self::PAYPAL_CURRENCY,
         ]);
 
         try {
@@ -154,7 +157,7 @@ class ProcessPaypalPaymentAction
                 'custom_id' => (string) $payment->id,
                 'description' => 'Pedido #'.$order->id.' — Motoworld',
                 'amount' => [
-                    'currency_code' => strtoupper((string) $order->currency),
+                    'currency_code' => self::PAYPAL_CURRENCY,
                     'value' => $this->formatAmount($order),
                 ],
             ]],
@@ -223,11 +226,28 @@ class ProcessPaypalPaymentAction
 
     private function amountInCents(Order $order): int
     {
-        return (int) round(((float) $order->total_amount) * 100);
+        return (int) round($this->paypalAmount($order) * 100);
     }
 
     private function formatAmount(Order $order): string
     {
-        return number_format((float) $order->total_amount, 2, '.', '');
+        return number_format($this->paypalAmount($order), 2, '.', '');
+    }
+
+    private function paypalAmount(Order $order): float
+    {
+        if (Currency::normalize($order->currency) === self::PAYPAL_CURRENCY) {
+            return round((float) $order->total_amount, 2);
+        }
+
+        $rate = $order->exchange_rate_sell !== null ? (float) $order->exchange_rate_sell : 0;
+
+        if ($rate <= 0) {
+            throw ValidationException::withMessages([
+                'payment' => 'No hay tipo de cambio para cobrar este pedido con PayPal (USD).',
+            ]);
+        }
+
+        return Currency::convert((float) $order->total_amount, $order->currency, self::PAYPAL_CURRENCY, $rate);
     }
 }

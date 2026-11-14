@@ -214,12 +214,9 @@
 
                         <div id="paypal-payment-panel" class="hidden space-y-3">
                             <div class="space-y-3 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-4">
-                                <p class="text-xs text-neutral-500">
-                                    Completa tus datos de comprador y entrega. El cobro se confirma en PayPal; no pasa por Culqi.
-                                    @if ($paypalFake ?? false)
-                                        Modo fake: no se envía a PayPal.
-                                    @endif
-                                </p>
+                                @if ($paypalFake ?? false)
+                                    <p class="text-xs text-neutral-500">Modo fake: no se envía a PayPal.</p>
+                                @endif
                                 <div id="paypal-button-container" class="min-h-[48px]"></div>
                             </div>
                         </div>
@@ -1075,10 +1072,11 @@ window.MotoworldCheckout = {
     function paypalSdkSrc(currency) {
         const params = new URLSearchParams({
             'client-id': String(cfg.paypalClientId || ''),
-            currency: currency || 'PEN',
+            currency: currency || 'USD',
             intent: 'capture',
             components: 'buttons',
             locale: 'es_PE',
+            'disable-funding': 'card,credit,paylater,venmo',
         });
         return 'https://www.paypal.com/sdk/js?' + params.toString();
     }
@@ -1131,7 +1129,7 @@ window.MotoworldCheckout = {
         if (cfg.paypalFake || !cfg.paypalClientId || !paypalButtonsEl) return;
         if (paypalPanel?.classList.contains('hidden')) return;
 
-        const currency = String(cfg.currency || 'PEN').toUpperCase();
+        const currency = 'USD';
         if (!force && paypalButtons && paypalSdkCurrency === currency && paypalButtonsEl.childElementCount > 0) {
             return;
         }
@@ -1152,7 +1150,7 @@ window.MotoworldCheckout = {
                 return;
             }
 
-            paypalButtons = paypal.Buttons({
+            const buttonOptions = {
                 style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
                 onClick: function (data, actions) {
                     if (!form.checkValidity()) {
@@ -1210,7 +1208,11 @@ window.MotoworldCheckout = {
                     paypalLocalOrderId = null;
                     showError(err?.message || 'No se pudo completar el pago con PayPal.');
                 },
-            });
+            };
+            if (paypal.FUNDING && paypal.FUNDING.PAYPAL) {
+                buttonOptions.fundingSource = paypal.FUNDING.PAYPAL;
+            }
+            paypalButtons = paypal.Buttons(buttonOptions);
 
             await paypalButtons.render(paypalButtonsEl);
         } catch (err) {
