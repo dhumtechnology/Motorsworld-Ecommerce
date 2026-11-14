@@ -29,7 +29,7 @@
             </div>
         @endif
 
-        @if (! ($paypalFake ?? true) && ! ($paypalClientId ?? null))
+        @if (! ($paypalFake ?? false) && ! ($paypalClientId ?? null))
             <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 Configura <code class="font-mono">PAYPAL_CLIENT_ID</code> y <code class="font-mono">PAYPAL_SECRET</code>,
                 o usa <code class="font-mono">PAYPAL_FAKE=true</code> para probar sin llaves.
@@ -216,11 +216,11 @@
                             <div class="space-y-3 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-4">
                                 <p class="text-xs text-neutral-500">
                                     Completa tus datos de comprador y entrega. El cobro se confirma en PayPal; no pasa por Culqi.
-                                    @if ($paypalFake ?? true)
+                                    @if ($paypalFake ?? false)
                                         Modo fake: no se envía a PayPal.
                                     @endif
                                 </p>
-                                <div id="paypal-button-container" class="@if ($paypalFake ?? true) hidden @endif min-h-[48px]"></div>
+                                <div id="paypal-button-container" class="min-h-[48px]"></div>
                             </div>
                         </div>
                     </section>
@@ -411,7 +411,7 @@ window.MotoworldCheckout = {
     currency: @json($currency ?? 'PEN'),
     fake: @json((bool) $culqiFake),
     paypalClientId: @json($paypalClientId ?? null),
-    paypalFake: @json((bool) ($paypalFake ?? true)),
+    paypalFake: @json((bool) ($paypalFake ?? false)),
     paypalCreateUrl: @json($paypalCreateUrl ?? '/checkout/paypal/orden'),
     paypalCaptureUrl: @json($paypalCaptureUrl ?? '/checkout/paypal/capturar'),
     paypalCancelUrl: @json($paypalCancelUrl ?? '/checkout/paypal/cancelar'),
@@ -457,6 +457,8 @@ window.MotoworldCheckout = {
     let paypalSdkCurrency = null;
     let paypalButtons = null;
     let paypalLocalOrderId = null;
+    let paypalRenderSeq = 0;
+    let paypalRendering = false;
 
     const deliveryFields = document.getElementById('delivery-address-fields');
     const addressLine = document.getElementById('address_line1');
@@ -584,7 +586,6 @@ window.MotoworldCheckout = {
 
         const usePaypalSdk = method === 'paypal' && !cfg.paypalFake && !!cfg.paypalClientId;
         if (payButton) payButton.classList.toggle('hidden', usePaypalSdk);
-        if (paypalButtonsEl) paypalButtonsEl.classList.toggle('hidden', method !== 'paypal' || !!cfg.paypalFake);
         if (payProviderNote) {
             payProviderNote.textContent = method === 'paypal'
                 ? 'Procesado por PayPal'
@@ -592,6 +593,8 @@ window.MotoworldCheckout = {
         }
         if (usePaypalSdk) {
             renderPaypalButtons();
+        } else {
+            closePaypalButtons();
         }
     }
 
@@ -630,6 +633,8 @@ window.MotoworldCheckout = {
     }
 
     function applyTotals(data, applied) {
+        const nextCurrency = String(data.currency || cfg.currency || 'PEN').toUpperCase();
+        const currencyChanged = nextCurrency !== String(cfg.currency || 'PEN').toUpperCase();
         cfg.amount = Number(data.total || 0);
         cfg.amountCents = Number(data.amount_cents || Math.round(cfg.amount * 100));
         cfg.currency = data.currency || cfg.currency;
@@ -684,7 +689,7 @@ window.MotoworldCheckout = {
             shippingAmountEl.textContent = hasShipping ? formatMoney(amount, currency) : '';
         }
         if (selectedPayMethod === 'paypal' && !cfg.paypalFake && cfg.paypalClientId) {
-            renderPaypalButtons();
+            renderPaypalButtons(currencyChanged);
         }
     }
 
@@ -1074,10 +1079,23 @@ window.MotoworldCheckout = {
             intent: 'capture',
             components: 'buttons',
             locale: 'es_PE',
-            'disable-funding': 'card,credit,paylater,venmo',
-            'enable-funding': 'paypal',
         });
         return 'https://www.paypal.com/sdk/js?' + params.toString();
+    }
+
+    function isZoidDestroyed(err) {
+        const message = String(err?.message || err || '');
+        return /zoid destroyed all components/i.test(message);
+    }
+
+    async function closePaypalButtons() {
+        const instance = paypalButtons;
+        paypalButtons = null;
+        if (instance && typeof instance.close === 'function') {
+            try {
+                await instance.close();
+            } catch (e) {}
+        }
     }
 
     function loadPaypalSdk(currency) {
@@ -1086,8 +1104,16 @@ window.MotoworldCheckout = {
                 resolve();
                 return;
             }
+
             const existing = document.getElementById('paypal-sdk');
-            if (existing) existing.remove();
+            if (existing && paypalSdkCurrency !== currency) {
+                existing.remove();
+                try { delete window.paypal; } catch (e) { window.paypal = undefined; }
+            } else if (existing && window.paypal) {
+                resolve();
+                return;
+            }
+
             const script = document.createElement('script');
             script.id = 'paypal-sdk';
             script.src = paypalSdkSrc(currency);
@@ -1101,79 +1127,102 @@ window.MotoworldCheckout = {
         });
     }
 
-    async function renderPaypalButtons() {
+    async function renderPaypalButtons(force) {
         if (cfg.paypalFake || !cfg.paypalClientId || !paypalButtonsEl) return;
-        const currency = cfg.currency || 'PEN';
+        if (paypalPanel?.classList.contains('hidden')) return;
+
+        const currency = String(cfg.currency || 'PEN').toUpperCase();
+        if (!force && paypalButtons && paypalSdkCurrency === currency && paypalButtonsEl.childElementCount > 0) {
+            return;
+        }
+        if (paypalRendering) return;
+
+        const seq = ++paypalRenderSeq;
+        paypalRendering = true;
+
         try {
+            await closePaypalButtons();
+            if (seq !== paypalRenderSeq) return;
+
             await loadPaypalSdk(currency);
+            if (seq !== paypalRenderSeq) return;
+
+            if (typeof paypal === 'undefined' || typeof paypal.Buttons !== 'function') {
+                showError('No se pudo inicializar PayPal.');
+                return;
+            }
+
+            paypalButtons = paypal.Buttons({
+                style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+                onClick: function (data, actions) {
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return actions.reject();
+                    }
+                    return actions.resolve();
+                },
+                createOrder: async function () {
+                    errorEl.classList.add('hidden');
+                    paymentMethodInput.value = 'paypal';
+                    setLoading(true, 'Conectando con PayPal', 'Te redirigimos a PayPal para confirmar el pago.');
+                    const data = await postJson(cfg.paypalCreateUrl, { payment_method: 'paypal' });
+                    paypalLocalOrderId = data.order_id || null;
+                    if (!data.id) throw new Error('PayPal no devolvió una orden.');
+                    if (String(data.id).startsWith('PAYPAL_FAKE_') || data.fake) {
+                        throw new Error('PayPal sigue en modo fake en el servidor. Revisa PAYPAL_FAKE, Client ID y Secret, y vuelve a cachear la config.');
+                    }
+                    setLoading(true, 'Confirma en PayPal', 'No cierres esta ventana hasta terminar el pago.');
+                    return data.id;
+                },
+                onApprove: async function (data) {
+                    setLoading(true, 'Confirmando pago', 'PayPal está capturando el cobro. No cierres esta ventana.');
+                    const result = await postJson(cfg.paypalCaptureUrl, {
+                        paypal_order_id: data.orderID,
+                        order_id: paypalLocalOrderId,
+                        payment_method: 'paypal',
+                    });
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                        return;
+                    }
+                    throw new Error(result.message || 'No se recibió confirmación del pago.');
+                },
+                onCancel: async function () {
+                    try {
+                        await postJson(cfg.paypalCancelUrl, {
+                            order_id: paypalLocalOrderId || '',
+                            payment_method: 'paypal',
+                        });
+                    } catch (e) {}
+                    paypalLocalOrderId = null;
+                    setLoading(false);
+                },
+                onError: async function (err) {
+                    if (isZoidDestroyed(err)) {
+                        return;
+                    }
+                    try {
+                        await postJson(cfg.paypalCancelUrl, {
+                            order_id: paypalLocalOrderId || '',
+                            payment_method: 'paypal',
+                        });
+                    } catch (e) {}
+                    paypalLocalOrderId = null;
+                    showError(err?.message || 'No se pudo completar el pago con PayPal.');
+                },
+            });
+
+            await paypalButtons.render(paypalButtonsEl);
         } catch (err) {
-            showError(err?.message || 'No se pudo cargar PayPal.');
-            return;
-        }
-        if (typeof paypal === 'undefined' || typeof paypal.Buttons !== 'function') {
-            showError('No se pudo inicializar PayPal.');
-            return;
-        }
-        if (paypalButtons && typeof paypalButtons.close === 'function') {
-            try { paypalButtons.close(); } catch (e) {}
-        }
-        paypalButtonsEl.innerHTML = '';
-        paypalButtons = paypal.Buttons({
-            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-            onClick: function (data, actions) {
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return actions.reject();
-                }
-                return actions.resolve();
-            },
-            createOrder: async function () {
-                errorEl.classList.add('hidden');
-                paymentMethodInput.value = 'paypal';
-                setLoading(true, 'Conectando con PayPal', 'Te redirigimos a PayPal para confirmar el pago.');
-                const data = await postJson(cfg.paypalCreateUrl, { payment_method: 'paypal' });
-                paypalLocalOrderId = data.order_id || null;
-                if (!data.id) throw new Error('PayPal no devolvió una orden.');
-                setLoading(true, 'Confirma en PayPal', 'No cierres esta ventana hasta terminar el pago.');
-                return data.id;
-            },
-            onApprove: async function (data) {
-                setLoading(true, 'Confirmando pago', 'PayPal está capturando el cobro. No cierres esta ventana.');
-                const result = await postJson(cfg.paypalCaptureUrl, {
-                    paypal_order_id: data.orderID,
-                    order_id: paypalLocalOrderId,
-                    payment_method: 'paypal',
-                });
-                if (result.redirect_url) {
-                    window.location.href = result.redirect_url;
-                    return;
-                }
-                throw new Error(result.message || 'No se recibió confirmación del pago.');
-            },
-            onCancel: async function () {
-                try {
-                    await postJson(cfg.paypalCancelUrl, {
-                        order_id: paypalLocalOrderId || '',
-                        payment_method: 'paypal',
-                    });
-                } catch (e) {}
-                paypalLocalOrderId = null;
-                setLoading(false);
-            },
-            onError: async function (err) {
-                try {
-                    await postJson(cfg.paypalCancelUrl, {
-                        order_id: paypalLocalOrderId || '',
-                        payment_method: 'paypal',
-                    });
-                } catch (e) {}
-                paypalLocalOrderId = null;
-                showError(err?.message || 'No se pudo completar el pago con PayPal.');
-            },
-        });
-        paypalButtons.render(paypalButtonsEl).catch((err) => {
+            if (seq !== paypalRenderSeq || isZoidDestroyed(err)) {
+                return;
+            }
             showError(err?.message || 'No se pudieron mostrar los botones de PayPal.');
-        });
+        } finally {
+            if (seq === paypalRenderSeq) {
+                paypalRendering = false;
+            }
+        }
     }
 
     async function payWithPaypalFake() {

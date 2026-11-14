@@ -44,8 +44,9 @@ return [
     ],
 
     'paypal' => [
-        // true = simula PayPal sin cuenta (solo desarrollo local)
-        'fake' => filter_var(env('PAYPAL_FAKE', false), FILTER_VALIDATE_BOOLEAN),
+        // true = simula PayPal sin cuenta (solo local). Si hay Client ID, nunca es fake.
+        'fake' => filter_var(env('PAYPAL_FAKE', false), FILTER_VALIDATE_BOOLEAN)
+            && ! filled(env('PAYPAL_CLIENT_ID')),
         'client_id' => ($id = env('PAYPAL_CLIENT_ID')) ? trim((string) $id) : null,
         'secret' => ($secret = env('PAYPAL_SECRET')) ? trim((string) $secret) : null,
         'mode' => strtolower((string) env('PAYPAL_MODE', 'sandbox')) === 'live' ? 'live' : 'sandbox',

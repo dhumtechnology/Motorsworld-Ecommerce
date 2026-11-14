@@ -189,17 +189,88 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Credenciales live nunca deben simular PayPal aunque PAYPAL_FAKE haya quedado en true.
+     * Si hay Client ID y Secret (en config cacheada o en el .env), nunca simular PayPal.
+     * En cPanel `config:cache` deja PAYPAL_FAKE=true aunque el .env ya diga false.
      */
     private function configureProductionPaypal(): void
     {
+        $fromEnv = $this->paypalValuesFromDotEnv();
+
+        if ($fromEnv['client_id'] !== '') {
+            config(['services.paypal.client_id' => $fromEnv['client_id']]);
+        }
+
+        if ($fromEnv['secret'] !== '') {
+            config(['services.paypal.secret' => $fromEnv['secret']]);
+        }
+
+        if ($fromEnv['mode'] !== null) {
+            config(['services.paypal.mode' => $fromEnv['mode']]);
+        }
+
+        if ($fromEnv['fake'] !== null) {
+            config(['services.paypal.fake' => $fromEnv['fake']]);
+        }
+
         $clientId = trim((string) config('services.paypal.client_id'));
         $secret = trim((string) config('services.paypal.secret'));
-        $mode = (string) config('services.paypal.mode', 'sandbox');
 
-        if ($mode === 'live' && $clientId !== '' && $secret !== '') {
+        if ($clientId !== '' && $secret !== '') {
             config(['services.paypal.fake' => false]);
         }
+    }
+
+    /**
+     * @return array{client_id: string, secret: string, mode: ?string, fake: ?bool}
+     */
+    private function paypalValuesFromDotEnv(): array
+    {
+        $result = [
+            'client_id' => '',
+            'secret' => '',
+            'mode' => null,
+            'fake' => null,
+        ];
+
+        $envFile = base_path('.env');
+
+        if (! is_readable($envFile)) {
+            return $result;
+        }
+
+        $contents = file_get_contents($envFile);
+
+        if ($contents === false) {
+            return $result;
+        }
+
+        $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents) ?? $contents;
+
+        foreach (preg_split('/\R/', $contents) as $line) {
+            $line = trim((string) $line);
+
+            if ($line === '' || str_starts_with($line, '#') || ! str_contains($line, '=')) {
+                continue;
+            }
+
+            [$name, $value] = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+
+            if (preg_match('/^([\'"])(.*)\1$/', $value, $matches) === 1) {
+                $value = $matches[2];
+            }
+
+            match ($name) {
+                'PAYPAL_CLIENT_ID' => $result['client_id'] = $value,
+                'PAYPAL_SECRET' => $result['secret'] = $value,
+                'PAYPAL_MODE' => $result['mode'] = strtolower($value) === 'live' ? 'live' : 'sandbox',
+                'PAYPAL_FAKE' => $result['fake'] = filter_var($value, FILTER_VALIDATE_BOOLEAN),
+                default => null,
+            };
+        }
+
+        return $result;
     }
 
     /**
